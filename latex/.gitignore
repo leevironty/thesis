@@ -1,0 +1,11 @@
+# Include pdf in the last commit
+*.pdf
+
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.toc
+*.xmpdata
+*.xmpi
+*.txt
