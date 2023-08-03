@@ -1,3 +1,7 @@
 *.zip
 reference-material
 .DS_Store
+.vscode
+timpasslib
+.python-version
+__pycache__

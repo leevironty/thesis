@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "thesis"
+version = "0.1.0"
+description = "Leevi's MSc thesis implementation code"
+authors = ["Leevi Rönty <leevi.ronty@aalto.fi>"]
+readme = "README.md"
+packages = [{include = "thesis", from="src"}]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.12"
+ortools = "^9.6.2534"
+pandas = "^2.0.3"
+pulp = "^2.7.0"
+pandera = {version = "^0.16.1", extras = ["mypy"]}
+attrs = "^23.1.0"
+networkx = "^3.1"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pre-commit = "^3.3.3"
+ipykernel = "^6.25.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

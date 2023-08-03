@@ -1,0 +1,4 @@
+# activity_index; type; from_event; to_event; lower_bound; upper_bound
+1;drive;1;2;17;18
+2;wait;2;3;1;5
+3;drive;3;4;19;21

@@ -3,6 +3,16 @@
 In progress.
 
 
+## Environment setup
+
+- New Python virtual environment.
+- ```pip install poetry```
+- ```poetry install```
+- ```pre-commit install```
+
+
+
+
 ## Idea
 
 Solving TimPass is hard, but PESP is easier. The edge weights affect the PESP solution quality, as we want to reroute the passengers after setting the timetable (essentially, a sequential problem). If we could know the TimPass solution weights beforehand, we could use PESP and a shortest path algorithm to obtain a solution to TimPass.
@@ -38,7 +48,7 @@ Can we find good solutions to TimPass efficiently, by first predicting the optim
     - Evaluate PESP + SP solutions, and compare them with known best solutions & run times.
     - Evaluate how the fitted models generalize to unseen networks.
         - Could we briefly fine-tune the model by generating a few examples in the same manner as in the training data generation? And could we do this within the time limit of 1h?
-    
+
 
 
 
@@ -52,3 +62,4 @@ Can we find good solutions to TimPass efficiently, by first predicting the optim
 ## Additional ideas
 - If we could have the model predict a distribution instead of a point value, maybe we could then sample those distributions and try multiple predictions for the weights. Maybe this could help, as the good solutions may look very different.
     - We need to sample the distributions jointly, could this be tricky? Depends on the used model?
+- Could we just generate the training network graphs randomly? Could this bring more variation and thus better generalization?
