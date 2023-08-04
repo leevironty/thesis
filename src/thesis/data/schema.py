@@ -2,8 +2,6 @@ from attrs import define, field
 from dataclasses import dataclass
 
 from enum import Enum
-# import pandera as pa
-# from pandera.typing import Series
 
 
 class ParseEnum(Enum):
@@ -18,6 +16,8 @@ class ActivityType(ParseEnum):
     WAIT = 'wait'
     DRIVE = 'drive'
     CHANGE = 'change'
+    SYNC = 'sync'
+    HEADWAY = 'headway'
 
 
 class EventType(ParseEnum):
@@ -31,20 +31,33 @@ class Direction(ParseEnum):
 
 
 @define
-class Activity:
+class Edge:
     activity_index: int = field(converter=int)
-    type: ActivityType = field(converter=ActivityType.parse)
     from_event: int = field(converter=int)
     to_event: int = field(converter=int)
-    lower_bound: int = field(converter=int)
-    upper_bound: int = field(converter=int)
 
 
 @define
-class Event:
+class Activity(Edge):
+    type: ActivityType = field(converter=ActivityType.parse)
+    lower_bound: int = field(converter=int)
+    upper_bound: int = field(converter=int)
+    penalty: int = field(converter=int)
+
+    def __attrs_post_init__(self):
+        if self.type != ActivityType.CHANGE:
+            self.penalty = 0
+
+
+@define
+class Node:
     event_id: int = field(converter=int)
-    type: EventType = field(converter=EventType.parse)
     stop_id: int = field(converter=int)
+
+
+@define
+class Event(Node):
+    type: EventType = field(converter=EventType.parse)
     line_id: int = field(converter=int)
     line_direction: Direction = field(converter=Direction.parse)
     line_freq_repetition: int = field(converter=int)

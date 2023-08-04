@@ -1,18 +1,18 @@
 from typing import Iterable
 from thesis.data.wrapper import Data
-from random import Random
+import random
 
 
-def variations(data: Data, n: int, seed: int = 1) -> Iterable[Data]:
-    od_prob = 0.1
-    rng = Random(seed)
+def variations(data: Data, n: int, od_share: float) -> Iterable[Data]:
+    rng = random.Random()
+    rng.seed(847120395)
+    od_size = int(len(data.ods) * od_share)
+
     for _ in range(n):
         new_data = Data(
             config=data.config,
             activities=data.activities,
             events=data.events,
-            od=[
-                od for od in data.od if rng.random() < od_prob
-            ]
+            ods=dict(rng.sample(list(data.ods.items()), k=od_size))
         )
         yield new_data
