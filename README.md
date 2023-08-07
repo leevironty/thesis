@@ -40,6 +40,7 @@ Can we find good solutions to TimPass efficiently, by first predicting the optim
         - Predict the passenger counts directly
         - Predict the optimal route as a sequence -> calculate the passenger counts.
         - Predict the optimal timetable/edge duration -> calculate the shortest paths -> passenger counts.
+        - Predict the state of the flow variables *p* -> a bit like the neural diving strategy tested by Google
     - Possible models to try:
         - Graph NN / something with attention mechanisms
         - Transformers / seq2seq for generating the paths between OD pairs.

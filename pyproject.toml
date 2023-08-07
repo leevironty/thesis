@@ -25,6 +25,7 @@ gurobipy = "^10.0.2"
 pytest = "^7.4.0"
 pre-commit = "^3.3.3"
 ipykernel = "^6.25.0"
+debugpy = "^1.6.7"
 
 [build-system]
 requires = ["poetry-core"]

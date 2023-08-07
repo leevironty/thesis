@@ -1,10 +1,10 @@
-from argparse import ArgumentParser
+from argparse import ArgumentParser, BooleanOptionalAction
 import logging
 
 from thesis.scripts.data_generation import generate_data
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('thesis.scripts')
 
 
 def main():
@@ -19,6 +19,8 @@ def main():
     datagen_parser.add_argument('--count', '-c', type=int)
     datagen_parser.add_argument('--od-share', type=float, default=1.0)
     datagen_parser.add_argument('--out', type=str, default='solutions/test')
+    datagen_parser.add_argument('--seed', type=int, default=123)
+    datagen_parser.add_argument('--preprocess', action=BooleanOptionalAction)
     datagen_parser.set_defaults(func=generate_data)
     args = parser.parse_args()
     args.func(args)

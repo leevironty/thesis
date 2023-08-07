@@ -13,6 +13,7 @@ from thesis.data.schema import (
     Node,
     Edge,
     ActivityType,
+    EventType,
 )
 
 T = TypeVar('T')
@@ -65,6 +66,7 @@ class Data:
     ods: dict[pair[int], OD]
     ods_mapped: dict[pair[int], OD] = field(init=False)
     solution: Solution | None = field(default=None)
+    preprocessed_flows: dict[pair[int], list[pair[int]]] | None = field(default=None)
 
     def __attrs_post_init__(self):
         # TODO: refactor this mess
@@ -106,6 +108,8 @@ class Data:
         aux_edges: dict[pair[int], Edge] = {}
         for origin_id, origin in origin_events.items():
             for event in event_map[origin.stop_id]:
+                if event.type == EventType.ARRIVAL:
+                    continue
                 aux_edges[(origin_id, event.event_id)] = Edge(
                     activity_index=next_id(),
                     from_event=origin_id,
@@ -113,6 +117,8 @@ class Data:
                 )
         for destination_id, destination in destination_events.items():
             for event in event_map[destination.stop_id]:
+                if event.type == EventType.DEPARTURE:
+                    continue
                 aux_edges[(event.event_id, destination_id)] = Edge(
                     activity_index=next_id(),
                     from_event=event.event_id,

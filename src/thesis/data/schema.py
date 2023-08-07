@@ -35,6 +35,8 @@ class Edge:
     activity_index: int = field(converter=int)
     from_event: int = field(converter=int)
     to_event: int = field(converter=int)
+    lower_bound: int = field(default=0, init=False)
+    upper_bound: int = field(default=0, init=False)
 
 
 @define

@@ -3,9 +3,9 @@ from thesis.data.wrapper import Data
 import random
 
 
-def variations(data: Data, n: int, od_share: float) -> Iterable[Data]:
+def variations(data: Data, n: int, od_share: float, seed: int) -> Iterable[Data]:
     rng = random.Random()
-    rng.seed(847120395)
+    rng.seed(seed)
     od_size = int(len(data.ods) * od_share)
 
     for _ in range(n):

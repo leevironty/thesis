@@ -10,7 +10,7 @@ from pulp import (
 from thesis.data.wrapper import Data, Solution
 from models.solver import get_solver
 
-Pair = tuple[int, int]
+pair = tuple[int, int]
 
 
 class TimPass:
@@ -27,17 +27,17 @@ class TimPass:
             upBound=data.config.period_length - 1,
             cat=LpInteger
         )
-        self.var_z: dict[Pair, LpVariable] = LpVariable.dicts(
+        self.var_z: dict[pair, LpVariable] = LpVariable.dicts(
             name='z',
             indices=data.activities_constrainable.keys(),
             cat=LpInteger
         )
-        self.var_p: dict[Pair, dict[Pair, LpVariable]] = LpVariable.dicts(
+        self.var_p: dict[pair, dict[pair, LpVariable]] = LpVariable.dicts(
             name='p',
             indices=(data.ods_mapped.keys(), data.activities_routable.keys()),
             cat=LpBinary,
         )
-        self.var_l: dict[Pair, dict[Pair, LpVariable]] = LpVariable.dicts(
+        self.var_l: dict[pair, dict[pair, LpVariable]] = LpVariable.dicts(
             name='lin',
             indices=(data.ods_mapped.keys(), data.activities.keys()),
             lowBound=0,
@@ -75,10 +75,27 @@ class TimPass:
         def d(i: int, j: int) -> int:
             return 1 if i == j else 0
 
-        outbound: dict[Pair, dict[int, list[LpVariable]]] = {}
-        inbound: dict[Pair, dict[int, list[LpVariable]]] = {}
+        outbound: dict[pair, dict[int, list[LpVariable]]] = {}
+        inbound: dict[pair, dict[int, list[LpVariable]]] = {}
+        # outbound_aux: dict[pair, dict[int, list[LpVariable]]] = {}
+        # inbound_aux: dict[pair, dict[int, list[LpVariable]]] = {}
+        print(f'Origin events: {self.data.events_aux[0].keys()}')
+        print(f'Destination events: {self.data.events_aux[1].keys()}')
+        self.constraint_useless_flows: dict[str, LpAffineExpression] = {}
         for uv, _p in self.var_p.items():
             for (from_node, to_node), p in _p.items():
+                # if from_node in uv or to_node in uv:
+                #     out_dict = outbound_aux
+                #     in_dict = inbound_aux
+                # else:
+                # out_dict = outbound
+                # in_dict = inbound
+                from_ok = from_node in uv or from_node in self.data.events.keys()
+                to_ok = to_node in uv or to_node in self.data.events.keys()
+                if not (from_ok and to_ok):
+                    print(f'Dropped flow variable: {uv=}, {(from_node, to_node)=}, {from_ok=}, {to_ok=}')
+                    self.constraint_useless_flows[f'useless_flow_{uv}_{(from_node, to_node)}'] = p == 0
+                    continue
                 outbound.setdefault(uv, {}).setdefault(from_node, []).append(p)
                 inbound.setdefault(uv, {}).setdefault(to_node, []).append(p)
 
@@ -91,6 +108,31 @@ class TimPass:
             for (u, v) in self.var_p.keys() for e in data.events_all.keys()
         }
 
+        # def should_not_include(uv: pair, ij: pair) -> bool:
+        #     u, v = uv
+        #     i, j = ij
+        #     return (
+        #         i in self.data.events_aux[0].keys() and i != u
+        #     ) or (
+        #         j in self.data.events_aux[1].keys() and j != v
+        #     )
+
+        # self.constraint_aux_flows = {
+        #     f'aux_flow_{uv}_{ij}': p == 0
+        #     for uv, _var in self.var_p.items()
+        #     for ij, p in _var.items()
+        #     if should_not_include(uv, ij)
+        # }
+
+        # Handle preprocessed events: set all flows to zero
+        if data.preprocessed_flows is not None:
+            self.constraint_preprocessed = {
+                f'preprocess_{uv}_{ij}': self.var_p[uv][ij] == 0
+                for uv, _list in data.preprocessed_flows.items() for ij in _list
+            }
+        else:
+            self.constraint_preprocessed = {}
+
         self.objective = self._get_objective()
 
         self.model.setObjective(self.objective)
@@ -100,6 +142,9 @@ class TimPass:
         self.model.extend(self.constraint_l_d)
         self.model.extend(self.constraint_l_d_mp)
         self.model.extend(self.constraint_paths)
+        self.model.extend(self.constraint_preprocessed)
+        self.model.extend(self.constraint_useless_flows)
+        # self.model.extend(self.constraint_aux_flows)
 
     def _get_objective(self) -> LpAffineExpression:
         return lpSum([
@@ -110,10 +155,10 @@ class TimPass:
             for uv, od in self.data.ods_mapped.items()
         ])
 
-    def _edge_penalty(self, a: Pair) -> LpAffineExpression:
+    def _edge_penalty(self, a: pair) -> LpAffineExpression:
         return self._edge_duration(a) + self.data.activities[a].penalty
 
-    def _edge_duration(self, a: Pair) -> LpAffineExpression:
+    def _edge_duration(self, a: pair) -> LpAffineExpression:
         i, j = a
         return (
             self.var_pi[j] - self.var_pi[i]
@@ -141,7 +186,7 @@ class TimPass:
             for uv, _var in self.var_p.items() for ij, p in _var.items()
             if p.value() == 1
         ]
-        weights: dict[Pair, int] = {}
+        weights: dict[pair, int] = {}
         for uv, ij in used_edges:
             prev = weights.get(ij, 0)
             weights[ij] = prev + self.data.ods_mapped[uv].customers
@@ -177,3 +222,13 @@ class TimPass:
     def print_objective(self):
         print('Objective:')
         print(self.model.objective)
+
+    # def print_definition_counts(self):
+
+    #     print('Variables:')
+    #     print(f'count (pi) = {len(self.var_pi)}')
+    #     print(f'count (p) = {len(self.var_p)}')
+    #     print(f'count (z) = {len(self.var_z)}')
+    #     print(f'count (lin) = {sum(len(d) for d in self.var_l.values())}')
+    #     print('Constraints')
+    #     print(f'count (l_d) = {len(self.)}')
