@@ -9,6 +9,7 @@ from pulp import (
 )
 from thesis.data.wrapper import Data, Solution
 from models.solver import get_solver
+from thesis.data.schema import Event
 
 pair = tuple[int, int]
 
@@ -34,12 +35,12 @@ class TimPass:
         )
         self.var_p: dict[pair, dict[pair, LpVariable]] = LpVariable.dicts(
             name='p',
-            indices=(data.ods_mapped.keys(), data.activities_routable.keys()),
+            indices=(data.ods.keys(), data.activities.keys()),
             cat=LpBinary,
         )
-        self.var_l: dict[pair, dict[pair, LpVariable]] = LpVariable.dicts(
+        self.var_lin: dict[pair, dict[pair, LpVariable]] = LpVariable.dicts(
             name='lin',
-            indices=(data.ods_mapped.keys(), data.activities.keys()),
+            indices=(data.ods.keys(), data.activities.keys()),
             lowBound=0,
             cat=LpInteger,
         )
@@ -56,19 +57,19 @@ class TimPass:
             activity.upper_bound + activity.penalty
             for activity in data.activities.values()
         ])
-        self.constraint_l_mp = {
+        self.constraint_lin_mp = {
             f'lin_mp_{od}_{a}': lin <= big_m * self.var_p[od][a]
-            for od, _v in self.var_l.items() for a, lin in _v.items()
+            for od, _v in self.var_lin.items() for a, lin in _v.items()
         }
-        self.constraint_l_d = {
+        self.constraint_lin_duration = {
             f'lin_d_{od}_{a}': lin <= self._edge_penalty(a)
-            for od, _v in self.var_l.items() for a, lin in _v.items()
+            for od, _v in self.var_lin.items() for a, lin in _v.items()
         }
-        self.constraint_l_d_mp = {
+        self.constraint_lin_duration_mp = {
             f'lin_d_mp_{od}_{a}': (
                 lin >= self._edge_penalty(a) - big_m * (1 - self.var_p[od][a])
             )
-            for od, _v in self.var_l.items() for a, lin in _v.items()
+            for od, _v in self.var_lin.items() for a, lin in _v.items()
         }
 
         # Constraint 8: path start and endpoints
@@ -81,7 +82,7 @@ class TimPass:
         # inbound_aux: dict[pair, dict[int, list[LpVariable]]] = {}
         print(f'Origin events: {self.data.events_aux[0].keys()}')
         print(f'Destination events: {self.data.events_aux[1].keys()}')
-        self.constraint_useless_flows: dict[str, LpAffineExpression] = {}
+        # self.constraint_useless_flows: dict[str, LpAffineExpression] = {}
         for uv, _p in self.var_p.items():
             for (from_node, to_node), p in _p.items():
                 # if from_node in uv or to_node in uv:
@@ -90,39 +91,61 @@ class TimPass:
                 # else:
                 # out_dict = outbound
                 # in_dict = inbound
-                from_ok = from_node in uv or from_node in self.data.events.keys()
-                to_ok = to_node in uv or to_node in self.data.events.keys()
-                if not (from_ok and to_ok):
-                    print(f'Dropped flow variable: {uv=}, {(from_node, to_node)=}, {from_ok=}, {to_ok=}')
-                    self.constraint_useless_flows[f'useless_flow_{uv}_{(from_node, to_node)}'] = p == 0
-                    continue
+                # from_ok = from_node in uv or from_node in self.data.events.keys()
+                # to_ok = to_node in uv or to_node in self.data.events.keys()
+                # if not (from_ok and to_ok):
+                #     print(f'Dropped flow variable: {uv=}, {(from_node, to_node)=}, {from_ok=}, {to_ok=}')
+                #     self.constraint_useless_flows[f'useless_flow_{uv}_{(from_node, to_node)}'] = p == 0
+                #     continue
                 outbound.setdefault(uv, {}).setdefault(from_node, []).append(p)
                 inbound.setdefault(uv, {}).setdefault(to_node, []).append(p)
 
-        self.constraint_paths = {
-            f'paths_(origin={u},destination={v},event={e})': (
-                lpSum(outbound[(u, v)].get(e, []))
-                - lpSum(inbound[(u, v)].get(e, []))
-                == d(u, e) - d(v, e)
-            )
-            for (u, v) in self.var_p.keys() for e in data.events_all.keys()
-        }
-
-        # def should_not_include(uv: pair, ij: pair) -> bool:
-        #     u, v = uv
-        #     i, j = ij
-        #     return (
-        #         i in self.data.events_aux[0].keys() and i != u
-        #     ) or (
-        #         j in self.data.events_aux[1].keys() and j != v
+        # self.constraint_paths = {
+        #     f'paths_(origin={u},destination={v},event={e})': (
+        #         lpSum(outbound[(u, v)].get(e, []))
+        #         - lpSum(inbound[(u, v)].get(e, []))
+        #         == d(u, e) - d(v, e)
         #     )
-
-        # self.constraint_aux_flows = {
-        #     f'aux_flow_{uv}_{ij}': p == 0
-        #     for uv, _var in self.var_p.items()
-        #     for ij, p in _var.items()
-        #     if should_not_include(uv, ij)
+        #     for (u, v) in self.var_p.keys() for e in data.events_all.keys()
         # }
+
+        self.constraint_paths: dict[str, LpAffineExpression] = {}
+        self.constraint_od_flow: dict[str, LpAffineExpression] = {}
+        for (origin, destination) in self.var_p.keys():
+            origin_flow: list[LpVariable] = []
+            destination_flow: list[LpVariable] = []
+            def get_rhs(event: Event) -> LpVariable | int:
+                if event.stop_id == origin:
+                    var = LpVariable(
+                        name=f'origin_flow_{(origin, destination)}_{event.event_id}',
+                        lowBound=0,
+                        upBound=1,
+                        cat=LpBinary,
+                    )
+                    origin_flow.append(var)
+                    return var
+                if event.stop_id == destination:
+                    var = LpVariable(
+                        name=f'destination_flow_{(origin, destination)}_{event.event_id}',
+                        lowBound=0,
+                        upBound=1,
+                        cat=LpBinary,
+                    )
+                    destination_flow.append(var)
+                    return -var
+                return 0
+            for e, event in self.data.events.items():
+                outbound_sum = lpSum(outbound[(origin, destination)].get(e, []))
+                inbound_sum = lpSum(inbound[(origin, destination)].get(e, []))
+                key = f'path_{(origin, destination)}_{e}'
+                self.constraint_paths[key] = outbound_sum - inbound_sum == get_rhs(event)
+                # self.constraint_paths[key] = outbound_sum - inbound_sum == 0
+            # key = f'origin_flow_sum_{(origin, destination)}'
+            # self.constraint_od_flow[key] = lpSum(origin_flow) == 1
+            # key = f'destination_flow_sum_{(origin, destination)}'
+            # self.constraint_od_flow[key] = lpSum(destination_flow) == 1
+
+
 
         # Handle preprocessed events: set all flows to zero
         if data.preprocessed_flows is not None:
@@ -138,21 +161,23 @@ class TimPass:
         self.model.setObjective(self.objective)
         self.model.extend(self.constraint_lower)
         self.model.extend(self.constraint_upper)
-        self.model.extend(self.constraint_l_mp)
-        self.model.extend(self.constraint_l_d)
-        self.model.extend(self.constraint_l_d_mp)
+        self.model.extend(self.constraint_lin_mp)
+        self.model.extend(self.constraint_lin_duration)
+        self.model.extend(self.constraint_lin_duration_mp)
         self.model.extend(self.constraint_paths)
         self.model.extend(self.constraint_preprocessed)
-        self.model.extend(self.constraint_useless_flows)
+        self.model.extend(self.constraint_paths)
+        self.model.extend(self.constraint_od_flow)
+        # self.model.extend(self.constraint_useless_flows)
         # self.model.extend(self.constraint_aux_flows)
 
     def _get_objective(self) -> LpAffineExpression:
         return lpSum([
             od.customers * lpSum([
-                self.var_l[uv][a]
+                self.var_lin[uv][a]
                 for a in self.data.activities.keys()
             ])
-            for uv, od in self.data.ods_mapped.items()
+            for uv, od in self.data.ods.items()
         ])
 
     def _edge_penalty(self, a: pair) -> LpAffineExpression:
@@ -189,7 +214,7 @@ class TimPass:
         weights: dict[pair, int] = {}
         for uv, ij in used_edges:
             prev = weights.get(ij, 0)
-            weights[ij] = prev + self.data.ods_mapped[uv].customers
+            weights[ij] = prev + self.data.ods[uv].customers
 
         return Solution(
             timetable=timetable,
