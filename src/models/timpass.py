@@ -78,36 +78,12 @@ class TimPass:
 
         outbound: dict[pair, dict[int, list[LpVariable]]] = {}
         inbound: dict[pair, dict[int, list[LpVariable]]] = {}
-        # outbound_aux: dict[pair, dict[int, list[LpVariable]]] = {}
-        # inbound_aux: dict[pair, dict[int, list[LpVariable]]] = {}
         print(f'Origin events: {self.data.events_aux[0].keys()}')
         print(f'Destination events: {self.data.events_aux[1].keys()}')
-        # self.constraint_useless_flows: dict[str, LpAffineExpression] = {}
         for uv, _p in self.var_p.items():
             for (from_node, to_node), p in _p.items():
-                # if from_node in uv or to_node in uv:
-                #     out_dict = outbound_aux
-                #     in_dict = inbound_aux
-                # else:
-                # out_dict = outbound
-                # in_dict = inbound
-                # from_ok = from_node in uv or from_node in self.data.events.keys()
-                # to_ok = to_node in uv or to_node in self.data.events.keys()
-                # if not (from_ok and to_ok):
-                #     print(f'Dropped flow variable: {uv=}, {(from_node, to_node)=}, {from_ok=}, {to_ok=}')
-                #     self.constraint_useless_flows[f'useless_flow_{uv}_{(from_node, to_node)}'] = p == 0
-                #     continue
                 outbound.setdefault(uv, {}).setdefault(from_node, []).append(p)
                 inbound.setdefault(uv, {}).setdefault(to_node, []).append(p)
-
-        # self.constraint_paths = {
-        #     f'paths_(origin={u},destination={v},event={e})': (
-        #         lpSum(outbound[(u, v)].get(e, []))
-        #         - lpSum(inbound[(u, v)].get(e, []))
-        #         == d(u, e) - d(v, e)
-        #     )
-        #     for (u, v) in self.var_p.keys() for e in data.events_all.keys()
-        # }
 
         self.constraint_paths: dict[str, LpAffineExpression] = {}
         self.constraint_od_flow: dict[str, LpAffineExpression] = {}
@@ -118,8 +94,6 @@ class TimPass:
                 if event.stop_id == origin:
                     var = LpVariable(
                         name=f'origin_flow_{(origin, destination)}_{event.event_id}',
-                        lowBound=0,
-                        upBound=1,
                         cat=LpBinary,
                     )
                     origin_flow.append(var)
@@ -127,8 +101,6 @@ class TimPass:
                 if event.stop_id == destination:
                     var = LpVariable(
                         name=f'destination_flow_{(origin, destination)}_{event.event_id}',
-                        lowBound=0,
-                        upBound=1,
                         cat=LpBinary,
                     )
                     destination_flow.append(var)
@@ -140,19 +112,22 @@ class TimPass:
                 key = f'path_{(origin, destination)}_{e}'
                 self.constraint_paths[key] = outbound_sum - inbound_sum == get_rhs(event)
                 # self.constraint_paths[key] = outbound_sum - inbound_sum == 0
-            # key = f'origin_flow_sum_{(origin, destination)}'
-            # self.constraint_od_flow[key] = lpSum(origin_flow) == 1
-            # key = f'destination_flow_sum_{(origin, destination)}'
-            # self.constraint_od_flow[key] = lpSum(destination_flow) == 1
+            key = f'origin_flow_sum_{(origin, destination)}'
+            self.constraint_od_flow[key] = lpSum(origin_flow) == 1
+            key = f'destination_flow_sum_{(origin, destination)}'
+            self.constraint_od_flow[key] = lpSum(destination_flow) == 1
 
 
 
         # Handle preprocessed events: set all flows to zero
         if data.preprocessed_flows is not None:
-            self.constraint_preprocessed = {
-                f'preprocess_{uv}_{ij}': self.var_p[uv][ij] == 0
-                for uv, _list in data.preprocessed_flows.items() for ij in _list
-            }
+            self.constraint_preprocessed: dict[str, LpAffineExpression] = {}
+            for uv, _list in data.preprocessed_flows.items():
+                for ij in _list:
+                    key = f'preprocess_{uv}_{ij}'
+                    if ij in self.var_p[uv]:
+                        self.constraint_preprocessed[key] = self.var_p[uv][ij] == 0
+
         else:
             self.constraint_preprocessed = {}
 

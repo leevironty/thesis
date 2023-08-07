@@ -31,11 +31,11 @@ def preprocess(data: Data) -> dict[pair[int], list[pair[int]]]:
     best_case: dict[int, dict[int, int]] = dict(nx.shortest_path_length(graph, weight=w_best))
 
     out: dict[pair[int], list[pair[int]]] = {}
-    for (u, v) in data.ods_mapped.keys():
+    for (u, v), od in data.ods_mapped.items():
         for (i, j), activity in data.activities_routable.items():
             gamma = best_case[u].get(i, math.inf)
             sigma = best_case[j].get(v, math.inf)
             if gamma + activity.lower_bound + sigma > beta[u][v]:
-                out.setdefault((u, v), []).append((i, j))
+                out.setdefault((od.origin, od.destination), []).append((i, j))
 
     return out
