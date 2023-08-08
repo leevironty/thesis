@@ -1,6 +1,7 @@
 import logging
 import sys
 
+
 logger = logging.getLogger(__name__)
 logger.propagate = False
 logger.setLevel(level=logging.DEBUG)
@@ -12,4 +13,9 @@ handler.setFormatter(fmt=formatter)
 
 logger.addHandler(handler)
 
-# logging.basicConfig(level=logging.DEBUG)
+
+def add_log_file_handler(path: str):
+    file_handler = logging.FileHandler(filename=path, mode='w')
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)

@@ -14,12 +14,12 @@ pair = tuple[T, T]
 
 def weight_worst_case(u: int, v: int, _, edges: dict[pair[int], Edge]) -> int:
     edge = edges[(u, v)]
-    return edge.upper_bound
+    return edge.upper_bound + edge.penalty
 
 
 def weight_best_case(u: int, v: int, _, edges: dict[pair[int], Edge]) -> int:
     edge = edges[(u, v)]
-    return edge.lower_bound
+    return edge.lower_bound + edge.penalty
 
 
 def preprocess(data: Data) -> dict[pair[int], list[pair[int]]]:

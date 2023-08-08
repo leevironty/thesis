@@ -37,6 +37,7 @@ class Edge:
     to_event: int = field(converter=int)
     lower_bound: int = field(default=0, init=False)
     upper_bound: int = field(default=0, init=False)
+    penalty: int = field(default=0, init=False)
 
 
 @define

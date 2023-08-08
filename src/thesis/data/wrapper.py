@@ -38,13 +38,25 @@ def read(path: str) -> pd.DataFrame:
 
 
 @define
+class SolverMeta:
+    status: str
+    gap: float
+    objective_value: int
+    num_variables: int
+    num_constraints: int
+
+@define
 class Solution:
-    timetable: dict[int, int]
+    # timetable: dict[int, int]
     used_edges: list[pair[pair[int]]]
     weights: dict[pair[int], int]
+    edge_durations: dict[pair[int], int]
     # TODO: add meta, contains e.g. solver status, gap, used time,
     # objective value etc.
 
+    # @classmethod
+    # def from_cycle(model: int ) -> 'Solution':
+    #     ...
 
 class _Counter:
     def __init__(self, init_value: int):
