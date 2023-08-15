@@ -8,10 +8,11 @@ import gzip
 from thesis.data.wrapper import Data
 from thesis import add_log_file_handler
 from thesis.data.generator import variations
-from models.timpass import TimPass
-from models.cycle_basis import TimPassCycle
-from models.preprocessor import preprocess
-from models.solver import get_solver
+
+# from thesis.models.mip.timpass import TimPass
+from thesis.models.mip.cycle_basis import TimPassCycle
+from thesis.models.mip.preprocessor import preprocess
+from thesis.models.mip.solver import get_solver
 import pulp
 
 
@@ -32,15 +33,21 @@ def generate_data(args: Namespace):
     # Model = TimPassCycle if args.cycle else TimPass
     Model = TimPassCycle
     start = time.time()
-    for i, variation in enumerate(variations(
-        data=dataset,
-        n=args.count,
-        od_share=args.od_share,
-        seed=args.seed,
-        activity_drop_prob=args.activity_drop_prob,
-    )):
+    if args.variations:
+        iterations = variations(
+            data=dataset,
+            n=args.count,
+            od_share=args.od_share,
+            seed=args.seed,
+            activity_drop_prob=args.activity_drop_prob,
+        )
+    else:
+        iterations = [dataset]
+    for i, variation in enumerate(iterations):
         log_path = output_folder / f'solution_{i:05}_log.log'
-        solver = get_solver(log_path.as_posix(), threads=args.threads, time_limit=args.time_limit)
+        solver = get_solver(
+            log_path.as_posix(), threads=args.threads, time_limit=args.time_limit
+        )
         if args.preprocess:
             variation.preprocessed_flows = preprocess(variation)
         model = Model(variation, solver)
@@ -50,7 +57,7 @@ def generate_data(args: Namespace):
                 f'Solution for problem {i} is not optimal! '
                 f'Status: {model.model.sol_status}'
             )
-            path = output_folder / 'non-optimal_{i:05}.pkl.gz'
+            path = output_folder / f'non-optimal_{i:05}.pkl.gz'
         else:
             variation.solution = model.get_solution()
             path = output_folder / f'solution_{i:05}.pkl.gz'

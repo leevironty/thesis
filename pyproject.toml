@@ -20,6 +20,10 @@ attrs = "^23.1.0"
 networkx = "^3.1"
 gurobipy = "^10.0.2"
 cattrs = "^23.1.2"
+torch = "^2.0.1"
+torch-geometric = "^2.3.1"
+lightning = "^2.0.6"
+wandb = "^0.15.8"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -27,6 +31,7 @@ pytest = "^7.4.0"
 pre-commit = "^3.3.3"
 ipykernel = "^6.25.0"
 debugpy = "^1.6.7"
+tabulate = "^0.9.0"
 
 [build-system]
 requires = ["poetry-core"]

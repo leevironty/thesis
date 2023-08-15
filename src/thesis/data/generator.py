@@ -1,6 +1,6 @@
 from typing import Iterable
 from thesis.data.wrapper import Data
-from thesis.data.schema import OD
+from thesis.data.schema import OD, ActivityType
 import random
 
 
@@ -22,12 +22,15 @@ def variations(
                 destination=od.destination,
                 customers=int(od.customers * (rng.random() * 4.8 + 0.2)),
             )
-            for key, od in rng.sample(list(data.ods.items()), k=od_size)}
+            for key, od in rng.sample(list(data.ods.items()), k=od_size)
+        }
         new_data = Data(
             config=data.config,
             activities={
-                key: value for key, value in data.activities.items()
+                key: value
+                for key, value in data.activities.items()
                 if rng.random() > activity_drop_prob
+                or value.type != ActivityType.CHANGE
             },
             events=data.events,
             ods=new_ods,

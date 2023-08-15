@@ -51,6 +51,40 @@ Can we find good solutions to TimPass efficiently, by first predicting the optim
         - Could we briefly fine-tune the model by generating a few examples in the same manner as in the training data generation? And could we do this within the time limit of 1h?
 
 
+### Updated plan / next steps / diff to original plan
+- Approach
+    - Only DL methods, as we can be almost sure that the "traditional" methods will not perform well.
+    - Models
+        - GAT, all node & edge features are first projected to the same feature space.
+        - ??? Some Heterogenous by default -model? Edge features are non-trivial then.
+        - Some actual transformer model, i.e. non-convolution based (Pure transfomers are powerful graph learners)
+- Focus on showing the potential of the proposed approach
+    - Small dataset, about the size of "toy2"
+    - Easy to calculate the PESP baseline, PESP improvement, TimPass optimum
+    - Investigate how this training method scales to larger datasets
+        - Probably can't compute exact PESP -> use heuristic as in LinTim
+    - Investigate how the quality of the training data solutions affects performance
+        - Idea: if poor generalization to larger datasets, maybe we can generate
+        training data for larger datasets, but with non-optimal solutions
+- Next
+    - Data improvements
+        - [ ] Generate random lines
+        - [ ] Randomize edge durations (make sure this is still feasible!)
+        - [ ] Generate random OD pairs with random demand
+        - [ ] Separate problem data from the correct labels
+        - [ ] Augment the data with pre-computed "shortest" paths according to lower bound routing
+        - [ ] Generate a large number (50k+) of training samples
+    - Model improvements
+        - [ ] Rethink target weight scaling / normalization
+            - Multiple correct solutions
+            - Proportional solutions are fine
+        - [ ] Setup hyperparameter tuning with WandB & triton
+        - [ ] Implement multiple other model architectures
+    - Other
+        - [ ] Include PESP solution validation in the training metrics
+            - Predict weights, solve timetable, solve shortest paths, calculate objective
+            - Must solve paths again due to scaling of weights
+
 
 
 ## Possible issues to think about beforehand

@@ -6,31 +6,37 @@ from pulp import (
     LpBinary,
     LpAffineExpression,
     lpSum,
+    LpSolver,
 )
 from thesis.data.wrapper import Data, Solution
-from models.solver import get_solver
+
+# from models.solver import get_solver
+import networkx as nx
+
 
 pair = tuple[int, int]
 
 
-class TimPass:
-    def __init__(self, data: Data):
+class TimPassCycle:
+    def __init__(self, data: Data, solver: LpSolver):
         self.data = data
+        self.solver = solver
+
+        graph = nx.Graph()
+        graph.add_edges_from(data.activities_constrainable)
+        cycles: list[list[int]] = nx.cycle_basis(graph)
+
         self.model = LpProblem(
             name='TimPass',
             sense=LpMinimize,
         )
-        self.var_pi: dict[int, LpVariable] = LpVariable.dict(
-            name='pi',
-            indices=data.events.keys(),
-            lowBound=0,
-            upBound=data.config.period_length - 1,
-            cat=LpInteger
+        self.var_z: dict[int, LpVariable] = LpVariable.dicts(
+            name='z', indices=list(range(len(cycles))), cat=LpInteger
         )
-        self.var_z: dict[pair, LpVariable] = LpVariable.dicts(
-            name='z',
-            indices=data.activities_constrainable.keys(),
-            cat=LpInteger
+        self.var_x: dict[pair, LpVariable] = LpVariable.dicts(
+            name='x',
+            indices=(data.activities_constrainable.keys()),
+            cat=LpInteger,
         )
         self.var_p: dict[pair, dict[pair, LpVariable]] = LpVariable.dicts(
             name='p',
@@ -52,23 +58,28 @@ class TimPass:
             for a, activity in data.activities_constrainable.items()
         }
         # objective linearization
-        big_m = max([
-            activity.upper_bound + activity.penalty
-            for activity in data.activities.values()
-        ])
+        big_m = max(
+            [
+                activity.upper_bound + activity.penalty
+                for activity in data.activities.values()
+            ]
+        )
         self.constraint_l_mp = {
             f'lin_mp_{od}_{a}': lin <= big_m * self.var_p[od][a]
-            for od, _v in self.var_l.items() for a, lin in _v.items()
+            for od, _v in self.var_l.items()
+            for a, lin in _v.items()
         }
         self.constraint_l_d = {
             f'lin_d_{od}_{a}': lin <= self._edge_penalty(a)
-            for od, _v in self.var_l.items() for a, lin in _v.items()
+            for od, _v in self.var_l.items()
+            for a, lin in _v.items()
         }
         self.constraint_l_d_mp = {
             f'lin_d_mp_{od}_{a}': (
                 lin >= self._edge_penalty(a) - big_m * (1 - self.var_p[od][a])
             )
-            for od, _v in self.var_l.items() for a, lin in _v.items()
+            for od, _v in self.var_l.items()
+            for a, lin in _v.items()
         }
 
         # Constraint 8: path start and endpoints
@@ -77,39 +88,45 @@ class TimPass:
 
         outbound: dict[pair, dict[int, list[LpVariable]]] = {}
         inbound: dict[pair, dict[int, list[LpVariable]]] = {}
-        # outbound_aux: dict[pair, dict[int, list[LpVariable]]] = {}
-        # inbound_aux: dict[pair, dict[int, list[LpVariable]]] = {}
         print(f'Origin events: {self.data.events_aux[0].keys()}')
         print(f'Destination events: {self.data.events_aux[1].keys()}')
         self.constraint_useless_flows: dict[str, LpAffineExpression] = {}
         for uv, _p in self.var_p.items():
             for (from_node, to_node), p in _p.items():
-                from_ok = from_node in uv or from_node in self.data.events.keys()
-                to_ok = to_node in uv or to_node in self.data.events.keys()
-                if not (from_ok and to_ok):
-                    # print(f'Dropped flow variable: {uv=}, {(from_node, to_node)=}, {from_ok=}, {to_ok=}')
-                    # self.constraint_useless_flows[f'useless_flow_{uv}_{(from_node, to_node)}'] = p == 0
-                    continue
                 outbound.setdefault(uv, {}).setdefault(from_node, []).append(p)
                 inbound.setdefault(uv, {}).setdefault(to_node, []).append(p)
 
         self.constraint_paths = {
             f'paths_(origin={u},destination={v},event={e})': (
-                lpSum(outbound[(u, v)].get(e, []))
-                - lpSum(inbound[(u, v)].get(e, []))
+                lpSum(outbound[(u, v)].get(e, [])) - lpSum(inbound[(u, v)].get(e, []))
                 == d(u, e) - d(v, e)
             )
-            for (u, v) in self.var_p.keys() for e in data.events_all.keys()
+            for (u, v) in self.var_p.keys()
+            for e in data.events_all.keys()
         }
 
         # Handle preprocessed events: set all flows to zero
         if data.preprocessed_flows is not None:
             self.constraint_preprocessed = {
                 f'preprocess_{uv}_{ij}': self.var_p[uv][ij] == 0
-                for uv, _list in data.preprocessed_flows.items() for ij in _list
+                for uv, _list in data.preprocessed_flows.items()
+                for ij in _list
             }
         else:
             self.constraint_preprocessed = {}
+
+        # cycle constraint
+        self.constraint_cycle: dict[str, LpAffineExpression] = {}
+        for index, cycle in enumerate(cycles):
+            rhs = 0
+            lhs = self.var_z[index] * self.data.config.period_length
+            for i, j in zip(cycle, cycle[1:] + [cycle[0]]):
+                if (i, j) in self.data.activities:
+                    rhs += self.var_x[(i, j)]
+                else:
+                    rhs -= self.var_x[(j, i)]
+            key = f'cycle_{index}'
+            self.constraint_cycle[key] = lhs == rhs
 
         self.objective = self._get_objective()
 
@@ -121,31 +138,26 @@ class TimPass:
         self.model.extend(self.constraint_l_d_mp)
         self.model.extend(self.constraint_paths)
         self.model.extend(self.constraint_preprocessed)
-        # self.model.extend(self.constraint_useless_flows)
-        # self.model.extend(self.constraint_aux_flows)
+        self.model.extend(self.constraint_cycle)
 
     def _get_objective(self) -> LpAffineExpression:
-        return lpSum([
-            od.customers * lpSum([
-                self.var_l[uv][a]
-                for a in self.data.activities.keys()
-            ])
-            for uv, od in self.data.ods_mapped.items()
-        ])
+        return lpSum(
+            [
+                od.customers
+                * lpSum([self.var_l[uv][a] for a in self.data.activities.keys()])
+                for uv, od in self.data.ods_mapped.items()
+            ]
+        )
 
     def _edge_penalty(self, a: pair) -> LpAffineExpression:
         return self._edge_duration(a) + self.data.activities[a].penalty
 
-    def _edge_duration(self, a: pair) -> LpAffineExpression:
+    def _edge_duration(self, a: pair) -> LpVariable | LpAffineExpression:
         i, j = a
-        return (
-            self.var_pi[j] - self.var_pi[i]
-            + self.var_z[a] * self.data.config.period_length
-        )
+        return self.var_x[(i, j)]
 
     def solve(self):
-        solver = get_solver()
-        self.model.solve(solver)
+        self.model.solve(self.solver)
 
     def get_solution(self) -> Solution:
         def result(var: LpVariable) -> int:
@@ -155,13 +167,14 @@ class TimPass:
                 raise ValueError('Encountered None in solution values!')
             return int(value)
 
-        timetable = {
-            event_id: result(pi)
-            for event_id, pi in self.var_pi.items()
-        }
+        # timetable = {
+        #     event_id: result(pi)
+        #     for event_id, pi in self.var_pi.items()
+        # }
         used_edges = [
             (uv, ij)
-            for uv, _var in self.var_p.items() for ij, p in _var.items()
+            for uv, _var in self.var_p.items()
+            for ij, p in _var.items()
             if p.value() == 1
         ]
         weights: dict[pair, int] = {}
@@ -169,28 +182,29 @@ class TimPass:
             prev = weights.get(ij, 0)
             weights[ij] = prev + self.data.ods_mapped[uv].customers
 
+        edge_durations = {ij: result(var) for ij, var in self.var_x.items()}
         return Solution(
-            timetable=timetable,
+            # timetable=timetable,
             used_edges=used_edges,
             weights=weights,
-
+            edge_durations=edge_durations,
         )
 
-    def print_solution(self):
-        timetable = {
-            event_id: pi.value()
-            for event_id, pi in self.var_pi.items()
-        }
-        used_edges = {
-            (uv, ij): p.value()
-            for uv, _var in self.var_p.items() for ij, p in _var.items()
-        }
-        print('Timetable:')
-        for key, value in timetable.items():
-            print(f'{key}: {value}')
-        print('Used edges:')
-        for key, value in used_edges.items():
-            print(f'{key}: {value}')
+    # def print_solution(self):
+    #     timetable = {
+    #         event_id: pi.value()
+    #         for event_id, pi in self.var_pi.items()
+    #     }
+    #     used_edges = {
+    #         (uv, ij): p.value()
+    #         for uv, _var in self.var_p.items() for ij, p in _var.items()
+    #     }
+    #     print('Timetable:')
+    #     for key, value in timetable.items():
+    #         print(f'{key}: {value}')
+    #     print('Used edges:')
+    #     for key, value in used_edges.items():
+    #         print(f'{key}: {value}')
 
     def print_constraints(self):
         print('Constraints:')
@@ -200,13 +214,3 @@ class TimPass:
     def print_objective(self):
         print('Objective:')
         print(self.model.objective)
-
-    # def print_definition_counts(self):
-
-    #     print('Variables:')
-    #     print(f'count (pi) = {len(self.var_pi)}')
-    #     print(f'count (p) = {len(self.var_p)}')
-    #     print(f'count (z) = {len(self.var_z)}')
-    #     print(f'count (lin) = {sum(len(d) for d in self.var_l.values())}')
-    #     print('Constraints')
-    #     print(f'count (l_d) = {len(self.)}')

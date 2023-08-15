@@ -5,7 +5,7 @@ import math
 import networkx as nx
 
 from thesis.data.wrapper import Data
-from thesis.data.schema import Activity, Edge
+from thesis.data.schema import Edge
 
 T = TypeVar('T')
 
@@ -27,11 +27,15 @@ def preprocess(data: Data) -> dict[pair[int], list[pair[int]]]:
     graph.add_edges_from(data.activities_routable)
     w_worst = partial(weight_worst_case, edges=data.activities_routable)
     w_best = partial(weight_best_case, edges=data.activities_routable)
-    beta: dict[int, dict[int, int]] = dict(nx.shortest_path_length(graph, weight=w_worst))
-    best_case: dict[int, dict[int, int]] = dict(nx.shortest_path_length(graph, weight=w_best))
+    beta: dict[int, dict[int, int]] = dict(
+        nx.shortest_path_length(graph, weight=w_worst)
+    )
+    best_case: dict[int, dict[int, int]] = dict(
+        nx.shortest_path_length(graph, weight=w_best)
+    )
 
     out: dict[pair[int], list[pair[int]]] = {}
-    for (u, v) in data.ods_mapped.keys():
+    for u, v in data.ods_mapped.keys():
         for (i, j), activity in data.activities_routable.items():
             gamma = best_case[u].get(i, math.inf)
             sigma = best_case[j].get(v, math.inf)

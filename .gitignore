@@ -7,3 +7,8 @@ timpasslib
 .python-version
 __pycache__
 solutions
+.pytest_cache
+slurm
+snapshot*
+wandb
+lightning_logs
