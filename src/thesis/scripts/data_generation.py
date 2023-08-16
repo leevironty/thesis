@@ -7,7 +7,7 @@ import gzip
 
 from thesis.data.wrapper import Data
 from thesis import add_log_file_handler
-from thesis.data.generator import variations
+from thesis.data.generator import toy_variations
 
 # from thesis.models.mip.timpass import TimPass
 from thesis.models.mip.cycle_basis import TimPassCycle
@@ -34,13 +34,14 @@ def generate_data(args: Namespace):
     Model = TimPassCycle
     start = time.time()
     if args.variations:
-        iterations = variations(
-            data=dataset,
-            n=args.count,
-            od_share=args.od_share,
-            seed=args.seed,
-            activity_drop_prob=args.activity_drop_prob,
-        )
+        # iterations = variations(
+        #     data=dataset,
+        #     n=args.count,
+        #     od_share=args.od_share,
+        #     seed=args.seed,
+        #     activity_drop_prob=args.activity_drop_prob,
+        # )
+        iterations = toy_variations(n=args.count, seed=args.seed)
     else:
         iterations = [dataset]
     for i, variation in enumerate(iterations):
@@ -61,6 +62,7 @@ def generate_data(args: Namespace):
         else:
             variation.solution = model.get_solution()
             path = output_folder / f'solution_{i:05}.pkl.gz'
+        logger.info(f'Solved problem {i}')
         with gzip.open(path, 'wb') as file:
             pickle.dump(variation, file)
     end = time.time()

@@ -78,6 +78,7 @@ Can we find good solutions to TimPass efficiently, by first predicting the optim
         - [ ] Rethink target weight scaling / normalization
             - Multiple correct solutions
             - Proportional solutions are fine
+        - [ ] Oversquashing problem and a FA layer as a solution for that
         - [ ] Setup hyperparameter tuning with WandB & triton
         - [ ] Implement multiple other model architectures
     - Other

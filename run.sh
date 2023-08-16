@@ -1,10 +1,10 @@
 #!/bin/bash -l
 
-#SBATCH --time=00:15:00
+#SBATCH --time=00:05:00
 #SBATCH --mem=2G
-#SBATCH --job-name=naming-test
-#SBATCH --array=0
-#SBATCH --cpus-per-task=32
+#SBATCH --job-name=big-data-gen-staging
+#SBATCH --array=0-19
+#SBATCH --cpus-per-task=8
 #SBATCH --mail-type=END,FAIL
 #SBATCH --output=slurm/main/%A_%a.log
 #SBATCH --error=slurm/main/%A_%a.log
@@ -26,10 +26,18 @@ mkdir -p $LOG_PATH
 #     --seed $SLURM_ARRAY_TASK_ID --out solutions/data/naming-test \
 #     --time-limit 120 timpasslib/toy_2
 
+# srun --output="$LOG_PATH/$SLURM_ARRAY_TASK_ID.log" \
+#     --error="$LOG_PATH/$SLURM_ARRAY_TASK_ID.log" \
+#     poetry run thesis evaluate \
+#     --time-limit 600 --baseline timpasslib/grid
+
 srun --output="$LOG_PATH/$SLURM_ARRAY_TASK_ID.log" \
     --error="$LOG_PATH/$SLURM_ARRAY_TASK_ID.log" \
-    poetry run thesis evaluate \
-    --time-limit 600 --baseline timpasslib/grid
+    poetry run thesis data-gen \
+    --count 10 \
+    --seed $SLURM_ARRAY_TASK_ID --out solutions/data/big-gen-toy-staging \
+    --time-limit 40 timpasslib/toy
+
 
 # srun env | sort
 
