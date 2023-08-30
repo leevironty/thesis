@@ -68,12 +68,12 @@ Can we find good solutions to TimPass efficiently, by first predicting the optim
         training data for larger datasets, but with non-optimal solutions
 - Next
     - Data improvements
-        - [ ] Generate random lines
-        - [ ] Randomize edge durations (make sure this is still feasible!)
-        - [ ] Generate random OD pairs with random demand
-        - [ ] Separate problem data from the correct labels
+        - [x] Generate random lines
+        - [x] Randomize edge durations (make sure this is still feasible!)
+        - [x] Generate random OD pairs with random demand
+        - [x] Separate problem data from the correct labels
         - [ ] Augment the data with pre-computed "shortest" paths according to lower bound routing
-        - [ ] Generate a large number (50k+) of training samples
+        - [x] Generate a large number (50k+) of training samples
     - Model improvements
         - [ ] Rethink target weight scaling / normalization
             - Multiple correct solutions

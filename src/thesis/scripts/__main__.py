@@ -4,7 +4,8 @@ import os
 
 from thesis.scripts.data_generation import generate_data
 from thesis.scripts.evaluation import run_evaluation
-from thesis.scripts.train import run_train
+from thesis.scripts.train import attach_train_parser
+from thesis.scripts.transform_data import attach_run_parser
 
 
 logger = logging.getLogger('thesis.scripts')
@@ -67,15 +68,16 @@ def main():
     eval_parser = main_subparsers.add_parser(
         name='evaluate', help='Evaluate produced weights'
     )
-    eval_parser.add_argument('dataset', type=str)
+    eval_parser.add_argument('--dataset', required=True, type=str)
     eval_parser.add_argument('--baseline', default=True, action=BooleanOptionalAction)
     eval_parser.add_argument('--model', type=str, choices=[])
     eval_parser.add_argument('--out', type=str, default='evaluations')
     eval_parser.add_argument('--time-limit', type=int, default=300)
+    eval_parser.add_argument('--checkpoint', type=str)
     eval_parser.set_defaults(func=run_evaluation)
 
-    train_parser = main_subparsers.add_parser(name='train', help='Train GNN')
-    train_parser.set_defaults(func=run_train)
+    attach_run_parser(main_subparsers)
+    attach_train_parser(main_subparsers)
 
     args = parser.parse_args()
     args.func(args)

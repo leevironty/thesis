@@ -6,6 +6,7 @@ from pulp import (
     LpAffineExpression,
     lpSum,
     LpSolver,
+    LpSolutionOptimal,
 )
 from thesis.data.wrapper import Data
 
@@ -79,6 +80,11 @@ class PESP:
 
     def solve(self):
         self.model.solve(self.solver)
+
+    def get_durations(self) -> dict[pair, int]:
+        if self.model.sol_status != LpSolutionOptimal:
+            raise RuntimeError('Did not find an optimal solution!')
+        return {key: var.value() for key, var in self.var_x.items()}
 
     def print_constraints(self):
         print('Constraints:')

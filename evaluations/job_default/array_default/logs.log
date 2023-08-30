@@ -1,5 +1,8 @@
-INFO : 2023-08-11 00:25:44,650 : thesis.scripts.evaluation : Starting the evaluation process with arguments: Namespace(job_id='job_default', job_array_id='array_default', threads=8, command='evaluate', dataset='timpasslib/grid', baseline=True, model=None, out='evaluations', time_limit=300, func=<function run_evaluation at 0x119410f70>)
-INFO : 2023-08-11 00:25:44,651 : thesis.scripts.evaluation : Reading the evaluation dataset
-INFO : 2023-08-11 00:25:44,741 : thesis.scripts.evaluation : Evaluating baseline solution
-INFO : 2023-08-11 00:25:47,907 : thesis.scripts.evaluation : Got weights, running the PESP model
-INFO : 2023-08-11 00:30:48,181 : thesis.scripts.evaluation : Got baseline objective value None
+INFO : 2023-08-24 10:11:37,830 : thesis.scripts.evaluation : Starting the evaluation process with arguments: Namespace(job_id='job_default', job_array_id='array_default', threads=8, command='evaluate', dataset='timpasslib/toy_2', baseline=True, model=None, out='evaluations', time_limit=300, checkpoint='thesis/36rg7ngl/checkpoints/epoch=4-step=1840.ckpt', func=<function run_evaluation at 0x128f1cee0>)
+INFO : 2023-08-24 10:11:37,831 : thesis.scripts.evaluation : Reading the evaluation dataset
+INFO : 2023-08-24 10:11:37,888 : thesis.scripts.evaluation : Evaluating baseline solution
+INFO : 2023-08-24 10:11:37,949 : thesis.scripts.evaluation : Got weights, running the PESP model
+INFO : 2023-08-24 10:11:38,724 : thesis.scripts.evaluation : Got baseline objective value 19446.0
+INFO : 2023-08-24 10:11:39,573 : thesis.scripts.evaluation : (robust eval) Got baseline objective value  19226.0
+INFO : 2023-08-24 10:11:39,573 : thesis.scripts.evaluation : Evaluating the given checkpoint thesis/36rg7ngl/checkpoints/epoch=4-step=1840.ckpt
+INFO : 2023-08-24 10:11:39,938 : thesis.scripts.evaluation : Len weights: 996
