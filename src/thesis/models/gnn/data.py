@@ -1,12 +1,16 @@
 import pathlib
+import logging
 
 import torch
 from torch_geometric.data import HeteroData
 from torch_geometric.data.data import BaseData
 from torch_geometric.loader import DataLoader
 from torch_geometric.data import Dataset
+from torch_geometric.transforms import AddMetaPaths
+
 
 from thesis.data.wrapper import Data as ThesisData
+from thesis.evaluation.model import get_trivial_weights
 from thesis.data.schema import (
     Event,
     EventType,
@@ -15,6 +19,26 @@ from thesis.data.schema import (
     Direction,
     OD,
 )
+
+
+logger = logging.getLogger(__name__)
+
+
+class SolutionDataset(Dataset):
+    def __init__(self, filenames: list[str]):
+        self._paths = filenames
+        super().__init__()
+
+    @property
+    def processed_file_names(self):
+        return self._paths
+    
+    def get(self, idx: int) -> HeteroData:
+        return torch.load(self._paths[idx])
+
+    def len(self) -> int:
+        return len(self._paths)
+
 
 
 class TimPassDataset(Dataset):
@@ -42,7 +66,7 @@ class TimPassDataset(Dataset):
 
 
 def get_data(path: str) -> list[HeteroData]:
-    paths = list(pathlib.Path(path).glob('**/solution_*.pkl.gz'))
+    paths = sorted(list(pathlib.Path(path).glob('**/solution_*.pkl.gz')))
 
     return [transform(ThesisData.from_pickle(file.as_posix())) for file in paths]
 
@@ -89,19 +113,26 @@ def get_data_list_no_transform(paths: list[pathlib.Path]) -> list[HeteroData]:
     return [get_file(path) for path in paths]
 
 
+def get_dataset(paths: list[pathlib.Path]) -> Dataset:
+    filenames = [path.as_posix() for path in paths]
+    return SolutionDataset(filenames)
+
+
 def get_loaders(
-    path: str, threads: int = 1, batch_size: int = 1
+    path: str, threads: int = 1, batch_size: int = 1, test_share: float = 0.1, val_share: float = 0.1
 ) -> tuple[DataLoader, DataLoader, DataLoader]:
+    assert test_share + val_share < 1.0, 'Sum of shares must be below one!'
     # paths = list(pathlib.Path(path).glob('**/solution_*.pkl.gz'))
-    paths = list(pathlib.Path(path).glob('**/solution_*.pkl.gz'))
-    test_share = 0.1
-    val_share = 0.1
+    logger.debug('Listing file paths')
+    paths = sorted(list(pathlib.Path(path).glob('**/solution_*.pt')))
     test_index = int((test_share + val_share) * len(paths))
     val_index = int(val_share * len(paths))
     # test_dataset = TimPassDataset(paths[:-test_index])
-    train_dataset = get_data_list_no_transform(paths[:-test_index])
-    val_dataset = get_data_list_no_transform(paths[-test_index:-val_index])
-    test_dataset = get_data_list_no_transform(paths[-val_index:])
+    logger.debug('Getting train loader')
+    train_dataset = get_dataset(paths[:-test_index])
+    logger.debug('Getting val and test loaders')
+    val_dataset = get_dataset(paths[-test_index:-val_index])
+    test_dataset = get_dataset(paths[-val_index:])
 
     train_loader = DataLoader(
         dataset=train_dataset,
@@ -161,6 +192,7 @@ def transform_od(od: OD, mean: float) -> list[float]:
 
 
 def transform(data: ThesisData) -> HeteroData:
+    assert data.preferences is not None
     out = HeteroData()
     event_map: dict[int, int] = dict(
         (key, i) for i, key in enumerate(data.events.keys())
@@ -223,8 +255,13 @@ def transform(data: ThesisData) -> HeteroData:
     target_mask: list[int] = []
     if data.solution is not None:
         target_values: list[float] = []
+    trivial_weights = get_trivial_weights(data)
+    max_trivial_weight = max(trivial_weights.values())
     for i, ((u, v), activity) in enumerate(data.activities_constrainable.items()):
+        preference = data.preferences.get((u, v), 1.0)
         features = transform_activity(activity, data.config.period_length)
+        norm_trivial_weight = trivial_weights.get((u, v), 0) / max_trivial_weight
+        features += [preference, norm_trivial_weight]
         route_features.append(features)
         routes.append((event_map[u], event_map[v]))
         routes.append((event_map[v], event_map[u]))
@@ -285,6 +322,13 @@ def transform(data: ThesisData) -> HeteroData:
         [1, 0], :
     ].contiguous()
     out['stop', 'linked', 'stop'].edge_index = stop_stop_tensor
+
+    metapaths = [
+        [('od', 'origin', 'stop'), ('stop', 'event'), ('event', 'route_features')],
+        [('od', 'destination', 'stop'), ('stop', 'event'), ('event', 'route_features')],
+        [('route_features', 'event'), ('event', 'route_features')],
+    ]
+    out = AddMetaPaths(metapaths)(out)
 
     return out
 

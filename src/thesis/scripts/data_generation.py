@@ -27,7 +27,6 @@ def generate_data(args: Namespace):
 
     logger.info(f'Starting the data generation process with arguments: {args}')
     logger.info('Reading the base dataset')
-    dataset = Data.from_path(args.dataset)
     logger.info('Generating variations and solving the problems.')
 
     # Model = TimPassCycle if args.cycle else TimPass
@@ -43,11 +42,12 @@ def generate_data(args: Namespace):
         # )
         iterations = toy_variations(n=args.count, seed=args.seed)
     else:
+        dataset = Data.from_path(args.dataset)
         iterations = [dataset]
     for i, variation in enumerate(iterations):
         log_path = output_folder / f'solution_{i:05}_log.log'
         solver = get_solver(
-            log_path.as_posix(), threads=args.threads, time_limit=args.time_limit
+            log_path=log_path.as_posix(), threads=args.threads, time_limit=args.time_limit
         )
         if args.preprocess:
             variation.preprocessed_flows = preprocess(variation)

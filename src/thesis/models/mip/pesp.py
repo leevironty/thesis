@@ -1,3 +1,5 @@
+import warnings
+
 from pulp import (
     LpProblem,
     LpVariable,
@@ -68,8 +70,11 @@ class PESP:
         self.model.extend(self.constraint_cycle)
 
     def _get_objective(self) -> LpAffineExpression:
+        # return lpSum(
+        #     [self._edge_penalty(ij) * weight for ij, weight in self.weights.items()]
+        # )
         return lpSum(
-            [self._edge_penalty(ij) * weight for ij, weight in self.weights.items()]
+            [self._edge_penalty(ij) * self.weights.get(ij, 0) for ij in self.data.activities.keys()]
         )
 
     def _edge_penalty(self, a: pair) -> LpAffineExpression:
@@ -81,9 +86,13 @@ class PESP:
     def solve(self):
         self.model.solve(self.solver)
 
-    def get_durations(self) -> dict[pair, int]:
+    def get_durations(self, allow_non_optimal: bool) -> dict[pair, int]:
         if self.model.sol_status != LpSolutionOptimal:
-            raise RuntimeError('Did not find an optimal solution!')
+            msg = 'Did not find an optimal solution!'
+            if allow_non_optimal:
+                warnings.warn(msg + ' Continuing as this is allowed.')
+            else:
+                raise RuntimeError(msg)
         return {key: var.value() for key, var in self.var_x.items()}
 
     def print_constraints(self):

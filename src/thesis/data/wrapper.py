@@ -53,6 +53,7 @@ class Solution:
     used_edges: list[pair[pair[int]]]
     weights: dict[pair[int], int]
     edge_durations: dict[pair[int], int]
+    aux: dict | None = field(default=None)
     # TODO: add meta, contains e.g. solver status, gap, used time,
     # objective value etc.
 
@@ -70,6 +71,10 @@ class _Counter:
         return self.value
 
 
+
+Preference = dict[tuple[int, int], dict[tuple[int, int], float]]
+
+
 @define
 class Data:
     config: Config
@@ -81,6 +86,7 @@ class Data:
     ods: dict[pair[int], OD]
     ods_mapped: dict[pair[int], OD] = field(init=False)
     solution: Solution | None = field(default=None)
+    preferences: Preference | None = field(default=None)
     preprocessed_flows: dict[pair[int], list[pair[int]]] | None = field(default=None)
 
     def __attrs_post_init__(self):

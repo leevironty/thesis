@@ -1,8 +1,26 @@
-INFO : 2023-08-24 10:11:37,830 : thesis.scripts.evaluation : Starting the evaluation process with arguments: Namespace(job_id='job_default', job_array_id='array_default', threads=8, command='evaluate', dataset='timpasslib/toy_2', baseline=True, model=None, out='evaluations', time_limit=300, checkpoint='thesis/36rg7ngl/checkpoints/epoch=4-step=1840.ckpt', func=<function run_evaluation at 0x128f1cee0>)
-INFO : 2023-08-24 10:11:37,831 : thesis.scripts.evaluation : Reading the evaluation dataset
-INFO : 2023-08-24 10:11:37,888 : thesis.scripts.evaluation : Evaluating baseline solution
-INFO : 2023-08-24 10:11:37,949 : thesis.scripts.evaluation : Got weights, running the PESP model
-INFO : 2023-08-24 10:11:38,724 : thesis.scripts.evaluation : Got baseline objective value 19446.0
-INFO : 2023-08-24 10:11:39,573 : thesis.scripts.evaluation : (robust eval) Got baseline objective value  19226.0
-INFO : 2023-08-24 10:11:39,573 : thesis.scripts.evaluation : Evaluating the given checkpoint thesis/36rg7ngl/checkpoints/epoch=4-step=1840.ckpt
-INFO : 2023-08-24 10:11:39,938 : thesis.scripts.evaluation : Len weights: 996
+INFO : 2023-09-18 16:05:02,132 : thesis.scripts.evaluation : Starting the evaluation process with arguments: Namespace(job_id='job_default', job_array_id='array_default', threads=4, command='evaluate', dataset='solutions/data/multi-solution-big', share=0.01, out='evaluations', time_limit=30, checkpoint='checkpoint-pref-order.ckpt', func=<function run_evaluation at 0x16666a5f0>)
+INFO : 2023-09-18 16:05:02,132 : thesis.scripts.evaluation : Reading the evaluation dataset
+INFO : 2023-09-18 16:05:02,309 : thesis.scripts.evaluation : Evaluating 1 out of 20
+INFO : 2023-09-18 16:05:02,466 : thesis.scripts.evaluation : Evaluating 2 out of 20
+INFO : 2023-09-18 16:05:02,509 : thesis.scripts.evaluation : Evaluating 3 out of 20
+INFO : 2023-09-18 16:05:03,578 : thesis.scripts.evaluation : Evaluating 4 out of 20
+INFO : 2023-09-18 16:05:03,634 : thesis.scripts.evaluation : Evaluating 5 out of 20
+INFO : 2023-09-18 16:05:04,026 : thesis.scripts.evaluation : Evaluating 6 out of 20
+INFO : 2023-09-18 16:05:04,152 : thesis.scripts.evaluation : Evaluating 7 out of 20
+INFO : 2023-09-18 16:05:04,454 : thesis.scripts.evaluation : Evaluating 8 out of 20
+INFO : 2023-09-18 16:05:04,510 : thesis.scripts.evaluation : Evaluating 9 out of 20
+INFO : 2023-09-18 16:05:04,929 : thesis.scripts.evaluation : Evaluating 10 out of 20
+INFO : 2023-09-18 16:05:05,117 : thesis.scripts.evaluation : Evaluating 11 out of 20
+WARNING : 2023-09-18 16:05:35,390 : thesis.scripts.evaluation : Skipped file solutions/data/multi-solution-big/job_22217355/array_6/solution_0533_06.pkl.gz!
+INFO : 2023-09-18 16:05:35,400 : thesis.scripts.evaluation : Evaluating 12 out of 20
+INFO : 2023-09-18 16:05:38,604 : thesis.scripts.evaluation : Evaluating 13 out of 20
+INFO : 2023-09-18 16:05:38,687 : thesis.scripts.evaluation : Evaluating 14 out of 20
+INFO : 2023-09-18 16:05:38,736 : thesis.scripts.evaluation : Evaluating 15 out of 20
+INFO : 2023-09-18 16:05:38,778 : thesis.scripts.evaluation : Evaluating 16 out of 20
+WARNING : 2023-09-18 16:06:09,237 : thesis.scripts.evaluation : Skipped file solutions/data/multi-solution-big/job_22217355/array_6/solution_0011_03.pkl.gz!
+INFO : 2023-09-18 16:06:09,244 : thesis.scripts.evaluation : Evaluating 17 out of 20
+WARNING : 2023-09-18 16:06:39,658 : thesis.scripts.evaluation : Skipped file solutions/data/multi-solution-big/job_22217355/array_6/solution_0475_06.pkl.gz!
+INFO : 2023-09-18 16:06:39,668 : thesis.scripts.evaluation : Evaluating 18 out of 20
+INFO : 2023-09-18 16:06:40,019 : thesis.scripts.evaluation : Evaluating 19 out of 20
+INFO : 2023-09-18 16:06:41,738 : thesis.scripts.evaluation : Evaluating 20 out of 20
+WARNING : 2023-09-18 16:07:12,073 : thesis.scripts.evaluation : Skipped file solutions/data/multi-solution-big/job_22217355/array_6/solution_0049_04.pkl.gz!

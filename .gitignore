@@ -13,3 +13,6 @@ snapshot*
 wandb
 lightning_logs
 checkpoints
+*.ckpt
+*.pkl
+*.prof

@@ -8,11 +8,11 @@ logs:
 
 PHONY: push
 push:
-	git check-ignore **/.* **/* | rsync -av --exclude-from=/dev/fd/0 ../thesis triton:
+	rsync -av --exclude-from=.gitignore ../thesis triton:/scratch/work/rontyl1
 
 PHONY: run
 run: push
-	ssh triton 'cd thesis && sbatch --mail-user=${AALTO_MAIL} run.sh'
+	ssh triton 'cd /scratch/work/rontyl1/thesis && sbatch --mail-user=${AALTO_MAIL} run.sh'
 
 # PHONY: test
 # test:

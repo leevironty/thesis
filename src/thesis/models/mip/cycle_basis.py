@@ -88,9 +88,9 @@ class TimPassCycle:
 
         outbound: dict[pair, dict[int, list[LpVariable]]] = {}
         inbound: dict[pair, dict[int, list[LpVariable]]] = {}
-        print(f'Origin events: {self.data.events_aux[0].keys()}')
-        print(f'Destination events: {self.data.events_aux[1].keys()}')
-        self.constraint_useless_flows: dict[str, LpAffineExpression] = {}
+        # print(f'Origin events: {self.data.events_aux[0].keys()}')
+        # print(f'Destination events: {self.data.events_aux[1].keys()}')
+        # self.constraint_useless_flows: dict[str, LpAffineExpression] = {}
         for uv, _p in self.var_p.items():
             for (from_node, to_node), p in _p.items():
                 outbound.setdefault(uv, {}).setdefault(from_node, []).append(p)
@@ -121,12 +121,13 @@ class TimPassCycle:
             rhs = 0
             lhs = self.var_z[index] * self.data.config.period_length
             for i, j in zip(cycle, cycle[1:] + [cycle[0]]):
-                if (i, j) in self.data.activities:
+                if (i, j) in self.data.activities_constrainable:
                     rhs += self.var_x[(i, j)]
                 else:
                     rhs -= self.var_x[(j, i)]
             key = f'cycle_{index}'
             self.constraint_cycle[key] = lhs == rhs
+    
 
         self.objective = self._get_objective()
 
@@ -137,7 +138,7 @@ class TimPassCycle:
         self.model.extend(self.constraint_l_d)
         self.model.extend(self.constraint_l_d_mp)
         self.model.extend(self.constraint_paths)
-        self.model.extend(self.constraint_preprocessed)
+        # self.model.extend(self.constraint_preprocessed)
         self.model.extend(self.constraint_cycle)
 
     def _get_objective(self) -> LpAffineExpression:
@@ -165,22 +166,46 @@ class TimPassCycle:
             value = var.value()
             if value is None:
                 raise ValueError('Encountered None in solution values!')
-            return int(value)
+            return round(value)  # possible to encounter floating point rounding errors if this is not included
 
-        # timetable = {
-        #     event_id: result(pi)
-        #     for event_id, pi in self.var_pi.items()
-        # }
+        # for uv, _var in self.var_p.items():
+        #     for ij, p in _var.items():
+        #         if not isinstance(p.value(), float):
+        #             raise RuntimeError('Should not encounter non-float values')
+        #         if p.value() != 0 and p.value() != 1:
+        #             print(f'Found a rounding error: {uv, ij =}')
+
         used_edges = [
             (uv, ij)
             for uv, _var in self.var_p.items()
             for ij, p in _var.items()
-            if p.value() == 1
+            if p.value() > 0.5  # numerical tolerance?
+            # if abs(p.value() - 1) < 0.001  # numerical tolerance
         ]
+        # used_edges_old_accuracy_test = [
+        #     (uv, ij)
+        #     for uv, _var in self.var_p.items()
+        #     for ij, p in _var.items()
+        #     if p.value() == 1
+        #     # if p.value() > 0.5  # numerical tolerance?
+        #     # if abs(p.value() - 1) < 0.001  # numerical tolerance
+        # ]
         weights: dict[pair, int] = {}
         for uv, ij in used_edges:
             prev = weights.get(ij, 0)
             weights[ij] = prev + self.data.ods_mapped[uv].customers
+        
+        # weights_old_accuracy_test: dict[pair, int] = {}
+        # for uv, ij in used_edges_old_accuracy_test:
+        #     prev = weights_old_accuracy_test.get(ij, 0)
+        #     weights_old_accuracy_test[ij] = prev + self.data.ods_mapped[uv].customers
+
+        # weights_robust: dict[pair, int] = {}
+        # for uv, od in self.data.ods_mapped.items():
+        #     for ij in self.data.activities.keys():
+        #         if ij not in weights_robust:
+        #             weights_robust[ij] = 0
+        #         weights_robust[ij] += od.customers * self.var_p[uv][ij].value()
 
         edge_durations = {ij: result(var) for ij, var in self.var_x.items()}
         return Solution(
@@ -188,6 +213,15 @@ class TimPassCycle:
             used_edges=used_edges,
             weights=weights,
             edge_durations=edge_durations,
+            aux={
+                # 'used_edges_old': used_edges_old_accuracy_test,
+                # 'weights_old': weights_old_accuracy_test,
+                # 'weights_robust': weights_robust,
+                'x': {ij: var.value() for ij, var in self.var_x.items()},
+                'z': {c: var.value() for c, var in self.var_z.items()},
+                'p': {uv: {ij: var.value() for ij, var in d.items()} for uv, d in self.var_p.items()},
+                'lin': {uv: {ij: var.value() for ij, var in d.items()} for uv, d in self.var_l.items()},
+            }
         )
 
     # def print_solution(self):

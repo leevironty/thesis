@@ -1,0 +1,26 @@
+name: sweep-3
+project: thesis
+run_cap: 100
+command:
+  - thesis
+  - --threads=4
+  - train
+  - --dataset=solutions/data/correct-floats
+  - --batch=64
+  - --max-epochs=10
+  - --num-workers=4
+  - --run-name=sweep-3
+  - ${args}
+method: bayes
+metric:
+  name: val_loss_epoch
+  goal: minimize
+parameters:
+  lr:
+    values: [0.0001, 0.0003, 0.001, 0.003, 0.01]
+  num-layers:
+    values: [2, 3, 4, 6, 8, 10, 12, 16, 20]
+  num-heads:
+    values: [4, 6, 8, 12, 16]
+  hidden-channels:
+    values: [32, 40, 48, 64, 80, 96, 112, 128]

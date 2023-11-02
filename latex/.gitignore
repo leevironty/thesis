@@ -9,3 +9,5 @@
 *.xmpdata
 *.xmpi
 *.txt
+*.bbl
+*.blg

@@ -1,12 +1,13 @@
 import pulp
 
 
-def get_solver(log_path: str, threads: int, time_limit: int) -> pulp.LpSolver:
+def get_solver(threads: int, time_limit: int, output: bool = True, log_path: str | None = None, rel_gap: float = 0) -> pulp.LpSolver:
     solver = pulp.getSolver(
         'GUROBI',
-        gapRel=0,
+        gapRel=rel_gap,
         logPath=log_path,
         threads=threads,
         timeLimit=time_limit,
+        msg=output,
     )
     return solver

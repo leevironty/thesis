@@ -1,0 +1,259 @@
+from typing import Any
+from torch_geometric.data import HeteroData
+import lightning
+
+# import torch_geometric.nn as tnn
+from torch_geometric.nn import MLP, HGTConv
+import torch
+from torch_geometric.typing import Metadata
+
+
+class Demo(lightning.LightningModule):
+    def __init__(
+        self,
+        in_channels_node: int = 15,
+        edge_dim: int = 15,
+        out_channels: int = 15,
+        num_layers: int = 10,
+        num_heads: int = 5,
+    ) -> None:
+        super().__init__()
+        self.save_hyperparameters()
+        self.predictor = tnn.models.MLP(
+            [out_channels * 2, out_channels * 2, 1],
+        )
+        self.model = tnn.models.GAT(
+            v2=True,
+            in_channels=in_channels_node,
+            hidden_channels=out_channels,
+            num_layers=num_layers,
+            out_channels=out_channels,
+            heads=num_heads,
+            edge_dim=edge_dim,
+        )
+        self.embed_event = tnn.Linear(
+            in_channels=5,
+            out_channels=in_channels_node,
+        )
+        self.embed_stop = tnn.Linear(
+            in_channels=1,
+            out_channels=in_channels_node,
+        )
+        self.embed_activity = tnn.Linear(
+            in_channels=8,
+            out_channels=edge_dim,
+        )
+        self.embed_activity_reverse = tnn.Linear(
+            in_channels=8,
+            out_channels=edge_dim,
+        )
+        self.embed_od = tnn.Linear(
+            in_channels=1,
+            out_channels=edge_dim,
+        )
+        self.embed_event_belongs_stop = tnn.Linear(
+            in_channels=1,
+            out_channels=edge_dim,
+        )
+        self.embed_stop_has_event = tnn.Linear(
+            in_channels=1,
+            out_channels=edge_dim,
+        )
+
+    def forward(self, data: HeteroData) -> torch.Tensor:
+        x = torch.concat(
+            [
+                self.embed_event(data['event'].x),
+                self.embed_stop(data['stop'].x),
+            ]
+        )
+        device = x.device
+        stop_offset = data['event'].x.shape[-2]
+        adj = torch.concat(
+            [
+                data['demand'].edge_index + stop_offset,
+                data['belongs'].edge_index
+                + torch.tensor([[0], [stop_offset]]).to(device),
+                data['has'].edge_index + torch.tensor([[stop_offset], [0]]).to(device),
+                data['routes'].edge_index,
+                data['routes_reverse'].edge_index,
+            ],
+            dim=-1,
+        )
+        edge_attr = torch.concat(
+            [
+                self.embed_od(data['demand'].edge_attr),
+                self.embed_event_belongs_stop(data['belongs'].edge_attr),
+                self.embed_stop_has_event(data['has'].edge_attr),
+                self.embed_activity(data['routes'].edge_attr),
+                self.embed_activity_reverse(data['routes_reverse'].edge_attr),
+            ]
+        )
+        x = self.model(x, adj, edge_attr=edge_attr)
+        x = torch.cat(
+            [
+                torch.index_select(x, dim=0, index=data['routes'].edge_index[0, :]),
+                torch.index_select(x, dim=0, index=data['routes'].edge_index[1, :]),
+            ],
+            dim=-1,
+        )
+
+        pred = self.predictor(x)
+        # return torch.nn.functional.relu(pred), pred
+        return torch.exp(pred)
+
+    def training_step(self, batch: HeteroData, _):
+        # y_clip, y = self(batch)
+        # target = batch['target'].edge_attr.reshape(-1, 1)
+        # loss_clip = torch.nn.functional.mse_loss(y_clip, target)
+        # loss_smooth = torch.nn.functional.mse_loss(y, target)
+        # loss = loss_clip + loss_smooth * 0.00
+        y = self(batch)
+        target = batch['target'].edge_attr.reshape(-1, 1)
+        loss = torch.nn.functional.mse_loss(y, target)
+        self.log(
+            'train_loss',
+            loss,
+            on_step=True,
+            on_epoch=True,
+            prog_bar=True,
+            logger=True,
+            batch_size=1,
+        )
+        return loss
+
+    def validation_step(self, batch: HeteroData, _):
+        # y_clip, y = self(batch)
+        # target = batch['target'].edge_attr.reshape(-1, 1)
+        # loss_clip = torch.nn.functional.mse_loss(y_clip, target)
+        # loss_smooth = torch.nn.functional.mse_loss(y, target)
+        # loss = loss_clip + loss_smooth * 0.00
+        y = self(batch)
+        target = batch['target'].edge_attr.reshape(-1, 1)
+        loss = torch.nn.functional.mse_loss(y, target)
+        self.log(
+            'val_loss',
+            loss,
+            on_step=True,
+            on_epoch=True,
+            prog_bar=True,
+            logger=True,
+            batch_size=1,
+        )
+
+    def predict_step(
+        self, batch: HeteroData, batch_idx: int, dataloader_idx: int = 0
+    ) -> Any:
+        # return super().predict_step(batch, batch_idx, dataloader_idx)
+        y = self(batch)
+        return y
+
+    def configure_optimizers(self) -> torch.optim.Optimizer:
+        optimizer = torch.optim.Adam(self.parameters(), lr=0.001)
+        return optimizer
+
+
+from torch_geometric.nn import HGTConv, Linear, MLP
+
+
+class HGT(torch.nn.Module):
+    def __init__(
+        self, hidden_channels, out_channels, num_heads, num_layers, meta: Metadata
+    ):
+        super().__init__()
+
+        # self.lin_dict = torch.nn.ModuleDict()
+        # for node_type in meta[0]:
+        #     self.lin_dict[node_type] = Linear(-1, hidden_channels)
+
+        self.convs = torch.nn.ModuleList()
+        for _ in range(num_layers):
+            conv = HGTConv(-1, hidden_channels, meta, num_heads, group='sum')
+            self.convs.append(conv)
+
+        self.lin = Linear(hidden_channels, out_channels)
+
+    def forward(self, x_dict, edge_index_dict):
+        # x_dict = {
+        #     node_type: self.lin_dict[node_type](x).relu_()
+        #     for node_type, x in x_dict.items()
+        # }
+
+        for conv in self.convs:
+            x_dict = conv(x_dict, edge_index_dict)
+
+        return self.lin(x_dict['author'])
+
+
+class EdgeRegression(lightning.LightningModule):
+    def __init__(
+        self,
+        meta: Metadata,
+    ) -> None:
+        super().__init__()
+        self.save_hyperparameters()
+        hidden_dims = 64
+        self.predictor = MLP([hidden_dims, 1])
+        self.hgt = HGT(
+            hidden_channels=hidden_dims,
+            out_channels=hidden_dims,
+            num_heads=8,
+            num_layers=4,
+            meta=meta,
+        )
+
+    def forward(self, data: HeteroData) -> torch.Tensor:
+        # x = self.hgt(data.x_dict, data.)
+        pred = self.predictor(x)
+        # return torch.nn.functional.relu(pred), pred
+        return torch.exp(pred)
+
+    def training_step(self, batch: HeteroData, _):
+        # y_clip, y = self(batch)
+        # target = batch['target'].edge_attr.reshape(-1, 1)
+        # loss_clip = torch.nn.functional.mse_loss(y_clip, target)
+        # loss_smooth = torch.nn.functional.mse_loss(y, target)
+        # loss = loss_clip + loss_smooth * 0.00
+        y = self(batch)
+        target = batch['target'].edge_attr.reshape(-1, 1)
+        loss = torch.nn.functional.mse_loss(y, target)
+        self.log(
+            'train_loss',
+            loss,
+            on_step=True,
+            on_epoch=True,
+            prog_bar=True,
+            logger=True,
+            batch_size=1,
+        )
+        return loss
+
+    def validation_step(self, batch: HeteroData, _):
+        # y_clip, y = self(batch)
+        # target = batch['target'].edge_attr.reshape(-1, 1)
+        # loss_clip = torch.nn.functional.mse_loss(y_clip, target)
+        # loss_smooth = torch.nn.functional.mse_loss(y, target)
+        # loss = loss_clip + loss_smooth * 0.00
+        y = self(batch)
+        target = batch['target'].edge_attr.reshape(-1, 1)
+        loss = torch.nn.functional.mse_loss(y, target)
+        self.log(
+            'val_loss',
+            loss,
+            on_step=True,
+            on_epoch=True,
+            prog_bar=True,
+            logger=True,
+            batch_size=1,
+        )
+
+    def predict_step(
+        self, batch: HeteroData, batch_idx: int, dataloader_idx: int = 0
+    ) -> Any:
+        # return super().predict_step(batch, batch_idx, dataloader_idx)
+        y = self(batch)
+        return y
+
+    def configure_optimizers(self) -> torch.optim.Optimizer:
+        optimizer = torch.optim.Adam(self.parameters(), lr=0.0001)
+        return optimizer

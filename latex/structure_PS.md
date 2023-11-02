@@ -1,0 +1,68 @@
+# Table of contents
+- Introduction
+    - > Goal: "everybody" should understand this.
+    - Intro: time table optimization and why good time tables matter in a very high level
+    - Literature review
+        - Describing the problem setting: TimPass & PESP models
+        - NN / ML methods in public transport planning
+        - NN methods with MIPs
+    - Problem setting
+        - Benefit of using heuristics for TimPass
+        - NN as a heuristic: describing the idea
+        - Stating what we will study:
+            -> This will be rather short?
+            - Does the NN heuristic beat shortest path routing? (this better be true)
+                -> Also ok if it works, e.g. only for instances where shortest path routing does not work.  (Measure "potential" of shortest paths.)
+                -> Apply NN rerouting only for some of the OD pairs.
+            - If yes, how does training with smaller problem instances generalize to larger problems?
+            - Multiple kinds of larger problems: larger ptn, more od pairs, more lines etc.
+            - How the solution quality affects this? As in, can we use suboptimal samples that still have better gap than the trivial heuristic?
+            - If not possible to use NN heuristic, why so? How could these problems be overcome (or just overcome and then the answer is yes)
+    - Introduce the overall structure of the thesis: descriptions for data, models results etc.
+-> more formal definition of EANs, PESP, TimPass
+- Public transport data
+    -> This is specific to your experiments/ training process, I would move it to the first subsection of the experiments
+    - EANs
+        - How eans look like, what we have going on there
+        -> The ones you generated or the definition? Don't you need this for defining PESP/TimPass?
+    - Benchmarks
+        - Mention timpasslib, briefly describe what we have there and how hard the problems are.
+    - Training data generation process
+        - Single ptn
+        - Random lines, line count between 2 and 4
+        - Random line frequencies, weighted by line count
+            -> What does this mean?
+        - All od pairs, random demands
+        - Solved with TimPass
+            - OBS! How does multiple valid solutions affect all of this? Maybe we should somehow include this fact in the training process????
+    - Represenation as a heterogenous graph
+        - All edge features turned to a node with node features and a bunch of edges
+        - No numerical ids, instead connected to nodes representing that id
+- NN methods
+    - Intro to NNs
+        - Briefly describe how NN models work: lots of multiplication and additions, loss, backpropagation for parameter updates
+    - HGT
+        - Used with graph data, graph data will be described later
+        - Architecture in detail
+            - Also mention positional encodings and batch norms
+        - Why HGT and not some other architecture?
+            - Benefits from heterogenous graph data
+            - Modern, good performance on benchmarks
+            - Message passing may allow us to scale this to larger problems without impossible memory requirements
+    - Training
+        - Hyperparameter tuning
+        - Mention triton
+            -> Why here? This is part of the experiments, not the architecture
+- Experiments
+    -> move data generation here
+    - Trying to beat the trivial heuristic
+        - How this is measured?
+            - Using generated test data
+            - Measuring both loss and objective gap to optimal solution
+    - Generalization
+        - Bigger problems, same measurement methods as for the other experiment
+- Results
+    -> Could be subsection of the experiments
+    - Pretty plots and tables of the obtained losses and gaps
+- Summary, conclusions
+    - ...

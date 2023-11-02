@@ -1,11 +1,11 @@
 #!/bin/bash -l
 
-#SBATCH --time=001:00:00
-#SBATCH --mem=16G
-#SBATCH --job-name=train-staging
-##SBATCH --array=0
-#SBATCH --cpus-per-task=8
-##SBATCH --mail-type=END,FAIL
+#SBATCH --time=00-20
+#SBATCH --mem=2G
+#SBATCH --job-name=data-gen-fixed
+#SBATCH --cpus-per-task=2
+#SBATCH --mail-type=END,FAIL
+#SBATCH --array=1-40
 #SBATCH --output=slurm/main/%A_%a.log
 #SBATCH --error=slurm/main/%A_%a.log
 
@@ -15,16 +15,25 @@ export SRUN_CPUS_PER_TASK=$SLURM_CPUS_PER_TASK
 module load miniconda
 conda activate thesis
 
-# LOG_PATH=slurm/$SLURM_JOB_NAME\_$SLURM_ARRAY_JOB_ID
+LOG_PATH=slurm/$SLURM_JOB_NAME\_$SLURM_ARRAY_JOB_ID
 
 # mkdir -p $LOG_PATH
 
-# srun --output="$LOG_PATH/$SLURM_ARRAY_TASK_ID.log" \
-#     --error="$LOG_PATH/$SLURM_ARRAY_TASK_ID.log" \
-#     poetry run thesis data-gen \
-#     -c 10 --od-share 0.3 --activity-drop-prob 0.0 \
-#     --seed $SLURM_ARRAY_TASK_ID --out solutions/data/naming-test \
-#     --time-limit 120 timpasslib/toy_2
+# srun -c 16 --mem=16G thesis --threads=16 big-eval \
+#     --checkpoint=checkpoint-pref-order.ckpt \
+#     --dataset-path=timpasslib/grid \
+#     --time-limit=80000 \
+#     --rel-gap=0.05
+
+
+# srun -c 4 --mem=4G thesis --threads=4 data-gen \
+#     --seed $SLURM_ARRAY_TASK_ID \
+#     --out solutions/correct \
+#     --count 2500 --time-limit 30 --preprocess asdf
+
+srun -c 2 --mem=2G thesis --threads=2 multi-solution-generation \
+    --seed $SLURM_ARRAY_TASK_ID --out solutions/data/correct-floats \
+    --time-limit 20 --count=400 --alt-solutions=10
 
 # srun --output="$LOG_PATH/$SLURM_ARRAY_TASK_ID.log" \
 #     --error="$LOG_PATH/$SLURM_ARRAY_TASK_ID.log" \
@@ -44,7 +53,7 @@ conda activate thesis
 
 # srun -p gpushort --gres=gpu:1 poetry run thesis train
 
-srun -p gpushort --gres=gpu:1 -c 8 --mem 16000 poetry run thesis --threads=8 train --batch-size=32 --no-run-eval --max-epochs=5 --dataset solutions/data/big-gen-toy-100k --num-workers=8
+# srun -p gpushort --gres=gpu:1 -c 8 --mem 16000 poetry run thesis --threads=8 train --batch-size=32 --no-run-eval --max-epochs=5 --dataset solutions/data/big-gen-toy-100k --num-workers=8
 
 # srun env | sort
 
