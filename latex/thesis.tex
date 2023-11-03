@@ -417,11 +417,9 @@ Now we can finally express the TimPass problem with the cycle basis formulation.
     % \item Introduce auxiliary events used in the TimPass formulation.
     % \item Introduce how the routing constraint matrix $A$ and vector $b$ are defined.
     % \item Briefly describe how the linearization trick for the objective works.
-    \item Describe how preprocessing works to reduce the number of routes we have to consider.
+    % \item Describe how preprocessing works to reduce the number of routes we have to consider.
     \item Describe how multiple solutions are obtained by turning the optimal objective into a constraint and generating a new objective with random weights on the routing variables. Maybe we can cite Helmi's work here?
 \end{itemize}
-\textbf{TODO: the formulation below does not take sync activities into account. Fix by including e.g. $p_{\text{some sync index}} = 0$.}
-\textbf{TODO: Include preprocessing constraint.}
 
 The given formulation for the TimPass problem works, but we are left with many flow variables. Luckily, there is a way to reduce the complexity by calculating which flows can never exist in the optimal solution. This method is first presented in \cite{schiewe2020periodic}. 
 
@@ -429,7 +427,10 @@ We define the function $SP_{u,v}(D)$ to be the function, that given the set of d
 
 We can use the upper and lower bounds for the durations in the functions defined above. However, as in the TimPass problem we are dealing with perceived travel times, we should include the penalty term in the duration. Thus, let us define $L^+ = \{L_a + \text{penalty}_a:a\in A\}$ and $U^+ = \{U_a + \text{penalty}_a:a \in A\}$. Now we can use these to calculate which flow variables $p_a^{uv}$ can never be active in the optimal solution.
 
-In \cref{alg:preprocessing} we present the algorithm for calculating which flow variables can be safely set to zero.
+In \cref{alg:preprocessing} we present the algorithm for calculating which flow variables can be safely set to zero. We need to run the algorithm for each OD pair for which we want to reduce the number of flow variables. In high level, the algorithm first calculates the longest possible route that can belong to an optimal solution. The length of that route under the upper bound edge durations is $\beta$. Then, for each activity, we check if the activity can belong to an optimal solution by checking if including the activity would increase the lowest possible perceived travel time for the path above $\beta$. In the end, we obtain a set of activities $P$, for which we can set the corresponding flow variable to zero. Let us note the set of preprocessed activities for the OD pair $(u, v) \in \od$ as $P_{u, v}$. This is the variable $P$ for running the algorithm for the given OD pair. Then we can include the following constraint to handle the preprocessed flow variables:
+\begin{align}
+    p_a^{uv} = 0 \quad \forall (u, v) \in \od, a \in P_{u,v}
+\end{align}
 
 % TODO: does this even make sense to represent this way? Definitions in a for loop may not be the most interesting thing.
 {
@@ -437,9 +438,11 @@ In \cref{alg:preprocessing} we present the algorithm for calculating which flow 
     \textbf{TODO:} \textit{Does expressing the preprocessing in this way even make sense? ofc. this is how it's calculated, but the definition does not benefit from the for-loops.}
 }
 \begin{algorithm}
-    \caption{Flow variable preprocessing}
+    \caption{Flow variable preprocessing for OD pair $(s_1, s_2)$.}
     \label{alg:preprocessing}
     \begin{algorithmic}
+        \State Auxiliary event $u = (\text{origin}, s_1)$
+        \State Auxiliary event $v = (\text{destination}, s_2)$
         \State Initialise $P \gets \emptyset$
         \State Calculate $\beta := len(SP_{u,v}(U^+), U^+)$
         \Comment{Longest possible route length from $u$ to $v$.}
