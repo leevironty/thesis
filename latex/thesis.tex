@@ -46,6 +46,7 @@
 \newcommand{\Ar}{A_\text{r}}
 \newcommand{\Arp}{A_\text{r}^+}
 \newcommand{\Ap}{A^+}
+\newcommand{\unif}[1]{\mathcal{U}\{#1\}}
 
 % \newcommand{\od}{\mathrm{OD}} 
 
@@ -519,11 +520,20 @@ In \cref{alg:preprocessing} we present the algorithm for calculating which flow 
 \section{Experiment setup}
 \subsection{Data generation}
 
-To train the neural network, we generated a large number of EANs for which we could solve the TimPass problem. All problems use the same available PTN with varying lines, frequencies, and demands. We use a period of 60.
+To train the neural network, we generated a large number of EANs and ODs for which we could solve the TimPass problem. All problems use the same PTN with varying lines, duration bounds, frequencies, demands, and penalties. We use a period of 60 minutes.
 
-First, we listed all available lines with at least three stops. Then, we sampled the number of lines uniformly between two and four. If the set of lines would be disconnected we would resample the lines to get connected stops.
+First, we listed all available lines as the set $\mathcal{L}$ with at least three stops and filtered the reversed line versions out. To keep the line plan realistic, we would later add the reverse line directions back to the plan. Then, we sampled the line plan size $|L| \sim \unif{2, 4}$. Knowing the size, we sampled the lines belonging to the plan uniformly without replacement from the set of lines: $L \subset \mathcal{L}$. As we want to emulate real EANs, we checked the resulting EAN would be connected if the reverse directions for the lines were also included. If this was not the case, we sampled the $L$ again.
 
-After the set of lines was determined, we would sample the line frequencies between one and four. We would weight lower frequencies more if the number of previously sampled lines was large. This ensures, that on average the problems are roughly equally as easy to solve.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/generation-rl-sample-density.pdf}
+    \caption{Probability mass functions for the sampling distribution of $r_l$ with various sizes $|L|$.}
+    \label{fig:generation-rl-mass}
+\end{figure}
+
+After the set of lines was determined, we would sample the line frequencies $f_l$ with the discrete probability mass function $p(r_l) = \sqrt[|L| - 1]{r_l / 4} - \sqrt[|L| - 1]{(r_l - 1) / 4}$. The probability mass function is visualised in \cref{fig:generation-rl-mass}. The function is designed to give a larger weight for the low line frequencies in case we have only a few lines in total. This regulates the variations in solving times for the generated problems. In practice, the samples are generated from a uniform distribution: $f_l = \lfloor x ^{|L| - 1} / 4 \rfloor + 1, x \sim \mathcal{U}[0, 1]$.
+
+% TODO: duplicate lines, must go to both directions
 
 For the lines with a frequency greater than one, we generate sync activities between all events in sequential line repetitions. By setting the sync upper and lower bounds to be equal to the period divided by the line frequency, we ensure even spacing of the departures.
 
