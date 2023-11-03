@@ -37,6 +37,16 @@
 \newcommand{\N}{\mathbb{N}}
 \newcommand{\Z}{\mathbb{Z}}
 \newcommand{\od}[1][]{\ifthenelse{\isempty{#1}}{\mathrm{OD}}{\mathrm{OD}_{\mathit{#1}}}}
+\newcommand{\Earr}{E_\text{arr}}
+\newcommand{\Edep}{E_\text{dep}}
+\newcommand{\Eaux}{E_\text{aux}}
+\newcommand{\Ep}{E^+}
+\newcommand{\Aaux}{A_\text{aux}}
+\newcommand{\Async}{A_\text{sync}}
+\newcommand{\Ar}{A_\text{r}}
+\newcommand{\Arp}{A_\text{r}^+}
+\newcommand{\Ap}{A^+}
+
 % \newcommand{\od}{\mathrm{OD}} 
 
 
@@ -201,44 +211,41 @@ We are interested in the periodic instead of the aperiodic scheduling problem. I
 
 
 % TODO: miten merkataan simple path tässä tapauksessa? Onko siis ordered setti / lista stoppeja?
-A \textit{line} $l$ is a simple path in a PTN. A \textit{line concept} is a set of lines $L$ with associated frequencies $f_l \in \N$ for all $l \in L$. A frequency determines how often a line is served within the period $T$. We assume the lines to be bidirectional, meaning that the vehicles travel the line in both directions.
+A \textit{line} $l$ is a simple directed path in a PTN. A \textit{line concept} is a set of lines $L$ with associated frequencies $f_l \in \N$ for all $l \in L$. A frequency determines how often a line is served within the period $T$. %We assume the lines to be bidirectional, meaning that the vehicles travel the line in both directions.
+In this case, we assume the lines to be directed, meaning that vehicles travel the line only in one direction. Usually, in real-world lines, the vehicles travel in both directions, but this can also be modelled here by including the reverse direction as a separate line instance. This notation of the line including the direction just makes the rest of the notation a bit simpler, while at the same time allowing more flexibility in what kinds of lines can be expressed.
 
-From the line concept, we can construct the event activity network (EAN). The graph EAN = $(E, A)$ has a set of events $E$ and a set of activities $A$ connecting the events. For the events, we have two types of them: $E = E_\text{arrival} \cup E_\text{departure}$. As the names suggest, the disjoint sets $E_\text{arrival}$ and $E_\text{departure}$ contain the events describing vehicle arrivals and departures from the stops. To simplify the notation, we define the set of available repetition numbers $R_l = \{1, \dots, f_l\}$ and the set of available directions $D = \{\text{fw}, \text{bw}\}$. More formally, the sets are defined as follows:
+From the line concept, we can construct the event activity network (EAN). The graph EAN = $(E, A)$ has a set of events $E$ and a set of activities $A$ connecting the events. For the events, we have the disjoint arrival and departure types: $E = \Earr \cup \Edep$. As the names suggest, the sets $\Earr$ and $\Edep$ contain the events describing vehicle arrivals and departures from the stops. To simplify the notation, we define the set of available repetition numbers as $R_l = \{1, \dots, f_l\}$. More formally, the sets are defined as follows:
 \begin{align*}
-    E_\text{arrival} &= \{
-        (\text{arr}, s, l, d, r) : l \in L, s \in l, d \in D, r \in R_l
+    \Earr &= \{
+        (\text{arr}, s, l, r) : l \in L, s \in l, r \in R_l
     \} \\
-    E_\text{departure} &= \{
-        (\text{dep}, s, l, d, r) : l \in L, s \in l, d \in D, r \in R_l
+    \Edep &= \{
+        (\text{dep}, s, l, r) : l \in L, s \in l, r \in R_l
     \}
 \end{align*}
-As seen in the definition, the events consist of the event type, the stop, the line, the driving direction (either forward or backward), and the line repetition number which is used to differentiate between separate repetitions of the line in the periodic case.
+As seen in the definition, the events consist of the event type, the stop, the line, and the line repetition number which is used to differentiate between separate repetitions of the line in the periodic case.
 
-For the activities, we also have multiple distinct types: drive, wait, change, and sync. Thus, we have that $A = A_\text{drive} \cup A_\text{wait} \cup A_\text{change} \cup A_\text{sync}$. The formal definitions are as follows:
+For the activities, we also have multiple distinct types: drive, wait, change, and sync. Thus, we have that $A = A_\text{drive} \cup A_\text{wait} \cup A_\text{change} \cup \Async$. The formal definitions are as follows:
 \begin{align*}
     A_\text{drive} =& \{(
-        (\text{dep}, s_1, l, \text{fw}, r),
-        (\text{arr}, s_2, l, \text{fw}, r)
-    ): l \in L, (s_1, s_2) \in l, r \in R_l\} \cup \\
-    &\{(
-        (\text{dep}, s_2, l, \text{bw}, r),
-        (\text{arr}, s_1, l, \text{bw}, r)
-    ): l \in L, (s_1, s_2) \in l, r \in R_l\} \\
+        (\text{dep}, s_1, l, r),
+        (\text{arr}, s_2, l, r)
+    ): l \in L, (s_1, s_2) \in l, r \in R_l\}\\
     A_\text{wait} =& \{(
-        (\text{arr}, s, l, d, r),
-        (\text{dep}, s, l, d, r)
-    ): l \in L, s \in l, d \in D, r \in R_l\} \\
+        (\text{arr}, s, l, r),
+        (\text{dep}, s, l, r)
+    ): l \in L, s \in l, r \in R_l\} \\
     A_\text{change} =& \{(
-        (\text{arr}, s, l_1, d_1, r_1),
-        (\text{dep}, s, l_2, d_2, r_2)
-    ): \\&l_1 \in L, l_2 \in L, l_1 \neq l_2, s \in l_1 \cap l_2, d_1 \in D, d_2 \in D, r_1 \in R_{l_1}, r_2 \in R_{l_2}\} \\
+        (\text{arr}, s, l_1, r_1),
+        (\text{dep}, s, l_2, r_2)
+    ): \\&\quad l_1 \in L, l_2 \in L\setminus \{l_1\}, s \in l_1 \cap l_2, r_1 \in R_{l_1}, r_2 \in R_{l_2}\} \\
     A_\text{sync} =& \{(
        (t, s, l, d, r-1),
        (t, s, l, d, r)
-    ):\\ &t\in \{\text{arr}, \text{dep}\}, l \in L, s \in l, d \in D, r \in R_l, r \geq 2 \}
+    ): e=(t, s, l, r) \in E, r \geq 2 \}
 \end{align*}
 
-In plain English, the drive activities correspond to the driving activity between stops. The activities connect the line's departure events to the corresponding arrival events. The wait activities correspond to the vehicle staying at the station, waiting to e.g. load and unload passengers. The wait activities connect arrival events to departure events. The drive and wait activities are demonstrated in \cref{fig:drive-wait-demo}. The change activities denote the line transfers that the passengers may take. The activities link the arrivals to departures within the same stop that do not belong to the same line. The idea of change activities and multiple lines at the same stop is shown in \cref{fig:change-demo}. The sync activities are a bit different from the other activities, as the passengers can't travel along those edges. For this reason, we note the set of activities usable for passenger routing as $A_\text{routable} = A \setminus A_\text{sync}$. The only use for sync activities is for defining constraints on the timetable to have some predefined spacing among the repetitions of the lines. How sync activities are connected is shown in \cref{fig:sync-demo}. Defining the constraints on all sync activities is not mandatory. In that case, the sync activities without constraints are essentially pointless.
+In plain English, the drive activities correspond to the driving activity between stops. The activities connect the line's departure events to the corresponding arrival events. The wait activities correspond to the vehicle staying at the station, waiting to e.g. load and unload passengers. The wait activities connect arrival events to departure events. The drive and wait activities are demonstrated in \cref{fig:drive-wait-demo}. The change activities denote the line transfers that the passengers may take. The activities link the arrivals to departures within the same stop that do not belong to the same line. The idea of change activities and multiple lines at the same stop is shown in \cref{fig:change-demo}. The sync activities are a bit different from the other activities, as the passengers can't travel along those edges. For defining the optimization models, we note the set of activities usable for passenger routing as $\Ar = A \setminus \Async$. The only use for sync activities is for defining constraints on the timetable to have some predefined spacing among the repetitions of the lines. How sync activities are connected is shown in \cref{fig:sync-demo}. Defining the constraints on all sync activities is not mandatory. In that case, the sync activities without constraints are essentially pointless.
 
 
 \begin{figure}
@@ -299,27 +306,26 @@ In plain English, the drive activities correspond to the driving activity betwee
 
 We can define a schedule for the events in an EAN. The event times are noted as $\pi_e \in \{0, \dots, T-1\}$ for all events $e \in E$. As we are working with a periodic schedule, all the event occurrence times must be lower than the period of the schedule $T$. As noted previously, we could have a real-valued schedule instead of a discrete one, but once again we follow the previous formulation.
 
-The activities in the EAN are used to define constraints on the upper and lower bounds for activity durations. For all activities $a \in A^0$, we have the lower bound $L_a \in \N$ and upper bound $U_a \in \N$. For the bounds, we of course must also have that $0 \leq L_a \leq U_a$. The activity duration for activity $a = (i, j)$ itself is calculated as follows: $\text{duration} = L_a + (\pi_j - \pi_i - L_a)\ \text{mod}\ T$. The lower bound term outside of the modulo ensures, that the lower bound is respected. The term inside the modulo is the "slack" time we have due to the schedule not aligning perfectly with the lower bound. As formulated, the duration is guaranteed to be greater or equal to the lower bound. For the given timetable $\pi$ to be feasible, for all activities $a \in A$ we must have that the upper bound holds: $L_a + (\pi_j - \pi_i - L_a)\ \text{mod}\ T \leq U_a$.
+The activities in the EAN are used to define constraints on the upper and lower bounds for activity durations. For all activities $a \in A$, we have the lower bound $L_a \in \N$ and upper bound $U_a \in \N$. For the bounds, we of course must also have that $0 \leq L_a \leq U_a$. The activity duration for activity $a = (i, j)$ itself is calculated as $L_a + (\pi_j - \pi_i - L_a)\ \text{mod}\ T$. The lower bound term outside of the modulo ensures, that the lower bound is respected. The term inside the modulo is the "slack" time we have due to the schedule not aligning perfectly with the lower bound. As formulated, the duration is guaranteed to be greater or equal to the lower bound. For the given timetable $\pi$ to be feasible, for all activities $a \in A$ we must have that the upper bound holds: $L_a + (\pi_j - \pi_i - L_a)\ \text{mod}\ T \leq U_a$.
 
-As the modulo does not fit well into linear programming, we replace the modulo term with a multiplier $z_a \in \Z$ times $T$: $\text{duration} = L_a + \pi_j - \pi_i - L_a z_aT$. As the multiplier $z_a$ can be chosen freely, this is equivalent to the formulation with the modulo.
+As the modulo operator does not fit well into linear programming as is, we replace the modulo with an integer multiple of the period $T$. The multiplier $z_a \in \Z$ becomes a decision variable. The lower bounds terms cancel out and the expression for the edge duration is now $\pi_j - \pi_i + z_aT$. As the multiplier $z_a$ can be chosen freely, this is equivalent to the formulation with the modulo.
 
 
 Along the EAN, we need information on the passenger demand between the stops of the PTN. We note the number of passengers wanting to travel from stop $i$ to stop $j$ as $\od_{i,j} \in \N$. Not all stop pairs have demand: we express the set of stop pairs with non-zero demand as $\od = \{(i,j): i \in S, j \in S, \od_{i,j} > 0\}$.
 
-For routing of the passengers, we assume a fixed routing that is given beforehand. When routing the passengers, each OD pair assumes some path from $i$ to $j$ through the EAN, and for the chosen path edges the weight $w_a$ is incremented by the number of passengers using that route. We will later return to routing in a subsequent section. For now, it's enough to recognize, that we have a weight $w_a \in \N$ for all routable activities of the EAN.
+For routing of the passengers, we assume a fixed routing that is given beforehand. When routing the passengers, each OD pair assumes some path from $i$ to $j$ through the EAN, and for the chosen path edges the weight $w_a$ is incremented by the number of passengers using that route. We will later return to routing in a subsequent section. For now, it's enough to recognize, that we have a weight $w_a \in \N$ for all routable activities $a \in \Ar$ of the EAN.
 
-Now we can express the PESP problem. Instead of minimising the real total travel time $\sum_{a \in A_\text{routable}} w_a (\text{duration}_a)$, we minimise the total perceived travel time. In perceived travel time, we add the "perceived penalty" duration to the real duration. In principle, the penalty $\text{penalty}_a$ could be any real value, but we consider it as a penalty for transferring between lines, i.e. a penalty that is non-zero only for change activities and for those activities the penalty is some positive integer.
+Now we can express the PESP problem. Instead of minimizing the real total travel time $\sum_{a=(i,j) \in \Ar} w_a (\pi_j - \pi_i + z_aT)$, we minimize the total perceived travel time. In perceived travel time, we add the "perceived penalty" duration to the real duration. In principle, the penalty $b_a$ could be any real value, but in this case, we consider it to be a non-negative integer. This models the dissatisfaction of the people who have to change lines to get to their destination. Note, that the objective only considers the routable activities, but the constraints take all activities into account.
+\begin{align}
+    \textrm{min.} \quad  &\sum_{a \in \Ar} w_{a} (\pi_j-\pi_i+z_aT + b_a) \\
+    \textrm{s.t.} \quad &L_a \leq \pi_j-\pi_i+z_aT  \leq U_a \quad a =(i,j)\in A \\
+    &\pi_i \in \{0, \dots, T-1\} \quad i \in E\\
+    &z_a \in \Z \quad a \in A
+\end{align}
+Cite this: \cite{schiewe2020periodic}.
 
 % From the OD demand, we use some routing scheme to obtain weights.  % TODO: more formally, good points in prev. literature.
 
-Cite this: \cite{schiewe2020periodic}.
-
-\begin{align}
-    \textrm{min.} \quad  &\sum_{a \in A_\text{routable}} w_{a} (\pi_j-\pi_i+z_aT + \text{penalty}_a) \\
-    \textrm{s.t.} \quad &L_a \leq \pi_j-\pi_i+z_aT  \leq U_a \quad a =(i,j)\in A_0 \\
-    &\pi_i \in \{0, \dots, T-1\} \quad i \in E_0\\
-    &z_a \in \Z \quad a \in A_0
-\end{align}
 
 The formulation for the PESP problem using the schedule $\pi$ is correct, but it's not the most efficient one available. Instead of explicitly defining the times for the events, we could instead define just the activity durations directly. We note the activity duration as $x_a \in \N$. Now the constraint on activity durations is much simpler: $L_a \leq x_a \leq U_a\ \forall a \in A$. This formulation also reduced the number of symmetrical solutions: when defining the event times explicitly, we could always transform a feasible timetable into another by rotating the event times through the period $T$.
 % TODO: any research on why the cycle-basis is more efficient?
@@ -333,83 +339,87 @@ However, now we need to take the cycles in the EAN into account. In \cref{fig:cy
     \label{fig:cycle-example}
 \end{figure}
 
-In the cycle basis formulation, we consider cycles regardless of the edge direction, but the cycle does have a direction. All the edges of a cycle $c$ belong either to the set of "positive edges" $c_+$ or the set of "negative edges" $c_-$, based on the direction of the edges along the cycle. In the example of \cref{fig:cycle-example}, we would have that $c_+ = \{a, b, c\}$ and $c_- = \{d, e, f\}$. In more general terms, for a cycle $c$ to be consistent, we must have
+In the cycle basis formulation, we consider cycles regardless of the edge direction, but the cycle does have a direction. All the edges of a cycle $c$ belong either to the set of "positive edges" $c^+$ or the set of "negative edges" $c^-$, based on the direction of the edges along the cycle. In the example of \cref{fig:cycle-example}, we would have that $c^+ = \{a, b, c\}$ and $c^- = \{d, e, f\}$. In more general terms, for a cycle $c$ to be consistent, we must have
 \begin{align}
-    \sum_{a\in c_+}x_a - \sum_{a \in c_-}x_a = zT\ \exists z \in Z.
+    \sum_{a\in c^+}x_a - \sum_{a \in c^-}x_a = zT\ \exists z \in \Z.
 \end{align}
 
-A EAN may have many cycles, but luckily we don't have to check the condition for all cycles. We can construct a cycle basis for the EAN and checking the condition for that basis is enough. We denote the cycle basis as $C$.  % TODO: proof / cite a source showing that cycle basis is enough to check. Maybe some words on how the cycle basis is constructed?
+An EAN may have many cycles, but luckily we don't have to check the condition for all cycles. We can construct a cycle basis for the EAN and checking the condition for that basis is enough. We denote the cycle basis as $C$. As the cycle inconsistency can be a problem only with activities with constraints, we calculate the cycle basis for activities that can have constraints, i.e. the set $A$.
+
+% TODO: proof / cite a source showing that cycle basis is enough to check. Maybe some words on how the cycle basis is constructed?
 
 
 Now we may define the cycle basis formulation for the PESP problem. The formulation is quite similar to the original definition, but now the activity duration is expressed in a very concise way and we have the additional cycle consistency constraint:
 \begin{align}
-    \textrm{min.} \quad  \sum_{a \in A_\text{routable}} w_{a} (x_a + \textrm{penalty}_a) \\
+    \textrm{min.} \quad  \sum_{a \in \Ar} w_{a} (x_a + b_a) \\
     \textrm{s.t.} \quad  \sum_{a\in c^+} x_a - \sum_{a\in c^-} x_a & = z_c T \quad c \in C \\
     L_a \leq x_a & \leq U_a \quad a \in A \\
     z_c &\in \Z \quad c \in C \\
     x_a &\in \Z \quad a \in A
 \end{align}
 
-In the TimPass problem, we are free to choose the route used for each OD pair as we minimise the total perceived travel time. However, to represent the routes from stop $i$ to stop $j$, we would prefer to have all the possible paths start and end to the same nodes. To achieve this, we introduce the auxiliary events $E_\text{aux}$ and auxiliary activities $A_\text{aux}$. For the auxiliary events, we have one origin and departure event for each stop: $E_\text{aux} = \{(t, v) : t \in \{\text{origin}, \text{destination}\}, v \in V\}$. For the auxiliary activities, we have an edge from all auxiliary origin events to the corresponding stop's events and an edge from all stop's events to the corresponding destination auxiliary event:
+In the TimPass problem, we are free to choose the route used for each OD pair as we minimise the total perceived travel time. However, to represent the routes from stop $i$ to stop $j$, we would prefer to have all the possible paths start and end to the same nodes. To achieve this, we introduce the auxiliary events $\Eaux$ and auxiliary activities $\Aaux$. For the auxiliary events, we have one origin and departure event for each stop: $\Eaux = \{(t, v) : t \in \{\text{orig}, \text{dest}\}, s \in S\}$. For the auxiliary activities, we have an edge from all auxiliary origin events to the corresponding stop's events and an edge from all stop's events to the corresponding destination auxiliary event:
 \begin{align}
-    A_\text{aux} = \{&((\text{origin}, s_1), e): s_1 \in V, e = (t, s_2, l, d, r) \in E, s_1 = s_2\} \cup \\
-    \{&(e, (\text{destination}, s_1)): s_1 \in V, e = (t, s_2, l, d, r) \in E, s_1 = s_2\}
+    % \Aaux = \{((\text{orig}, s), e): e = (t, s, l, r) \in E\} \cup 
+    % \{(e, (\text{dest}, s)): e = (t, s, l, r) \in E\}\\
+    \Aaux = \bigcup_{e = (t, s, l, r) \in E}\{((\text{orig}, s), e), (e, (\text{dest}, s))\}
 \end{align}
+To denote the set of all routable activities, we note $\Arp = \Ar \cup \Aaux$. Similarly, to denote all events including the auxiliary events, we note $\Ep = E \cup \Eaux$. Extended activities are not considered to be real activities in the sense of having a duration. As such, the auxiliary activities are not subject to duration constraints and are not part of the objective function.
 
-To note if the activity $a$ is part of the chosen path between stops $u$ and $v$, we have the variable $p_a^{uv} \in \{0, 1\}$. This allows us to set up some constraints on what is considered a valid path. For a from stop $u$ to stop $v$ to be valid, it must start at the event $(\text{origin}, u)$ and end at $(\text{destination}, v)$. Additionally, the path must be connected from the origin all the way to the destination, i.e. for all events that are not auxiliary events we must have an equal number of active edges leading to it and out of it. 
+To note if the activity $a$ is part of the chosen path between stops $u$ and $v$, we have the flow variable $p_a^{uv} \in \{0, 1\}, (a, uv) \in \Arp \times \od$. This allows us to set up some constraints on what is considered a valid path. For a from stop $u$ to stop $v$ to be valid, it must start at the event $(\text{orig}, u)$ and end at $(\text{dest}, v)$. Additionally, the path must be connected from the origin all the way to the destination, i.e. for all events that are not auxiliary events we must have an equal number of active edges leading to it and out of it. 
 
-We can formalise this by introducing a node-arc-incidence matrix $M$ and an origin-destination vector $b =(b_e)_{e\in E \cup E_\text{aux}}$. For a origin-destination pair $(u, v) \in \od$, the origin-destination vector elements are:
+We can formalise this by introducing a node-arc-incidence matrix $M$ and an origin-destination vector $q =(q_e)_{e\in \Ep}$. For a origin-destination pair $(u, v) \in \od$, the origin-destination vector elements are:
 \begin{align}
-    b_e = \begin{cases}
-        -1\ \text{if}\ e=(\text{origin}, u)\\
-        +1\ \text{if}\ e=(\text{destination}, v)\\
-        0\ \text{otherwise}
+    q_e = \begin{cases}
+        -1&\text{if}\ e=(\text{orig}, u)\\
+        1&\text{if}\ e=(\text{dest}, v)\\
+        0&\text{otherwise}
     \end{cases}
 \end{align}
 
-For the node-arc incidence matrix $M=(m_{e, a})_{(e, a) \in (E \cup E_\text{aux}) \times (A \cup A_\text{aux})}$, we have that the element is minus one if the activity leads away from the event, one if the activity leads to the event and zero otherwise. Formally:
+For the node-arc incidence matrix $M=(m_{e, a})_{(e, a) \in \Ep \times \Arp}$, we have that the element is minus one if the activity leads away from the event, one if the activity leads to the event and zero otherwise. Formally:
 \begin{align}
     m_{e, a} = \begin{cases}
-        -1\ \text{if}\ a = (e, t)\ \exists t \in E \cup E_\text{aux}\\
-        1\ \text{if}\ a = (t , e)\ \exists t \in E \cup E_\text{aux}\\
-        0\ \text{otherwise}
+        -1&\text{if}\ a = (e, t)\ \exists t \in \Ep\\
+        1&\text{if}\ a = (t , e)\ \exists t \in \Ep\\
+        0&\text{otherwise}
     \end{cases}
 \end{align}
 
 Armed with this notation, we can finally construct the constraint necessary for the set of active flow variables to constitute a valid path from stop $u$ to stop $v$:
 \begin{align}
-    M \cdot (p_a^{uv}) = b \quad \forall uv \in \od
+    M \cdot (p_a^{uv})_{a \in \Arp} = b \quad \forall uv \in \od
 \end{align}
 This constraint does not actually prevent the flow variables from creating a cycle, but as we are minimising the total perceived travel time, those cycles would be non-optimal and thus they will not occur in optimal solutions.
 
 We can express the total perceived travel time as the sum of perceived travel times over all OD pairs. Thus, we are minimising the following expression:
 \begin{align}
-    \sum_{uv \in \od}\od_{uv} \sum_{a \in A_\text{routable}}p_a^{uv}(x_a + \text{penalty}_a)
+    \sum_{uv \in \od}\od_{uv} \sum_{a \in \Ar}p_a^{uv}(x_a + b_a)
 \end{align}
-However, we have a problem as we hope to get a linear integer programming problem. Now we have $p_a^{uv}x_a$, which is not linear as both terms are decision variables. Luckily, as the flow variable $p_a^uv$ can only be either 0 or 1, we can linearise this expression quite easily.
+However, we have a problem as we hope to get a linear integer programming problem. Now we have $p_a^{uv}x_a$, which is not linear as both terms are decision variables. Luckily, as the flow variable $p_a^{uv}$ can only be either 0 or 1, we can linearise this expression quite easily.
 
-We create the linearization decision variable $lin_a^{uv}$ for all $a \in A$ and $uv \in \od$. We aim to always have $lin_a^{uv} = p_a^{uv}(x_a + \text{penalty}_a)$ without explicitly stating this equality, as the right hand side has the non-linear term. We achieve this by constructing suitable constraints for the linearization term.
+We create the linearization decision variable $lin_a^{uv}$ for all $a \in \Ar$ and $uv \in \od$. We aim to always have $lin_a^{uv} = p_a^{uv}(x_a + b_a)$ without explicitly stating this equality, as the right-hand side has the non-linear term. We achieve this by constructing suitable constraints for the linearization term.
 
-Let $B$ be some large integer for which $B \geq x_a + \text{penalty}_a\ \forall a \in A$. With this value, we can come up with the following set of constraints:
+Let $B$ be some large integer for which $B \geq x_a + b_a\ \forall a \in \Ar$. With this value, we can come up with the following set of constraints:
 \begin{align}
     &lin_a^{uv} \geq 0 \\
     &lin_a^{uv} \leq p_a^{uv} B \\
-    &lin_a^{uv} \leq x_a + \text{penalty}_a \\
-    &lin_a^{uv} \geq x_a + \text{penalty}_a - (1 - p_a^{uv}) B
+    &lin_a^{uv} \leq x_a + b_a \\
+    &lin_a^{uv} \geq x_a + b_a - (1 - p_a^{uv}) B
 \end{align}
-Now, if $p_a^{uv} = 0$, we must have that $lin_a^{uv} = 0$. If $p_a^{uv} = 1$, then $lin_a^{uv} = x_a + \text{penalty}_a$.
+Now, if $p_a^{uv} = 0$, we must have that $lin_a^{uv} = 0$. If $p_a^{uv} = 1$, then $lin_a^{uv} = x_a + b_a$.
 
 Now we can finally express the TimPass problem with the cycle basis formulation. We omit the linearization term and constraints for clarity, but in practice, the linearization must be done for commonly available solvers to function properly.
 \begin{align}
-    \textrm{min.} \quad  \sum_{\mathit{uv} \in \textrm{OD}} \od_{\mathit{uv}} \sum_{a \in A_\text{routable}} p_{a}^{\mathit{uv}} (x_a + \textrm{penalty}_a) \\
+    \textrm{min.} \quad  \sum_{\mathit{uv} \in \textrm{OD}} \od_{\mathit{uv}} \sum_{a \in \Ar} p_{a}^{\mathit{uv}} (x_a + b_a) \\
     % \textrm{min.} \quad  \sum_{\mathit{uv} \in \textrm{OD}} \od_{\mathit{uv}} \sum_{a \in A_\text{routable}} lin_a^{uv}) \\
     \textrm{s.t.} \quad  \sum_{a\in c^+} x_a - \sum_{a\in c^-} x_a & = z_c T \quad c \in C \\
     L_a \leq x_a &\leq U_a \quad a \in A \\
     % x_a &\leq U_a \\
-    M (p_{a}^{\mathit{uv}})_{a\in A} &= b^{\mathit{uv}} \quad \mathit{uv} \in \textrm{OD}\\
+    M (p_{a}^{\mathit{uv}})_{a\in \Arp} &= b^{\mathit{uv}} \quad \mathit{uv} \in \textrm{OD}\\
     x_a &\in \Z \quad a \in A \\
     z_c &\in \Z \quad c \in C \\
-    p_a^{\mathit{uv}} &\in \{0, 1\} \quad a \in A, \mathit{uv} \in \textrm{OD}
+    p_a^{\mathit{uv}} &\in \{0, 1\} \quad a \in \Arp, \mathit{uv} \in \textrm{OD}
 \end{align}
 
 % TODO: preprocessing??
@@ -425,11 +435,11 @@ The given formulation for the TimPass problem works, but we are left with many f
 
 We define the function $SP_{u,v}(D)$ to be the function, that given the set of durations $D$ for the activities, calculates the shortest path between nodes $u$ and $v$ in the given EAN. This shortest path can be calculated with e.g. Dijkstra's algorithm. We can calculate the length of the path with the function $len(p, D)$, which calculates the length of the path $p$ with the durations $D$. We define $len(p, D) = \sum_{a \in p} D_a$.
 
-We can use the upper and lower bounds for the durations in the functions defined above. However, as in the TimPass problem we are dealing with perceived travel times, we should include the penalty term in the duration. Thus, let us define $L^+ = \{L_a + \text{penalty}_a:a\in A\}$ and $U^+ = \{U_a + \text{penalty}_a:a \in A\}$. Now we can use these to calculate which flow variables $p_a^{uv}$ can never be active in the optimal solution.
+We can use the upper and lower bounds for the durations in the functions defined above. However, as in the TimPass problem we are dealing with perceived travel times, we should include the penalty term in the duration. Thus, let us define $L^b = \{L_a + b_a:a\in A\}$ and $U^b = \{U_a + b_a:a \in A\}$. Now we can use these to calculate which flow variables $p_a^{uv}$ can never be active in the optimal solution.
 
-In \cref{alg:preprocessing} we present the algorithm for calculating which flow variables can be safely set to zero. We need to run the algorithm for each OD pair for which we want to reduce the number of flow variables. In high level, the algorithm first calculates the longest possible route that can belong to an optimal solution. The length of that route under the upper bound edge durations is $\beta$. Then, for each activity, we check if the activity can belong to an optimal solution by checking if including the activity would increase the lowest possible perceived travel time for the path above $\beta$. In the end, we obtain a set of activities $P$, for which we can set the corresponding flow variable to zero. Let us note the set of preprocessed activities for the OD pair $(u, v) \in \od$ as $P_{u, v}$. This is the variable $P$ for running the algorithm for the given OD pair. Then we can include the following constraint to handle the preprocessed flow variables:
+In \cref{alg:preprocessing} we present the algorithm for calculating which flow variables can be safely set to zero. We need to run the algorithm for each OD pair for which we want to reduce the number of flow variables. In high level, the algorithm first calculates the longest possible route that can belong to an optimal solution. The length of that route under the upper bound edge durations is $\beta$. Then, for each activity, we check if the activity can belong to an optimal solution by checking if including the activity would increase the lowest possible perceived travel time for the path above $\beta$. In the end, we obtain a set of activities $P$, for which we can set the corresponding flow variable to zero. Let us note the set of preprocessed activities for the OD pair $uv \in \od$ as $P_{uv}$. This is the variable $P$ for running the algorithm for the given OD pair. Then we can include the following constraint to handle the preprocessed flow variables:
 \begin{align}
-    p_a^{uv} = 0 \quad \forall (u, v) \in \od, a \in P_{u,v}
+    p_a^{uv} = 0 \quad \forall uv \in \od, a \in P_{uv}
 \end{align}
 
 % TODO: does this even make sense to represent this way? Definitions in a for loop may not be the most interesting thing.
@@ -441,19 +451,19 @@ In \cref{alg:preprocessing} we present the algorithm for calculating which flow 
     \caption{Flow variable preprocessing for OD pair $(s_1, s_2)$.}
     \label{alg:preprocessing}
     \begin{algorithmic}
-        \State Auxiliary event $u = (\text{origin}, s_1)$
-        \State Auxiliary event $v = (\text{destination}, s_2)$
+        \State Auxiliary event $u = (\text{orig}, s_1)$
+        \State Auxiliary event $v = (\text{dest}, s_2)$
         \State Initialise $P \gets \emptyset$
-        \State Calculate $\beta := len(SP_{u,v}(U^+), U^+)$
+        \State Calculate $\beta := len(SP_{u,v}(U^b), U^b)$
         \Comment{Longest possible route length from $u$ to $v$.}
         \For{$e \in E$}
-            \State Calculate $\gamma_e := len(SP_{u,e}(L^+), L^+)$
+            \State Calculate $\gamma_e := len(SP_{u,e}(L^b), L^b)$
             \Comment{Shortest possible path length from $u$ to $e$}
-            \State Calculate $\delta_e := len(SP_{e,v}(L^+), L^+)$
+            \State Calculate $\delta_e := len(SP_{e,v}(L^b), L^b)$
             \Comment{Shortest possible path length from $e$ to $v$}
         \EndFor
         \For{$a = (i, j) \in A$}
-            \If{$\gamma_i + L_a + \delta_j > \beta$}
+            \If{$\gamma_i + L_a^b + \delta_j > \beta$}
                 \State $P \gets P \cup \{a\}$
                 \Comment{The activity can never belong to the shortest path with any timetable, so we ignore it.}
             \EndIf
