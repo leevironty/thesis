@@ -191,6 +191,19 @@ def transform_od(od: OD, mean: float) -> list[float]:
     return [od.customers / mean]
 
 
+def calc_preprocessed_flow(data: ThesisData) -> dict[tuple[int, int], float]:
+    assert data.preprocessed_flows is not None
+    out: dict[tuple[int, int], int] = {}
+    for (uv, pairs) in data.preprocessed_flows.items():
+        customers = data.ods_mapped[uv].customers
+        for ij in pairs:
+            if ij not in out:
+                out[ij] = 0
+            out[ij] += customers
+    total_customers = sum(od.customers for od in data.ods.values())
+    return {ij: value / total_customers for ij, value in out.items()}
+
+
 def transform(data: ThesisData) -> HeteroData:
     assert data.preferences is not None
     out = HeteroData()
@@ -205,6 +218,8 @@ def transform(data: ThesisData) -> HeteroData:
         (key, i)
         for i, key in enumerate(set(event.line_id for event in data.events.values()))
     )
+    preprocessed_shares = calc_preprocessed_flow(data)
+    
     # 1. routing parts
     # 2. stops, ods, event to stop link
     # 3. line ids
@@ -261,7 +276,8 @@ def transform(data: ThesisData) -> HeteroData:
         preference = data.preferences.get((u, v), 1.0)
         features = transform_activity(activity, data.config.period_length)
         norm_trivial_weight = trivial_weights.get((u, v), 0) / max_trivial_weight
-        features += [preference, norm_trivial_weight]
+        preprocessing_share = preprocessed_shares.get((u, v), 0.0)
+        features += [preference, preprocessing_share, norm_trivial_weight]
         route_features.append(features)
         routes.append((event_map[u], event_map[v]))
         routes.append((event_map[v], event_map[u]))

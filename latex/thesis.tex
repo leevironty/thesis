@@ -36,6 +36,8 @@
 
 \newcommand{\N}{\mathbb{N}}
 \newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+
 \newcommand{\od}[1][]{\ifthenelse{\isempty{#1}}{\mathrm{OD}}{\mathrm{OD}_{\mathit{#1}}}}
 \newcommand{\Earr}{E_\text{arr}}
 \newcommand{\Edep}{E_\text{dep}}
@@ -47,6 +49,36 @@
 \newcommand{\Arp}{A_\text{r}^+}
 \newcommand{\Ap}{A^+}
 \newcommand{\unif}[1]{\mathcal{U}\{#1\}}
+\newcommand{\unifcont}[1]{\mathcal{U}[#1]}
+
+\newcommand{\lin}{\textit{lin}}
+\newcommand{\flow}{p}
+\newcommand{\stops}{S}
+\newcommand{\roads}{R}
+\newcommand{\lines}{L}
+\newcommand{\period}{T}
+\newcommand{\freq}{f}
+\newcommand{\events}{E}
+\newcommand{\activities}{A}
+\newcommand{\reps}{R}
+% \newcommand{\incidence}{\mathbf{A}} % NOTE: m_{i,a} for elements, so A is maybe not a sensible letter here
+\newcommand{\incidence}{\mathbf{M}}
+\newcommand{\preprocessed}{\mathcal{P}}
+\newcommand{\shortestpath}{\mathit{SP}}
+\newcommand{\Klin}{\textrm{K-lin}}
+\newcommand{\Qlin}{\textrm{Q-lin}}
+\newcommand{\Vlin}{\textrm{V-lin}}
+\newcommand{\Alin}{\textrm{A-lin}}
+\newcommand{\msg}{\textrm{Msg}}
+\newcommand{\len}{\textrm{Len}}
+
+
+
+% \newcommand{\}{\textit{lin}}
+
+
+% \SetKw{Continue}{continue}
+
 
 % \newcommand{\od}{\mathrm{OD}} 
 
@@ -126,26 +158,31 @@ Otaniemi, 9 February 2023\\
 \section{Introduction}
 \label{sec:intro}
 % \thispagestyle{empty}
-\begin{itemize}
-    \item Public transportation affects the lives of many
-    \item Low wait times are one component of a good transportation system
-    \item One way to affect the transfer wait times is to have schedules that play well together
-    \item Bonus: changing the schedule is very cheap, compared to introducing new lines or increasing the frequency of the lines.
-    \item Problem: optimal timetable depends on routes used, but routes used depend on the timetable
-    \item For optimality, these must be considered at the same time
-    \item This is infeasible with the current models
-    \item If routes are fixed, it's easier to solve for a good timetable
-    \item Objective of the thesis: study how we could predict the optimal routing so that we would be left with the easier-to-solve PESP problem.
-    \item Overview of the thesis: we generated data, fitted a GNN on it, evaluated on both generated and given data, checked for generalization, benchmarked etc.
-\end{itemize}
+% \begin{itemize}
+%     % \item Public transportation affects the lives of many
+%     % \item Low wait times are one component of a good transportation system
+%     % \item One way to affect the transfer wait times is to have schedules that play well together
+%     % \item Bonus: changing the schedule is very cheap, compared to introducing new lines or increasing the frequency of the lines.
+%     % \item Problem: optimal timetable depends on routes used, but routes used depend on the timetable
+%     % \item For optimality, these must be considered at the same time
+%     % \item This is infeasible with the current models
+%     % \item If routes are fixed, it's easier to solve for a good timetable TODO: word this better in the text
+%     % \item Objective of the thesis: study how we could predict the optimal routing so that we would be left with the easier-to-solve PESP problem.
+%     % \item Overview of the thesis: we generated data, fitted a GNN on it, evaluated on both generated and given data, checked for generalization, benchmarked etc.
+% \end{itemize}
+
+Public transportation systems play a role in many people's lives. As such, it is of great public interest to have transportation systems that are both cheap and offer high-quality services. One perspective on quality is the expected travel time between often-used journey origins and destinations. Typically, the customers of public transport appreciate getting to their destination faster. 
 
 
 
 % From the passenger's point of view, an efficient public transportation system allows the passengers to travel to their destination quickly. The time spent 
 
-The schedule determines when the vehicles arrive and depart from the stops in a public transport system. From the passenger's point of view, an efficient schedule minimizes the expected travel time. However, optimizing for the travel time is not easy. The optimal schedule depends on the routes the passengers choose to get to their destination, but at the same time the chosen routes depend on the schedule. This means, that to guarantee optimal solutions, we must optimize both the schedule and the passenger routes at the same time. This is much more difficult than optimizing the schedule with a pre-determined passenger routing, as the number of routes that each passenger can choose from can be very large, and in a realistic scenario, we will have a large number of passengers.
+The schedule determines when the vehicles arrive and depart from the stops in a public transport system. From the passenger's point of view, an efficient schedule minimizes the expected travel time. However, optimizing for the travel time is not easy. The optimal schedule depends on the routes the passengers choose to get to their destination, but at the same time the chosen routes depend on the schedule. This means, that to guarantee optimal solutions, we must optimize both the schedule and the passenger routes at the same time. This is much more difficult than optimizing the schedule with a pre-determined passenger routing, as the number of routes that each passenger can choose from can be very large, and in a realistic scenario, we will have a large number of passengers. In practice, we can't solve this problem optimally for realistically-sized problems.
 
-In this thesis, we will attempt to develop a heuristic solution method to this integrated optimization problem by trying to predict the optimal routing before solving for the timetable. We will study if a graph neural network model would be able to predict these routes and how the model's predictions would fare against previous heuristics with both small and large public transport networks.
+In this thesis, we will attempt to develop a heuristic solution method to this integrated optimization problem by trying to predict the optimal routing before solving for the timetable. This would allow us to exclude routing from the optimization problem, making the problem easier to solve. We will study if a graph neural network model would be able to predict these routes and how the model's predictions would fare against previous heuristics with both small and large public transport networks.
+
+Note, that in this case, we don't differentiate between transportation modes
+like busses and trains. In general, a real public transportation system would have multiple modes of transportation, but we ignore this for now, as the developed heuristic could be easily extended to a multimodal case. 
 
 We begin by first reviewing the literature related to the topics of the thesis. We continue by covering the theoretical background for the problem, some simple previous heuristics, and graph neural networks. Then we describe the data generation and the experiments, after which we conclude by presenting the results and analyzing what we learned.
 
@@ -192,7 +229,15 @@ Three perspectives:
 
 \clearpage
 \section{Methods}
+In \cref{fig:process-flow} we show the overview of how all the different methods are related to each other to finally get to the results, i.e. heuristic evaluation.
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{figures/process-flow.png}
+    \caption{The overview of how the data is generated, model trained, and the heuristic evaluated.}
+    \label{fig:process-flow}
+\end{figure}
 \subsection{Event activity network data}
+\label{sec:ean-def}
 
 
 % \begin{definition}[Public transport network]\label{def:ptn}
@@ -205,23 +250,39 @@ Three perspectives:
 % prujaa: ???
 
 
+Before we can define event activity networks, we have to define a few other things.
+\begin{definition}[Public Transport Network]\label{def:ptn}
+    A \textit{public transport network} (PTN) is a simple undirected graph PTN = $(S, R)$ with a set of stops $S$ and a set of direct connections between the stops $R$. 
+\end{definition}
 
-Before we can define event activity networks, we have to define a few other things. A \textit{public transport network} (PTN) is a simple graph PTN = $(S, R)$ with a set of stops $S$ and a set of direct connections between the stops $R$. A PTN describes the underlying transportation infrastructure of a public transport system. Note, that in this case, we don't differentiate between transportation modes like busses and trains. In general, a real public transportation system would have multiple modes of transportation, but we ignore this for now, as the developed heuristic could be easily extended to a multimodal case. We also consider the connections to be undirected. This only makes the modelling a bit easier, but one could also have a PTN with directed edges. The PTN could also be non-simple, but that notation would make a difference only if there were either capacity constraints per connection or if multiple modalities were used.
+A PTN describes the underlying transportation infrastructure of a public transport system. We consider the connections to be undirected. This only makes the modelling a bit easier, but one could also have a PTN with directed edges. The PTN could also be non-simple, but that notation would make a difference only if there were either capacity constraints per connection or if multiple modalities were used.
 
-We are interested in the periodic instead of the aperiodic scheduling problem. In the periodic setting, we have a \textit{period} $T \in \N$ which defines the time interval at which various events and activities are repeated. This period could be for example 60 minutes, one day, or something else. The appropriate period length depends on what kind of schedule we aim to optimise. Note that in general, the period could be a positive real number, but we consider it to be an integer to follow the convention established in \cite{schiewe2020periodic}.
+\begin{definition}[Periodic scheduling]  % TODO: this after EAN definition
+    A period $\period \in \N$ defines the time interval at which various events and activities are repeated.
+\end{definition}
 
+We are interested in the periodic instead of the aperiodic scheduling problem. This period could be for example 60 minutes, one day, or something else. The appropriate period length depends on what kind of schedule we aim to optimise. Note that in general, the period could be a positive real number, but we consider it to be an integer to follow the convention established in \cite{schiewe2020periodic}.
+
+\begin{definition}[Line concept]
+    A \textit{line} $l \subset R$ is a simple directed path in a PTN. A \textit{line concept} is a set of lines $L$ with associated frequencies $f_l \in \N$ for all $l \in L$. A frequency determines how often a line is served within the period $T$.
+\end{definition}
 
 % TODO: miten merkataan simple path tässä tapauksessa? Onko siis ordered setti / lista stoppeja?
-A \textit{line} $l$ is a simple directed path in a PTN. A \textit{line concept} is a set of lines $L$ with associated frequencies $f_l \in \N$ for all $l \in L$. A frequency determines how often a line is served within the period $T$. %We assume the lines to be bidirectional, meaning that the vehicles travel the line in both directions.
-In this case, we assume the lines to be directed, meaning that vehicles travel the line only in one direction. Usually, in real-world lines, the vehicles travel in both directions, but this can also be modelled here by including the reverse direction as a separate line instance. This notation of the line including the direction just makes the rest of the notation a bit simpler, while at the same time allowing more flexibility in what kinds of lines can be expressed.
+%A \textit{line} $l \subset R$ is a simple directed path in a PTN. A \textit{line concept} is a set of lines $L$ with associated frequencies $f_l \in \N$ for all $l \in L$. A frequency determines how often a line is served within the period $T$. %We assume the lines to be bidirectional, meaning that the vehicles travel the line in both directions.
 
-From the line concept, we can construct the event activity network (EAN). The graph EAN = $(E, A)$ has a set of events $E$ and a set of activities $A$ connecting the events. For the events, we have the disjoint arrival and departure types: $E = \Earr \cup \Edep$. As the names suggest, the sets $\Earr$ and $\Edep$ contain the events describing vehicle arrivals and departures from the stops. To simplify the notation, we define the set of available repetition numbers as $R_l = \{1, \dots, f_l\}$. More formally, the sets are defined as follows:
+In this case, we assume the lines to be directed, meaning that vehicles travel the line only in one direction. Usually, in real-world lines, the vehicles travel in both directions, but this can also be modeled here by including the reverse direction as a separate line instance. %This notation of the line including the direction just makes the rest of the notation a bit simpler, while at the same time allowing more flexibility in what kinds of lines can be expressed.
+
+From the line concept, we can construct the event activity network (EAN).
+\begin{definition}[Event Activity Network]\label{def:ean}
+    The event activity network $EAN$ is a directed graph $\textit{EAN} = (E, A)$ with a set of events $E$ and a set of activities $A$ connecting the events.
+\end{definition}
+For the events, we have the disjoint arrival and departure types: $E = \Earr \cup \Edep$. As the names suggest, the sets $\Earr$ and $\Edep$ contain the events describing vehicle arrivals and departures from the stops. To simplify the notation, we define the set of available repetition numbers as $R_l = \{1, \dots, f_l\}$. More formally, the sets are defined as follows:
 \begin{align*}
     \Earr &= \{
-        (\text{arr}, s, l, r) : l \in L, s \in l, r \in R_l
+        (\text{arr}, u, l, r) : l \in L, u \in l, r \in R_l
     \} \\
     \Edep &= \{
-        (\text{dep}, s, l, r) : l \in L, s \in l, r \in R_l
+        (\text{dep}, u, l, r) : l \in L, u \in l, r \in R_l
     \}
 \end{align*}
 As seen in the definition, the events consist of the event type, the stop, the line, and the line repetition number which is used to differentiate between separate repetitions of the line in the periodic case.
@@ -229,24 +290,24 @@ As seen in the definition, the events consist of the event type, the stop, the l
 For the activities, we also have multiple distinct types: drive, wait, change, and sync. Thus, we have that $A = A_\text{drive} \cup A_\text{wait} \cup A_\text{change} \cup \Async$. The formal definitions are as follows:
 \begin{align*}
     A_\text{drive} =& \{(
-        (\text{dep}, s_1, l, r),
-        (\text{arr}, s_2, l, r)
-    ): l \in L, (s_1, s_2) \in l, r \in R_l\}\\
+        (\text{dep}, u, l, r),
+        (\text{arr}, v, l, r)
+    ): l \in L, (u, v) \in l, r \in R_l\}\\
     A_\text{wait} =& \{(
-        (\text{arr}, s, l, r),
-        (\text{dep}, s, l, r)
-    ): l \in L, s \in l, r \in R_l\} \\
+        (\text{arr}, u, l, r),
+        (\text{dep}, u, l, r)
+    ): l \in L, u \in l, r \in R_l\} \\
     A_\text{change} =& \{(
-        (\text{arr}, s, l_1, r_1),
-        (\text{dep}, s, l_2, r_2)
-    ): \\&\quad l_1 \in L, l_2 \in L\setminus \{l_1\}, s \in l_1 \cap l_2, r_1 \in R_{l_1}, r_2 \in R_{l_2}\} \\
-    A_\text{sync} =& \{(
-       (t, s, l, d, r-1),
-       (t, s, l, d, r)
-    ): e=(t, s, l, r) \in E, r \geq 2 \}
+        (\text{arr}, u, l_1, r_1),
+        (\text{dep}, u, l_2, r_2)
+    ): \\&\quad (l_1, l_2) \in L^2, l_1 \neq l_2, u \in l_1 \cap l_2, r_1 \in R_{l_1}, r_2 \in R_{l_2}\} \\
+    \Async =& \{(
+       (t, u, l, r-1),
+       (t, u, l, r)
+    ): (t, u, l, r) \in E, r \geq 2 \}
 \end{align*}
 
-In plain English, the drive activities correspond to the driving activity between stops. The activities connect the line's departure events to the corresponding arrival events. The wait activities correspond to the vehicle staying at the station, waiting to e.g. load and unload passengers. The wait activities connect arrival events to departure events. The drive and wait activities are demonstrated in \cref{fig:drive-wait-demo}. The change activities denote the line transfers that the passengers may take. The activities link the arrivals to departures within the same stop that do not belong to the same line. The idea of change activities and multiple lines at the same stop is shown in \cref{fig:change-demo}. The sync activities are a bit different from the other activities, as the passengers can't travel along those edges. For defining the optimization models, we note the set of activities usable for passenger routing as $\Ar = A \setminus \Async$. The only use for sync activities is for defining constraints on the timetable to have some predefined spacing among the repetitions of the lines. How sync activities are connected is shown in \cref{fig:sync-demo}. Defining the constraints on all sync activities is not mandatory. In that case, the sync activities without constraints are essentially pointless.
+In plain English, the drive activities correspond to the driving activity between stops. The activities connect the line's departure events to the corresponding arrival events. The wait activities correspond to the vehicle staying at the station, waiting to e.g. load and unload passengers. The wait activities connect arrival events to departure events. The drive and wait activities are demonstrated in \cref{fig:drive-wait-demo}. The change activities denote the line transfers that the passengers may take. The activities link the arrivals to departures within the same stop that do not belong to the same line. The idea of change activities and multiple lines at the same stop is shown in \cref{fig:change-demo}. The sync activities are a bit different from the other activities, as the passengers can't travel along those edges. For defining the optimization models, we note the set of activities usable for passenger routing as $\Ar = A \setminus \Async$. The only use for sync activities is for defining constraints on the timetable to have some predefined spacing among the repetitions of the lines. How sync activities are connected is shown in \cref{fig:sync-demo}. Defining the constraints on all sync activities is not mandatory. In that case, the sync activities without constraints are redundant.
 
 
 \begin{figure}
@@ -305,23 +366,23 @@ In plain English, the drive activities correspond to the driving activity betwee
 
 \subsection{Integer programming problems}
 
-We can define a schedule for the events in an EAN. The event times are noted as $\pi_e \in \{0, \dots, T-1\}$ for all events $e \in E$. As we are working with a periodic schedule, all the event occurrence times must be lower than the period of the schedule $T$. As noted previously, we could have a real-valued schedule instead of a discrete one, but once again we follow the previous formulation.
+We can define a schedule for the events in an EAN. The event times are noted as $\pi_i \in \{0, \dots, T-1\}$ for all events $i \in E$. As we are working with a periodic schedule, all the event occurrence times must be lower than the period of the schedule $T$. As noted previously, we could have a real-valued schedule instead of a discrete one, but once again we follow the previous formulation.
 
-The activities in the EAN are used to define constraints on the upper and lower bounds for activity durations. For all activities $a \in A$, we have the lower bound $L_a \in \N$ and upper bound $U_a \in \N$. For the bounds, we of course must also have that $0 \leq L_a \leq U_a$. The activity duration for activity $a = (i, j)$ itself is calculated as $L_a + (\pi_j - \pi_i - L_a)\ \text{mod}\ T$. The lower bound term outside of the modulo ensures, that the lower bound is respected. The term inside the modulo is the "slack" time we have due to the schedule not aligning perfectly with the lower bound. As formulated, the duration is guaranteed to be greater or equal to the lower bound. For the given timetable $\pi$ to be feasible, for all activities $a \in A$ we must have that the upper bound holds: $L_a + (\pi_j - \pi_i - L_a)\ \text{mod}\ T \leq U_a$.
+The activities in the EAN are used to define constraints on the upper and lower bounds for activity durations. For all activities $a \in A$, we have the lower bound $L_a \in \N$ and upper bound $U_a \in \N$. For the bounds, we of course must also have that $0 \leq L_a \leq U_a$. The activity duration for activity $a = (i, j)$ itself is calculated as $(\pi_j - \pi_i - L_a)\ \text{mod}\ T + L_a$. The lower bound term outside of the modulo ensures, that the lower bound is respected. The term inside the modulo is the "slack" time we have due to the schedule not aligning perfectly with the lower bound. As formulated, the duration is guaranteed to be greater or equal to the lower bound. For the given timetable $\pi$ to be feasible, for all activities $a \in A$ we must have that the upper bound holds: $(\pi_j - \pi_i - L_a)\ \text{mod}\ T + L_a\leq U_a$.
 
 As the modulo operator does not fit well into linear programming as is, we replace the modulo with an integer multiple of the period $T$. The multiplier $z_a \in \Z$ becomes a decision variable. The lower bounds terms cancel out and the expression for the edge duration is now $\pi_j - \pi_i + z_aT$. As the multiplier $z_a$ can be chosen freely, this is equivalent to the formulation with the modulo.
 
 
-Along the EAN, we need information on the passenger demand between the stops of the PTN. We note the number of passengers wanting to travel from stop $i$ to stop $j$ as $\od_{i,j} \in \N$. Not all stop pairs have demand: we express the set of stop pairs with non-zero demand as $\od = \{(i,j): i \in S, j \in S, \od_{i,j} > 0\}$.
+Along the EAN, we need information on the passenger demand between the stops of the PTN. We note the number of passengers wanting to travel from stop $u$ to stop $v$ as $\od_{u, v} \in \N$. Not all stop pairs have demand: we express the set of stop pairs with non-zero demand as $\od = \{(u,v): (u, v) \in S^2, \od_{u,v} > 0\}$.
 
 For routing of the passengers, we assume a fixed routing that is given beforehand. When routing the passengers, each OD pair assumes some path from $i$ to $j$ through the EAN, and for the chosen path edges the weight $w_a$ is incremented by the number of passengers using that route. We will later return to routing in a subsequent section. For now, it's enough to recognize, that we have a weight $w_a \in \N$ for all routable activities $a \in \Ar$ of the EAN.
 
 Now we can express the PESP problem. Instead of minimizing the real total travel time $\sum_{a=(i,j) \in \Ar} w_a (\pi_j - \pi_i + z_aT)$, we minimize the total perceived travel time. In perceived travel time, we add the "perceived penalty" duration to the real duration. In principle, the penalty $b_a$ could be any real value, but in this case, we consider it to be a non-negative integer. This models the dissatisfaction of the people who have to change lines to get to their destination. Note, that the objective only considers the routable activities, but the constraints take all activities into account.
 \begin{align}
-    \textrm{min.} \quad  &\sum_{a \in \Ar} w_{a} (\pi_j-\pi_i+z_aT + b_a) \\
-    \textrm{s.t.} \quad &L_a \leq \pi_j-\pi_i+z_aT  \leq U_a \quad a =(i,j)\in A \\
-    &\pi_i \in \{0, \dots, T-1\} \quad i \in E\\
-    &z_a \in \Z \quad a \in A
+    \mathbf{(PESP)}\quad\min&\ \sum_{a \in \Ar} w_{a} (\pi_j-\pi_i+z_aT + b_a) \\
+    \textrm{s.t.} \quad L_a &\leq \pi_j-\pi_i+z_aT  \leq U_a  &a &=(i,j)\in A \\
+    \pi_i &\in \{0, \dots, T-1\} &i &\in E\\
+    z_a &\in \Z &a &\in A
 \end{align}
 Cite this: \cite{schiewe2020periodic}.
 
@@ -340,9 +401,9 @@ However, now we need to take the cycles in the EAN into account. In \cref{fig:cy
     \label{fig:cycle-example}
 \end{figure}
 
-In the cycle basis formulation, we consider cycles regardless of the edge direction, but the cycle does have a direction. All the edges of a cycle $c$ belong either to the set of "positive edges" $c^+$ or the set of "negative edges" $c^-$, based on the direction of the edges along the cycle. In the example of \cref{fig:cycle-example}, we would have that $c^+ = \{a, b, c\}$ and $c^- = \{d, e, f\}$. In more general terms, for a cycle $c$ to be consistent, we must have
+In the cycle basis formulation, we consider cycles regardless of the edge direction, but the cycle does have a direction. All the edges of a cycle $c$ belong either to the set of "positive edges" $c^+$ or the set of "negative edges" $c^-$, based on the direction of the edges along the cycle. In the example of \cref{fig:cycle-example}, we would have that $c^+ = \{a, b, c\}$ and $c^- = \{d, e, f\}$. In more general terms, for a cycle $c$ to be consistent, for some $z \in \Z$ we must have:
 \begin{align}
-    \sum_{a\in c^+}x_a - \sum_{a \in c^-}x_a = zT\ \exists z \in \Z.
+    \sum_{a\in c^+}x_a - \sum_{a \in c^-}x_a = zT
 \end{align}
 
 An EAN may have many cycles, but luckily we don't have to check the condition for all cycles. We can construct a cycle basis for the EAN and checking the condition for that basis is enough. We denote the cycle basis as $C$. As the cycle inconsistency can be a problem only with activities with constraints, we calculate the cycle basis for activities that can have constraints, i.e. the set $A$.
@@ -352,44 +413,44 @@ An EAN may have many cycles, but luckily we don't have to check the condition fo
 
 Now we may define the cycle basis formulation for the PESP problem. The formulation is quite similar to the original definition, but now the activity duration is expressed in a very concise way and we have the additional cycle consistency constraint:
 \begin{align}
-    \textrm{min.} \quad  \sum_{a \in \Ar} w_{a} (x_a + b_a) \\
-    \textrm{s.t.} \quad  \sum_{a\in c^+} x_a - \sum_{a\in c^-} x_a & = z_c T \quad c \in C \\
-    L_a \leq x_a & \leq U_a \quad a \in A \\
-    z_c &\in \Z \quad c \in C \\
-    x_a &\in \Z \quad a \in A
+    \textbf{(PESP cycle basis)}\ \min &  \sum_{a \in \Ar} w_{a} (x_a + b_a) \\
+    \textrm{s.t.} \quad  z_c T &= \sum_{a\in c^+} x_a - \sum_{a\in c^-} x_a &c &\in C \\
+    L_a &\leq x_a  \leq U_a &a &\in A \\
+    z_c &\in \Z &c& \in C \\
+    x_a &\in \Z &a& \in A
 \end{align}
 
-In the TimPass problem, we are free to choose the route used for each OD pair as we minimise the total perceived travel time. However, to represent the routes from stop $i$ to stop $j$, we would prefer to have all the possible paths start and end to the same nodes. To achieve this, we introduce the auxiliary events $\Eaux$ and auxiliary activities $\Aaux$. For the auxiliary events, we have one origin and departure event for each stop: $\Eaux = \{(t, v) : t \in \{\text{orig}, \text{dest}\}, s \in S\}$. For the auxiliary activities, we have an edge from all auxiliary origin events to the corresponding stop's events and an edge from all stop's events to the corresponding destination auxiliary event:
+In the TimPass problem, we are free to choose the route used for each OD pair as we minimise the total perceived travel time. However, to represent the routes from stop $i$ to stop $j$, we would prefer to have all the possible paths start and end to the same nodes. To achieve this, we introduce the auxiliary events $\Eaux$ and auxiliary activities $\Aaux$. For the auxiliary events, we have one origin and departure event for each stop: $\Eaux = \{(t, u) : t \in \{\text{orig}, \text{dest}\}, u \in S\}$. For the auxiliary activities, we have an edge from all auxiliary origin events to the corresponding stop's events and an edge from all stop's events to the corresponding destination auxiliary event:
 \begin{align}
-    % \Aaux = \{((\text{orig}, s), e): e = (t, s, l, r) \in E\} \cup 
-    % \{(e, (\text{dest}, s)): e = (t, s, l, r) \in E\}\\
-    \Aaux = \bigcup_{e = (t, s, l, r) \in E}\{((\text{orig}, s), e), (e, (\text{dest}, s))\}
+    % \Aaux = \{((\text{orig}, u), e): e = (t, u, l, r) \in E\} \cup 
+    % \{(e, (\text{dest}, u)): e = (t, u, l, r) \in E\}\\
+    \Aaux = \bigcup_{i = (t, u, l, r) \in E}\{((\text{orig}, u), i), (i, (\text{dest}, u))\}
 \end{align}
 To denote the set of all routable activities, we note $\Arp = \Ar \cup \Aaux$. Similarly, to denote all events including the auxiliary events, we note $\Ep = E \cup \Eaux$. Extended activities are not considered to be real activities in the sense of having a duration. As such, the auxiliary activities are not subject to duration constraints and are not part of the objective function.
 
-To note if the activity $a$ is part of the chosen path between stops $u$ and $v$, we have the flow variable $p_a^{uv} \in \{0, 1\}, (a, uv) \in \Arp \times \od$. This allows us to set up some constraints on what is considered a valid path. For a from stop $u$ to stop $v$ to be valid, it must start at the event $(\text{orig}, u)$ and end at $(\text{dest}, v)$. Additionally, the path must be connected from the origin all the way to the destination, i.e. for all events that are not auxiliary events we must have an equal number of active edges leading to it and out of it. 
+To note if the activity $a$ is part of the chosen path between stops $u$ and $v$, we have the flow variable $p_a^{uv} \in \{0, 1\}, (a, uv) \in \Arp \times \od$. This allows us to set up some constraints on what is considered a valid path. For a from stop $u$ to stop $v$ to be valid, it must start at the event $(\text{orig}, u)$ and end at $(\text{dest}, v)$. Additionally, the path must be connected from the origin all the way to the destination, i.e. for all events that are not auxiliary events we must have an equal number of ingoing and outgoing edges active.
 
-We can formalise this by introducing a node-arc-incidence matrix $M$ and an origin-destination vector $q =(q_e)_{e\in \Ep}$. For a origin-destination pair $(u, v) \in \od$, the origin-destination vector elements are:
+We can formalise this by introducing a node-arc-incidence matrix $\incidence$ and an origin-destination vector $q^\mathit{uv} =(q_i^\mathit{uv})_{i\in \Ep}$. For a origin-destination pair $(u, v) \in \od$, the origin-destination vector elements are:
 \begin{align}
-    q_e = \begin{cases}
-        -1&\text{if}\ e=(\text{orig}, u)\\
-        1&\text{if}\ e=(\text{dest}, v)\\
+    q^\mathit{uv}_i = \begin{cases}
+        -1&\text{if}\ i=(\text{orig}, u)\\
+        1&\text{if}\ i=(\text{dest}, v)\\
         0&\text{otherwise}
     \end{cases}
 \end{align}
 
-For the node-arc incidence matrix $M=(m_{e, a})_{(e, a) \in \Ep \times \Arp}$, we have that the element is minus one if the activity leads away from the event, one if the activity leads to the event and zero otherwise. Formally:
+For the node-arc incidence matrix $\incidence=(m_{i, a})_{(i, a) \in \Ep \times \Arp}$, we have that the element is minus one if the activity leads away from the event, one if the activity leads to the event and zero otherwise. Formally:
 \begin{align}
-    m_{e, a} = \begin{cases}
-        -1&\text{if}\ a = (e, t)\ \exists t \in \Ep\\
-        1&\text{if}\ a = (t , e)\ \exists t \in \Ep\\
+    m_{i, a} = \begin{cases}
+        -1&\text{if}\ a = (i, j)\ \exists j \in \Ep\\
+        1&\text{if}\  a = (j, i)\ \exists j \in \Ep\\
         0&\text{otherwise}
     \end{cases}
 \end{align}
 
 Armed with this notation, we can finally construct the constraint necessary for the set of active flow variables to constitute a valid path from stop $u$ to stop $v$:
 \begin{align}
-    M \cdot (p_a^{uv})_{a \in \Arp} = b \quad \forall uv \in \od
+    \incidence (p_a^{uv})_{a \in \Arp} = q^\mathit{uv} \quad \forall uv \in \od
 \end{align}
 This constraint does not actually prevent the flow variables from creating a cycle, but as we are minimising the total perceived travel time, those cycles would be non-optimal and thus they will not occur in optimal solutions.
 
@@ -399,73 +460,80 @@ We can express the total perceived travel time as the sum of perceived travel ti
 \end{align}
 However, we have a problem as we hope to get a linear integer programming problem. Now we have $p_a^{uv}x_a$, which is not linear as both terms are decision variables. Luckily, as the flow variable $p_a^{uv}$ can only be either 0 or 1, we can linearise this expression quite easily.
 
-We create the linearization decision variable $lin_a^{uv}$ for all $a \in \Ar$ and $uv \in \od$. We aim to always have $lin_a^{uv} = p_a^{uv}(x_a + b_a)$ without explicitly stating this equality, as the right-hand side has the non-linear term. We achieve this by constructing suitable constraints for the linearization term.
+We create the linearization decision variable $\textit{lin}_a^{uv}$ for all $a \in \Ar$ and $uv \in \od$. We aim to always have $\textit{lin}_a^{uv} = p_a^{uv}(x_a + b_a)$ without explicitly stating this equality, as the right-hand side has the non-linear term. We achieve this by constructing suitable constraints for the linearization term.
 
 Let $B$ be some large integer for which $B \geq x_a + b_a\ \forall a \in \Ar$. With this value, we can come up with the following set of constraints:
 \begin{align}
-    &lin_a^{uv} \geq 0 \\
-    &lin_a^{uv} \leq p_a^{uv} B \\
-    &lin_a^{uv} \leq x_a + b_a \\
-    &lin_a^{uv} \geq x_a + b_a - (1 - p_a^{uv}) B
+    &\textit{lin}_a^{uv} \geq 0 \\
+    &\textit{lin}_a^{uv} \leq p_a^{uv} B \\
+    &\textit{lin}_a^{uv} \leq x_a + b_a \\
+    &\textit{lin}_a^{uv} \geq x_a + b_a - (1 - p_a^{uv}) B
 \end{align}
-Now, if $p_a^{uv} = 0$, we must have that $lin_a^{uv} = 0$. If $p_a^{uv} = 1$, then $lin_a^{uv} = x_a + b_a$.
+Now, if $p_a^{uv} = 0$, we must have that $\textit{lin}_a^{uv} = 0$. If $p_a^{uv} = 1$, then $\textit{lin}_a^{uv} = x_a + b_a$.
 
 Now we can finally express the TimPass problem with the cycle basis formulation. We omit the linearization term and constraints for clarity, but in practice, the linearization must be done for commonly available solvers to function properly.
 \begin{align}
-    \textrm{min.} \quad  \sum_{\mathit{uv} \in \textrm{OD}} \od_{\mathit{uv}} \sum_{a \in \Ar} p_{a}^{\mathit{uv}} (x_a + b_a) \\
+    \textbf{(TimPass)}\ \min&\sum_{\mathit{uv} \in \textrm{OD}} \od_{\mathit{uv}} \sum_{a \in \Ar} p_{a}^{\mathit{uv}} (x_a + b_a) \\
     % \textrm{min.} \quad  \sum_{\mathit{uv} \in \textrm{OD}} \od_{\mathit{uv}} \sum_{a \in A_\text{routable}} lin_a^{uv}) \\
-    \textrm{s.t.} \quad  \sum_{a\in c^+} x_a - \sum_{a\in c^-} x_a & = z_c T \quad c \in C \\
-    L_a \leq x_a &\leq U_a \quad a \in A \\
-    % x_a &\leq U_a \\
-    M (p_{a}^{\mathit{uv}})_{a\in \Arp} &= b^{\mathit{uv}} \quad \mathit{uv} \in \textrm{OD}\\
-    x_a &\in \Z \quad a \in A \\
-    z_c &\in \Z \quad c \in C \\
-    p_a^{\mathit{uv}} &\in \{0, 1\} \quad a \in \Arp, \mathit{uv} \in \textrm{OD}
+    \textrm{s.t.} \quad  z_c T &= \sum_{a\in c^+} x_a - \sum_{a\in c^-} x_a &c& \in C \\
+    L_a &\leq x_a \leq U_a &a& \in A \\
+    \incidence (p_{a}^{\mathit{uv}})_{a\in \Arp} &= q^{\mathit{uv}} &\mathit{uv} &\in \textrm{OD}\\
+    x_a &\in \Z &a& \in A \\
+    z_c &\in \Z &c& \in C \\
+    p_a^{\mathit{uv}} &\in \{0, 1\} &a& \in \Arp, \mathit{uv} \in \textrm{OD}
 \end{align}
 
-% TODO: preprocessing??
-\begin{itemize}
-    % \item Introduce auxiliary events used in the TimPass formulation.
-    % \item Introduce how the routing constraint matrix $A$ and vector $b$ are defined.
-    % \item Briefly describe how the linearization trick for the objective works.
-    % \item Describe how preprocessing works to reduce the number of routes we have to consider.
-    \item Describe how multiple solutions are obtained by turning the optimal objective into a constraint and generating a new objective with random weights on the routing variables. Maybe we can cite Helmi's work here?
-\end{itemize}
+% \begin{itemize}
+%     % \item Introduce auxiliary events used in the TimPass formulation.
+%     % \item Introduce how the routing constraint matrix $A$ and vector $b$ are defined.
+%     % \item Briefly describe how the linearization trick for the objective works.
+%     % \item Describe how preprocessing works to reduce the number of routes we have to consider.
+%     \item Describe how multiple solutions are obtained by turning the optimal objective into a constraint and generating a new objective with random weights on the routing variables. Maybe we can cite Helmi's work here?
+% \end{itemize}
 
 The given formulation for the TimPass problem works, but we are left with many flow variables. Luckily, there is a way to reduce the complexity by calculating which flows can never exist in the optimal solution. This method is first presented in \cite{schiewe2020periodic}. 
 
-We define the function $SP_{u,v}(D)$ to be the function, that given the set of durations $D$ for the activities, calculates the shortest path between nodes $u$ and $v$ in the given EAN. This shortest path can be calculated with e.g. Dijkstra's algorithm. We can calculate the length of the path with the function $len(p, D)$, which calculates the length of the path $p$ with the durations $D$. We define $len(p, D) = \sum_{a \in p} D_a$.
 
-We can use the upper and lower bounds for the durations in the functions defined above. However, as in the TimPass problem we are dealing with perceived travel times, we should include the penalty term in the duration. Thus, let us define $L^b = \{L_a + b_a:a\in A\}$ and $U^b = \{U_a + b_a:a \in A\}$. Now we can use these to calculate which flow variables $p_a^{uv}$ can never be active in the optimal solution.
+To formalise the preprocessing, we will need a notation for the shortest paths. In practice, the shortest paths will be calculated with Dijkstra's algorithm.
+\begin{definition}[Shortest Path]
+    Let $D$ be the set of durations for activities so that $D_a \in \N$. We calculate the length of a path $P$ as $\len(P, D) = \sum_{a \in P} D_a$. We define the function $\shortestpath_{i,j}(D)$ to return a shortest path between the events $i$ and $j$, i.e. \begin{align}
+        \min_P\  \len(P, D) = \len(\shortestpath_{i, j}(D), D)
+    \end{align}
+    Where $P$ is a valid path between events $i$ and $j$.
+\end{definition}
 
-In \cref{alg:preprocessing} we present the algorithm for calculating which flow variables can be safely set to zero. We need to run the algorithm for each OD pair for which we want to reduce the number of flow variables. In high level, the algorithm first calculates the longest possible route that can belong to an optimal solution. The length of that route under the upper bound edge durations is $\beta$. Then, for each activity, we check if the activity can belong to an optimal solution by checking if including the activity would increase the lowest possible perceived travel time for the path above $\beta$. In the end, we obtain a set of activities $P$, for which we can set the corresponding flow variable to zero. Let us note the set of preprocessed activities for the OD pair $uv \in \od$ as $P_{uv}$. This is the variable $P$ for running the algorithm for the given OD pair. Then we can include the following constraint to handle the preprocessed flow variables:
+% We define the function $\shortestpath_{u,v}(D)$ to be the function, that given the set of durations $D$ for the activities, calculates the shortest path between nodes $u$ and $v$ in the given EAN. This shortest path can be calculated with e.g. Dijkstra's algorithm. We can calculate the length of the path with the function $\mathit{len}(p, D)$, which calculates the length of the path $p$ with the durations $D$. We define $\mathit{len}(p, D) = \sum_{a \in p} D_a$.
+
+The upper and lower bounds can be used as the duration in both $\len$ and $\shortestpath$. However, as in the TimPass problem we are dealing with perceived travel times, we should include the penalty term in the duration. Thus, let us define $L^b = \{L_a + b_a:a\in A\}$ and $U^b = \{U_a + b_a:a \in A\}$. Now we can use these to calculate which flow variables $p_a^{uv}$ can never be active in the optimal solution.
+
+In \cref{alg:preprocessing} we present the algorithm for calculating which flow variables can be safely set to zero. We need to run the algorithm for each OD pair for which we want to reduce the number of flow variables. In high level, the algorithm first calculates the longest possible route that can belong to an optimal solution. The length of that route under the upper bound edge durations is $\beta$. Then, for each activity, we check if the activity can belong to an optimal solution by checking if including the activity would increase the lowest possible perceived travel time for the path above $\beta$. In the end, we obtain a set of activities $\preprocessed$, for which we can set the corresponding flow variable to zero. Let us note the set of preprocessed activities for the OD pair $uv \in \od$ as $P_{uv}$. This is the variable $P$ for running the algorithm for the given OD pair. Then we can include the following constraint to handle the preprocessed flow variables:
 \begin{align}
     p_a^{uv} = 0 \quad \forall uv \in \od, a \in P_{uv}
 \end{align}
 
-% TODO: does this even make sense to represent this way? Definitions in a for loop may not be the most interesting thing.
-{
-    \color{red}
-    \textbf{TODO:} \textit{Does expressing the preprocessing in this way even make sense? ofc. this is how it's calculated, but the definition does not benefit from the for-loops.}
-}
+% % TODO: does this even make sense to represent this way? Definitions in a for loop may not be the most interesting thing.
+% {
+%     \color{red}
+%     \textbf{TODO:} \textit{Does expressing the preprocessing in this way even make sense? ofc. this is how it's calculated, but the definition does not benefit from the for-loops.}
+% }
 \begin{algorithm}
-    \caption{Flow variable preprocessing for OD pair $(s_1, s_2)$.}
+    \caption{Flow variable preprocessing for OD pair $(u, v)$.}
     \label{alg:preprocessing}
     \begin{algorithmic}
-        \State Auxiliary event $u = (\text{orig}, s_1)$
-        \State Auxiliary event $v = (\text{dest}, s_2)$
-        \State Initialise $P \gets \emptyset$
-        \State Calculate $\beta := len(SP_{u,v}(U^b), U^b)$
-        \Comment{Longest possible route length from $u$ to $v$.}
-        \For{$e \in E$}
-            \State Calculate $\gamma_e := len(SP_{u,e}(L^b), L^b)$
-            \Comment{Shortest possible path length from $u$ to $e$}
-            \State Calculate $\delta_e := len(SP_{e,v}(L^b), L^b)$
-            \Comment{Shortest possible path length from $e$ to $v$}
+        \State Auxiliary event $i = (\text{orig}, u)$
+        \State Auxiliary event $j = (\text{dest}, v)$
+        \State Initialise $\preprocessed \gets \emptyset$
+        \State Calculate $\beta := \mathit{len}(\shortestpath_{i, j}(U^b), U^b)$
+        \Comment{Longest possible route length from $i$ to $j$.}
+        \For{$k \in E$}
+            \State Calculate $\gamma_k := \mathit{len}(\shortestpath_{i,k}(L^b), L^b)$
+            \Comment{Shortest possible path length from $i$ to $k$}
+            \State Calculate $\delta_k := \mathit{len}(\shortestpath_{k,j}(L^b), L^b)$
+            \Comment{Shortest possible path length from $k$ to $j$}
         \EndFor
-        \For{$a = (i, j) \in A$}
+        \For{$a = (i, j) \in \Ar$}
             \If{$\gamma_i + L_a^b + \delta_j > \beta$}
-                \State $P \gets P \cup \{a\}$
+                \State $\preprocessed \gets \preprocessed \cup \{a\}$
                 \Comment{The activity can never belong to the shortest path with any timetable, so we ignore it.}
             \EndIf
         \EndFor
@@ -474,32 +542,147 @@ In \cref{alg:preprocessing} we present the algorithm for calculating which flow 
     
 \subsection{Shortest path routing heuristic}
 
-\begin{itemize}
-    \item Idea: use lower bounds + penalties as the edge duration, use Dijkstra's alg to calculate the shortest paths between each OD pair -> accumulate demand for OD pair to be a weight / demand for each activity along the shortest path.
-    \item Use obtained weights in PESP
-    \item Note about routing: we assume, that the passengers are happy to leave at any time during the period. We are minimizing just the time passengers spend going from origin stop to destination stop.
-    \item Note about capacity restrictions: as we don't have any, routing everyone through the same route is fine.
-\end{itemize}
+A simple baseline heuristic to the TimPass problem is to route the passengers according to the lower bound shortest paths and to then solve the timetable with PESP. Formally, we calculate the weights with \cref{alg:weights} by using the penalised lower bounds $L^b$ as the activity durations. As we don't have capacity constraints on the activities, we can route each OD pair independently of each other.
+
+% TODO: citation to some relevant source
+
+\begin{algorithm}
+    \caption{Weight calculation from edge durations}
+    \label{alg:weights}
+    \begin{algorithmic}
+        \Require{Activity durations $D$}
+        \State $w_a = 0$ for all $a \in A$.
+        \For{$(u, v) \in \od$}
+            \State $i = (\mathrm{orig}, u)$
+            \State $j = (\mathrm{dest}, v)$
+            \For{$a \in \shortestpath_{i, j}(D)$}
+                \State $w_a \gets w_a + D_a$
+            \EndFor
+        \EndFor
+    \end{algorithmic}
+\end{algorithm}
+
+We use the obtained weights in the PESP to obtain a timetable. The timetable evaluation is conducted in the same way as for the new proposed heuristic. The evaluation method is described in \cref{sec:heur-eval}. Note, that despite the weights used here representing real passengers, we should still do the rerouting as described in the evaluation method, as that can improve the objective. We want to ensure fair evaluation for both the baseline and the proposed heuristic.
+
+% TODO: source / citation for why rerouting is necessary for fair evaluation
+
+% \begin{itemize}
+%     % \item Idea: use lower bounds + penalties as the edge duration, use Dijkstra's alg to calculate the shortest paths between each OD pair -> accumulate demand for OD pair to be a weight / demand for each activity along the shortest path.
+%     \item Use obtained weights in PESP
+%     \item Note about routing: we assume, that the passengers are happy to leave at any time during the period. We are minimizing just the time passengers spend going from origin stop to destination stop.
+%     \item Note about capacity restrictions: as we don't have any, routing everyone through the same route is fine.
+% \end{itemize}
 
 \subsection{GNNs}
-\begin{itemize}
-    \item Neural networks in general: lots of additions and multiplications, with some non-linear layers
-    \item How message passing works in general: node embedding to message, send msg to neighbouring nodes, aggregate msgs in some order-invariant way (e.g. attention, sum, max, mean), update node embedding
-    \item Can be repeated multiple times -> node embeddings
-    \item Node embeddings can be used for downstream tasks
-    \item Trained with backpropagation of loss gradient
-\end{itemize}
+
+In general, neural networks are machine learning models with a large number of learnable parameters. The networks consist of multiple additions and multiplications in many layers. Even though the individual operations seem simple, surprisingly complex behaviour can emerge. Graph neural networks are a set of architectures that operate on graph data. To be specific, we focus here on message-passing architectures \cite{mpgnn-into-2017}, but other methods for processing graph data do exist.
+
+The GNN as in \cite{gnn-intro-2009} is viewed as a function $\tau(G, n) \in \R^m$ that maps the node $n$ of a graph $G$ into $m$-dimensional Euclidian space. Essentially, this generates some $\R^m$ representations for the nodes that we can then use for other downstream tasks, e.g. regression or classification. In \cite{mpgnn-into-2017} the message-passing framework is introduced as a way to formalise the various variants of the graph neural networks.
+
+In MPGNNs, the graph $G = (V, E)$ contains the node-level features $x_v$ and edge-level features $e_{vw}$. We note the neighbourhood of node $v \in V$ as $N(v) \subseteq V$. The neighbourhoods are used to pass the messages in MPGNNs.
+
+The algorithm contains multiple layers of message passing and processing, which ultimately yields the mapping or embedding of the nodes. We note the number of layers as $T$. For each layer $t$, we learn a message construction function $M_t$ and a state updating function $U_t$. The combination of the functions is used to construct the hidden states of the nodes $h_v^{t+1}$ for the next layer $t+1$.
+
+The message construction function $M_t(h_v^t, h_w^t, e_{vw}),\ w \in N(v)$ maps the hidden states and the edge features of the neighbourhood of $v$ to messages. These messages can then be aggregated in some symmetric way, e.g. a sum in case of the messages belonging to some Euclidean space. The requirement for the aggregation to be symmetric is important: otherwise the hidden state update would depend on the order in which we process the edges, but this is not justified by the structure of the graph. The messages from the neighbourhood are aggregated to a single aggregated message $m_v^t$:
+\begin{align}
+    m_v^t = \sum_{w \in N(v)}M_t(h_v^t, h_w^t, e_{vw})
+\end{align}
+
+The state update function maps the current hidden state and the obtained aggregated message to a new hidden state: $h_v^{t+1} = U_t(h_v^t, m_v^t)$. This forms a layer together with the message generation and aggregation functions. The layers are repeated multiple times, each one with their own trainable parameters.
+
+The obtained node embeddings $h_v^T$ of the last layer are used as inputs for the downstream tasks. For example, in the case of a regression problem, we could then have a single-layer perceptron, mapping $h_v^T \mapsto \hat{y} \in \R$. Then, in a supervised setting, we could then calculate the loss $\ell(y, \hat{y}) \in \R$ against the true label $y$ and then use some optimization algorithm to update the model parameters to minimise the loss.
+
+Typically, optimization method for neural networks uses some variation of the stochastic gradient descent (SGD). In SGD, the gradient of the loss w.r.t. $\hat{y}$ is propagated back through the network to obtain the gradient with respect to the parameters. In vanilla SGD, the gradients multiplied by a suitable step size would be used as the parameter update. However, it has been noted that this method is susceptible to getting stuck on local minima. In this thesis, we will be using the Adam optimizer \cite{adam-2014}, which can be viewed as an extension of SGD with momentum and step size adaption.
+
+One desirable quality of MPGNNs is that the same model can be used with networks of varying sizes. This does not limit us to always have the same number of nodes and edges in the problem.
+
+% TODO: note about graph transformers
+ 
+
+
+% \begin{itemize}
+% %     \item Neural networks in general: lots of additions and multiplications, with some non-linear layers
+% %     \item How message passing works in general: node embedding to message, send msg to neighbouring nodes, aggregate msgs in some order-invariant way (e.g. attention, sum, max, mean), update node embedding
+% %     \item Can be repeated multiple times -> node embeddings
+%     % \item Node embeddings can be used for downstream tasks
+%     % \item Trained with backpropagation of loss gradient
+%     % \item 
+%     % \item Mention optimization methods, adam
+%     \item Note about scale: network size is not fixed -> possible scaling benefits
+% \end{itemize}
 
 
 \subsubsection{Positional encodings}
-\begin{itemize}
-    \item Used laplacian eigenvector positional encodings
-    \item Describe why PEs are often used to enable GNNs to distinguish different structures
-    \item Briefly describe how this PE method works
-    \item Briefly discuss other alternatives for PE choices
-\end{itemize}
+
+One limitation of the message-passing framework is, that if the initial node features are equal, some non-isomorphic network structures may not be detected \cite{repr-limit-2020}. This can be resolved by injecting some structural information to the features of the nodes. In this case, we will be using Laplacian eigenvector positional encodings \cite{LaPE-first-introduction-2003} to allow the model to better differentiate many kinds of structures.
+
+Let $A$ be the adjacency matrix of a graph. The elements of the Laplacian matrix $L$ are then
+\begin{align}
+    L_{ij} = \begin{cases}
+        A_ij,\ i \neq j\\
+        \sum_{k \in V} A_{ik},\ i = j
+    \end{cases}
+\end{align}
+The Laplacian eigenvectors $\mathbf{f_i}$ are the eigenvectors of the Laplacian matrix. For the positional encoding, we would take the eigenvectors with $m$ largest corresponding eigenvalues and inject the resulting vector values to the nodes.
+
+The sign of the eigenvectors can be arbitrary. This is why we choose only top-$m$ vectors, as when training the model we need to pick a random combination of signs. The model can learn the invariance to the sings symmetries much easier, as we have a limited number of possible combinations.
+
+A naive way of implementing the positional encoding would be to just use some random ordering of the nodes. This has the flaw that we would need to train the model using all possible orderings of the nodes to make the model learn to be invariant to the actual order, and just use it for positional information. As we typically choose $m \ll |V|$, using the Laplacian eigenvectors for positional encoding makes the model training much easier.
+
+We use the Laplacian PE implementation from \cite{LaPE-implementation-2020}.
+
+
+% TODO: possibly add a fourier-series like visualisation of LaPE over some graph
+
+% \begin{itemize}
+%     % \item Describe why PEs are often used to enable GNNs to distinguish different structures
+%     \item Used laplacian eigenvector positional encodings
+%     \item Briefly describe how this PE method works
+%     \item Briefly discuss other alternatives for PE choices
+% \end{itemize}
 
 \subsubsection{Network architecture}
+
+The typical MPGNNs are designed for homogenous graphs, meaning that the nodes and edges have the same semantic meaning. However in this thesis, we need to include also non-homogenous information, as on top of the events and activities we have the OD demands. This pushes us to use more contemporary methods that allow us to model heterogeneous graphs. We chose to use the Heterogenous Graph Transformer (HGT) architecture \cite{hgt-2020}. The HGT architecture also includes methods for dealing with "web-scale networks" and temporal graphs, but we will just omit those, as the networks we are dealing with are much smaller and do not vary over time.
+
+In heterogenous graphs $G = (\mathcal{V}, \mathcal{E}, \mathcal{A}, \mathcal{R})$, the nodes $v \in \mathcal{V}$ and edges $e \in \mathcal{E}$ are associated to node types $\mathcal{A}$ and edge types $\mathcal{R}$ by mapping functions $\tau(v): \mathcal{V} \to \mathcal{A}$ and $\phi(e): \mathcal{E} \to \mathcal{R}$. This allows us to define the meta-relation $\langle \tau(u), \phi(e), \tau(v)\rangle$ of an edge $e=(u,v)$. This meta-relation is the tuple of the origin and destination node types and the edge relation. Using the meta-relation we can comprehensively state what kind of interaction an edge expresses. This will be used later when defining the message-passing methods of the network. Note, that a node-type pair may have multiple kinds of relations, this is why we need to also include the type of the edge to the meta-relation.
+
+As in the MPGNN architecture, the HGT also generates messages and aggregates them over the neighbourhood of a node $v$ to generate the updated hidden state $h_v^t$. However, in a heterogeneous setting, the feature distributions of the nodes of different types are also assumed to be different. This motivates the use of different message generation and update functions for different meta-relations and node types. The architecture also uses an attention mechanism to give more weight to messages coming from nodes that the model estimates to be important.
+
+We introduce three affine transformations that will be used in the message-generation procedure. The functions map the hidden state to vectors called key, query, and value:
+\begin{align}
+    \Klin_{\tau(v)}(h_)
+\end{align}
+
+
+Let us begin by describing the attention mechanism. As the HGT can work with multigraphs, we denote the set of edges between nodes $u$ and $v$ as $E(u,v)$. We will calculate $\text{Attention}(u, e, v) \in \R$ for all $u \in N(v), e \in E(u,v)$. Attention uses
+% TODO: make this neat
+
+\begin{align}
+    NE(v) = \{u, e : u \in N(v), e \in E(u, v)\}\\
+    Q^t(v) = \{\Qlin^t_{\tau(u)}(h^t_u): u \in N(v)\} \\
+    K^t(v) = \{\Klin^t_{\tau(u)}(h^t_u): u \in N(v)\}\\
+    ATT^t(v) = \{K^t(v)_uW^{ATT}_{\phi(e)}Q^\top_v : (u, e) \in NE(v) \} \\
+    \text{Attention}(u, v) = \frac{e^{ATT^t(v)_u}}{\sum_{i \in N(v)} e^{ATT^t(v)_i}} 
+\end{align}
+
+
+\begin{align}
+    A^t(v) = \{\Alin^t_{\tau(u)}(h^t_u): u \in N(v)\} \\
+    \msg(u, e, v) = \\
+    h^{t+1}_v = h^t_v + A^t_v \text{Relu}\left(\sum_{(u, e) \in NE(v)} \text{Attention}(u, e, v) \msg(u, e, v)\right)
+\end{align}
+
+% Q_tau: updated node query for attention
+% K_tau: other node value for attention
+% W^ATT_(phi(e)): ??? -> softmax = attention-multiplier
+% V_tau -> W^MSG_phi = msg
+% aggregation: attention dot msg
+% A_tau: state update func
+% state update: relu -> A_tau -> new h
+% repeat for all layers
+% NOTE: parameters not shared between layers, but the layer index left out to keep notation cleaner
+
 \begin{itemize}
     \item Using HGT for generating node embeddings, MLP for turning node embeddings to predictions.
     \item Injecting PEs to the problem instances before HGT
@@ -510,19 +693,53 @@ In \cref{alg:preprocessing} we present the algorithm for calculating which flow 
 
 
 \subsection{Heuristic evaluation method}
-\begin{itemize}
-    \item For heuristics that assign weights to activities, that are then used to solve PESP
-    \item Process in short: solve pesp, use obtained time table to generate shortest path routing, calculate the real objective value from shortest paths and obtained event durations.
-    \item Reasoning for doing all this: the weights obtained from the GNN may be scaled arbitrarily (just a prediction, not necessarily unbiased / ) -> we must rescale the weights so that the weights represent 
-\end{itemize}
+\label{sec:heur-eval}
+
+
+The GNN heuristic yields us weights for the activities in the EAN and with those weights we solve the schedule with PESP. However, we can't directly calculate the TimPass objective value from the weights and the schedule, as the weights can be arbitrarily scaled so it does not represent the total number of passengers per activity. We will solve this by calculating the objective-minimising properly scaled weights based on the obtained schedule. Luckily this is easy to do, as the shortest path routing based on the obtained activity durations minimises the objective for the given schedule.
+
+We will now show that the shortest path routing minimises the objective for a fixed schedule. Let $P(u, v)$ be a path between stops $u$ and $v$. The TimPass objective can formulated equivalently in terms of routes or paths instead of flow variables:
+\begin{align}
+    &\min_{P}\sum_{uv \in \od} \od_{uv} \sum_{a \in P(u, v)} x_a \\
+    =&\min_{P}\sum_{uv \in \od} \od_{uv} \len(P(u, v), x)
+\end{align}
+
+Remember that we don't have capacity constraints for the activities. This means, that the paths are independent of each other. This means, that we can simply minimise each term of the sum independently. By the definition of the shortest path route $SP_{u, v}(x)$, the shortest path routing minimises this objective.
+
+\begin{align}
+    =&\sum_{uv \in \od} \od_{uv} \min_{P(u,v)}\len(P(u, v), x) \\
+    =&\sum_{uv \in \od} \od_{uv} \len(\shortestpath_{(\mathrm{orig}, u),(\mathrm{dest}, v)}(x), x) \label{eq:eval-obj}
+\end{align}
+
+We calculate the objective value for the heuristic from \cref{eq:eval-obj} by setting $x$ to be the activity durations solved from the PESP. This value can be compared with both the shortest path heuristic and the TimPass solution's upper and lower bounds to determine how well the heuristic is doing.
+
+
+% \begin{itemize}
+%     \item For heuristics that assign weights to activities, that are then used to solve PESP
+%     \item Process in short: solve pesp, use obtained time table to generate shortest path routing, calculate the real objective value from shortest paths and obtained event durations.
+%     \item Reasoning for doing all this: the weights obtained from the GNN may be scaled arbitrarily (just a prediction, not necessarily unbiased / ) -> we must rescale the weights so that the weights represent 
+% \end{itemize}
 
 \clearpage
 \section{Experiment setup}
 \subsection{Data generation}
 
-To train the neural network, we generated a large number of EANs and ODs for which we could solve the TimPass problem. All problems use the same PTN with varying lines, duration bounds, frequencies, demands, and penalties. We use a period of 60 minutes.
+To train the neural network, we generated a large number of EANs and ODs for which we could solve the TimPass problem. The problem typically has multiple solutions, but for reasons explained in \cref{sec:solution-preference-reasoning} we need to control which of the optimal solutions we obtain. All problems use the same PTN with varying lines, duration bounds, frequencies, demands, and penalties. We use a period $T$ of 60 minutes. The used PTN is drawn in \cref{fig:base-ptn}.
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/base-ptn.jpg}
+    \caption{The base PTN on which we generate data.}
+    \label{fig:base-ptn}
+\end{figure}
+
 
 First, we listed all available lines as the set $\mathcal{L}$ with at least three stops and filtered the reversed line versions out. To keep the line plan realistic, we would later add the reverse line directions back to the plan. Then, we sampled the line plan size $|L| \sim \unif{2, 4}$. Knowing the size, we sampled the lines belonging to the plan uniformly without replacement from the set of lines: $L \subset \mathcal{L}$. As we want to emulate real EANs, we checked the resulting EAN would be connected if the reverse directions for the lines were also included. If this was not the case, we sampled the $L$ again.
+
+
+
+After the set of lines was determined, we would sample the line frequencies $f_l$ with the discrete probability mass function $p(r_l) = \sqrt[|L| - 1]{r_l / 4} - \sqrt[|L| - 1]{(r_l - 1) / 4}$. The probability mass function is visualised in \cref{fig:generation-rl-mass}. The function is designed to give a larger weight for the low line frequencies in case we have only a few lines in total. This regulates the variations in solving times for the generated problems. In practice, the samples are generated from a uniform distribution: $f_l = \lfloor x ^{|L| - 1} / 4 \rfloor + 1, x \sim \unifcont{0, 1}$.
 
 \begin{figure}
     \centering
@@ -531,28 +748,118 @@ First, we listed all available lines as the set $\mathcal{L}$ with at least thre
     \label{fig:generation-rl-mass}
 \end{figure}
 
-After the set of lines was determined, we would sample the line frequencies $f_l$ with the discrete probability mass function $p(r_l) = \sqrt[|L| - 1]{r_l / 4} - \sqrt[|L| - 1]{(r_l - 1) / 4}$. The probability mass function is visualised in \cref{fig:generation-rl-mass}. The function is designed to give a larger weight for the low line frequencies in case we have only a few lines in total. This regulates the variations in solving times for the generated problems. In practice, the samples are generated from a uniform distribution: $f_l = \lfloor x ^{|L| - 1} / 4 \rfloor + 1, x \sim \mathcal{U}[0, 1]$.
 
-% TODO: duplicate lines, must go to both directions
+As we want the passengers to be able to travel everywhere in the resulting EAN, we also include the lines in the reverse direction. We define the reverse line $l_r$ of a line $l$ as $l_r = \{(j, i):(i, j) \in l\}$. For the EAN, we will use the extended line set $L^r = L \cup \{l_r : l \in L \}$. We also set the frequency to the reverse direction to be the same as to the forward direction: $f_{l_r} = f_l$.
 
-For the lines with a frequency greater than one, we generate sync activities between all events in sequential line repetitions. By setting the sync upper and lower bounds to be equal to the period divided by the line frequency, we ensure even spacing of the departures.
-
-Once we have all the edges in the EAN, we can sample the upper and lower bounds. We sample the bounds for lines and stop pairs, meaning that the activities belonging to the same line with the same stops as endpoints have the same bounds. We also sample the transfer edge penalties.
+From the set of lines and frequencies, we can derive the events and actions of the EAN. We create all events and activities as defined in \cref{sec:ean-def}. For all activities, we must also define the upper and lower bounds for the duration. We sample the bounds using \cref{alg:drive-sampling}. The algorithm first iterates through lines and relevant stop pairs. After sampling the bounds, the bounds are then set for all relevant activities.
 
 
-Once we have the lines and frequencies, we can sample the demands between stops present in the EAN. 
+\begin{algorithm}
+
+\caption{Algorithm for sampling the drive activity duration bounds}
+\label{alg:drive-sampling}
+\begin{algorithmic}
+    \For{$l \in L$}
+        \For{$(u, v) \in l$}
+            \State Sample $\lambda \sim \unif{1, 15}$ \Comment{The lower bound}
+            \State Sample $\omega \sim \unif{0, 5}$ \Comment{Difference between upper and lower bound}
+            \For{$r \in R_l$}
+                \State $a_1 = [(\text{dep}, u, l, r), (\text{arr}, v, l, r)]$ \Comment{Drive activity of $l$}
+                \State $a_2 = [(\text{dep}, v, l_r, r), (\text{arr}, u, l_r, r)]$ \Comment{Drive activity of $l_r$}
+                \State $L_{a_1}, L_{a_2} = \lambda$
+                \State $U_{a_1}, U_{a_2} = \lambda + \omega$
+            \EndFor
+        \EndFor
+    \EndFor
+\end{algorithmic}
+
+\end{algorithm}
+
+The bounds for wait activities are sampled with the same idea of not having the bounds change between line directions or repetitions. This time we loop over the stops and skip the iteration if the stop is the start or end of the given line. The method is described in \cref{alg:wait-sampling}
+
+\begin{algorithm}
+
+    \caption{Algorithm for sampling the wait activity duration bounds}
+    \label{alg:wait-sampling}
+    \begin{algorithmic}
+        \For{$l \in L$}
+            \For{$s \in l$}
+                \If{$s$ is the start or end of $l$}
+                    \State \textbf{Continue}
+                \EndIf
+                \State Sample $\lambda \sim \unif{1, 3}$ \Comment{The lower bound}
+                \State Sample $\omega \sim \unif{0, 2}$ \Comment{Difference between upper and lower bound}
+                \For{$r \in R_l$}
+                    \State $a_1 = [(\text{arr}, u, l, r), (\text{dep}, u, l, r)]$ \Comment{Wait activity of $l$}
+                    \State $a_2 = [(\text{arr}, u, l_r, r), (\text{dep}, u, l_r, r)]$ \Comment{Wait activity of $l_r$}
+                    \State $L_{a_1}, L_{a_2} = \lambda$
+                    \State $U_{a_1}, U_{a_2} = \lambda + \omega$
+                \EndFor
+            \EndFor
+        \EndFor
+    \end{algorithmic}
+    
+\end{algorithm}
+
+For the change activities, the sampling process is a bit different. First, we sample the lower bound $\lambda_u \sim \unif{1, 5}\ \forall u \in S$. Then, $L_a = \lambda_u,\ U_a = \lambda_u + T - 1$ for all activities $a = [(\text{arr}, u, l_1, r_1), (\text{dep}, u, l_2, r_2)] \in A_\text{change}$. In this case, the difference between the upper and lower bound is always $T-1$. This ensures, that the change is always feasible. We have the same bounds for all transfers that happen at the same stop.
+
+By the definition used here, we could have different penalties for all the change activities, and nothing limits us to having penalties only for those activities too. However, to keep things simple and aligned with other datasets, we just sample $\rho \sim \unif{1, 5}$ and set $b_a = \rho$ for all $a \in A_\text{change}$.
+
+For sync activities, we don't sample the bounds. Instead, we simply set
+\begin{align}
+    L_a, U_a = T / f_l\quad  \forall a = [(t, u, l, r_1), (t, u, l, r_1)] \in \Async
+\end{align}
+
+Finally, we must come up with an OD matrix for the problem instance. Only the stops that belong to a line are present in the EAN. As the lines are randomly chosen, the set of stops is also random. If we were to consider the demand for all stop pairs, we could end up with a difficult problem to solve, as we could have many OD-pairs for which we need to solve the best route. Instead, if the number of possible OD-pairs is greater than 40, we sample $|\od| \sim \unif{30, 40}$ and then take the random subset $\od \subset S^2$. If we did not sample $|\od|$, we just use all possible OD-pairs. For all OD-pairs we sample the demand as $\od_{uv} \sim \unif{1, 20}\ \forall uv \in \od$.
+
+Now we can define the TimPass problem and attempt to solve it. We would try to solve the obtained problem with Gurobi with a time limit of 20 seconds. If the optimal solution was not obtained within this limit, we would deem the problem difficult to solve and try sampling the problem again. As stated previously, we need to be able to control which of the multiple solutions we actually get. This is done by first solving the problem as usual. We denote the calculated optimal objective value $V^*$. To obtain other solutions, we create add a new constraint and change the objective function. The new constraint is that the objective must be equal to $V^*$:
+\begin{align}
+    \sum_{\mathit{uv} \in \textrm{OD}} \od_{\mathit{uv}} \sum_{a \in \Ar} p_{a}^{\mathit{uv}} (x_a + b_a)  = V^*
+\end{align}
+For the new objective, we change it to be the weighted sum of the flow variables. The weights are sampled randomly between zero and one:
+\begin{align}
+    \min\ \sum_{uv \in \od}\sum_{a\in \Ar}w_a^{uv}p_{a}^{\mathit{uv}} (x_a + b_a),\quad w_a^{uv} \sim \unifcont{0, 1}
+\end{align}
+Assuming that we can't sample the same weight for multiple flow variables, this ensures that the modified problem has only one optimal solution.
+
+With the problem given above, we attempted to generate 10 solutions for each problem instance. We only kept the unique solutions. Then we wrote the solutions to disk to be used later for the neural network training and evaluation.
+
+% TODO: comment on the number of solutions found???
 
 
-\begin{itemize}
-    \item Base ptn on top of which lines are generated (include graph)
-    \item Generation process goes roughly like this:
-    \item Enumerated all lines with at least three stops
-    \item Sampled random lines and line frequencies, with a weight on frequencies to reduce the probability of instances being very large
-    \item Randomized drive durations
-    \item Generate random demands for all OD pairs
-\end{itemize}
+% TODO: could we cite Helmi's work here?
+
+
+
+% For the lines with a frequency greater than one, we generate sync activities between all events in sequential line repetitions. By setting the sync upper and lower bounds to be equal to the period divided by the line frequency, we ensure even spacing of the departures.
+
+
+
+
+
+% \begin{itemize}
+%     % \item Base ptn on top of which lines are generated (include graph)
+%     % \item Generation process goes roughly like this:
+%     % \item Enumerated all lines with at least three stops
+%     % \item Sampled random lines and line frequencies, with a weight on frequencies to reduce the probability of instances being very large
+%     % \item Randomized drive durations
+%     % \item Generate random demands for all OD pairs
+% \end{itemize}
 
 \subsection{Data representation as a heterogenous graph}
+
+The simplified overview of the node types and their relations is expressed in \cref{fig:hetero-relations}. We use 
+
+% TODO: is simplified, as edge features not included in HGT -> tricks are required :(
+% TODO: data transformaatio on salee väärin koodissa! :( -> investigoi, jos oikeesti väärin, niin uutta transformaatiota tulille ja sit uutta ajoa. Tosin: preferenssit pitää salee muuttaa action-kohtaisiksi, että tässä formuloinnissa olis mitään järkeä. Vaihtoehtoisesti vois linkata actionin, OD:n ja preferenssin, mut olisko tää aika työlästä? Joka tapauksessa pitänee kouluttaa uudestaan >:(
+% 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.3\textwidth]{figures/hetero-graph-relations.png}
+    \caption{The node and relation types of the heterogenous representation.}
+    \label{fig:hetero-relations}
+\end{figure}
 \begin{itemize}
     \item Describe how heterogenous graphs are represented in torch\_geometric -> some data conversions are needed
     \item Edge features not included in the architecture -> we turn edges with features to nodes, connecting them with special edges to the original edge endpoints
@@ -596,6 +903,7 @@ Once we have the lines and frequencies, we can sample the demands between stops 
 
 
 \subsection{Theoretical lower bound without preference of solutions}
+\label{sec:solution-preference-reasoning}
 \begin{itemize}
     \item Multiple solutions to TimPass exist, we pick the "right" one essentially at random
     \item We are using mse loss -> the loss would be minimized when we predict the expected value of the optimal solution

@@ -193,24 +193,24 @@ class Predictor(lightning.LightningModule):
     #     return [optimizer], [scheduler]
     def configure_optimizers(self) -> Any:
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=0.0)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer,
-            mode='min',
-            factor=0.3,
-            threshold=0.2,
-            threshold_mode='rel',
-            patience=1000,
-            cooldown=500,
-        )
+        # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        #     optimizer,
+        #     mode='min',
+        #     factor=0.3,
+        #     threshold=0.2,
+        #     threshold_mode='rel',
+        #     patience=1000,
+        #     cooldown=500,
+        # )
         return {
             "optimizer": optimizer,
-            "lr_scheduler": {
-                "scheduler": scheduler,
-                "monitor": "train_loss_step",
-                "frequency": 1,
-                "interval": "step",
-                "name": 'plateau-scheduler',
-            },
+            # "lr_scheduler": {
+            #     "scheduler": scheduler,
+            #     "monitor": "train_loss_step",
+            #     "frequency": 1,
+            #     "interval": "step",
+            #     "name": 'plateau-scheduler',
+            # },
         }
         # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         #     optimizer,

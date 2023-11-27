@@ -72,7 +72,8 @@ class _Counter:
 
 
 
-Preference = dict[tuple[int, int], dict[tuple[int, int], float]]
+# Preference = dict[tuple[int, int], dict[tuple[int, int], float]]
+Preference = dict[tuple[int, int], float]
 
 
 @define

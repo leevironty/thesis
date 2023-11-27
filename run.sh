@@ -55,7 +55,7 @@ srun -c 2 --mem=2G thesis --threads=2 multi-solution-generation \
 
 # srun -p gpushort --gres=gpu:1 -c 8 --mem 16000 poetry run thesis --threads=8 train --batch-size=32 --no-run-eval --max-epochs=5 --dataset solutions/data/big-gen-toy-100k --num-workers=8
 
-# srun env | sort
+# srun env | sort 
 
 
 # srun poetry run thesis data-gen -c 50 --od-share 0.015 --activity-drop-prob 0.1 \

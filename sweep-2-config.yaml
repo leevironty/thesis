@@ -1,15 +1,15 @@
 name: sweep-3
 project: thesis
-run_cap: 100
+run_cap: 150
 command:
   - thesis
   - --threads=4
   - train
-  - --dataset=solutions/data/correct-floats
+  - --dataset=solutions/data/nov-24-preference-fix
   - --batch=64
-  - --max-epochs=10
+  - --max-epochs=15
   - --num-workers=4
-  - --run-name=sweep-3
+  - --run-name=sweep-4
   - ${args}
 method: bayes
 metric:
@@ -17,10 +17,10 @@ metric:
   goal: minimize
 parameters:
   lr:
-    values: [0.0001, 0.0003, 0.001, 0.003, 0.01]
+    values: [0.0001, 0.0003, 0.001, 0.003]
   num-layers:
-    values: [2, 3, 4, 6, 8, 10, 12, 16, 20]
+    values: [2, 3, 6, 10, 15, 23, 34, 50, 75]
   num-heads:
-    values: [4, 6, 8, 12, 16]
+    values: [2, 4, 8, 16]
   hidden-channels:
-    values: [32, 40, 48, 64, 80, 96, 112, 128]
+    values: [16, 24, 36, 54, 81, 122]

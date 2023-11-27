@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 def attach_multi_solution_generation(main_subparsers):
     parser: ArgumentParser = main_subparsers.add_parser(name='multi-solution-generation', help='Generate data with multiple solutions')
-    parser.add_argument('--out', type=str, required=True)
+    parser.add_argument('--out', type=str, required=True, help='logpath')
     parser.add_argument('--count', type=int, required=True)
     parser.add_argument('--time-limit', type=int, default=20)
     parser.add_argument('--alt-solutions', type=int, default=20)
@@ -56,6 +56,7 @@ def generate_multi_solution_data(args: Namespace):
         variation.preprocessed_flows = preprocess(variation)
         model = MultiSolutionTimPass(variation, epsilon=0.0001, solver=solver)
         if model.original_timpass.model.sol_status != LpStatusOptimal:
+            logger.info(f'Skipping problem {problem_number}, did not find an optimal solution.')
             continue
         uniques = []
         for attempt_number in range(args.alt_solutions):

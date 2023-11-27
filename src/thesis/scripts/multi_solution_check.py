@@ -52,15 +52,20 @@ class MultiSolutionTimPass:
         #     act: self.rng.random()
         #     for act in self.data.activities_routable.keys()
         # }
+        # random_preferences = {
+        #     uv: {
+        #         ij: self.rng.random()
+        #         for ij in d_.keys()
+        #     }
+        #     for uv, d_ in self.original_timpass.var_p.items()
+        # }
         random_preferences = {
-            uv: {
-                ij: self.rng.random()
-                for ij in d_.keys()
-            }
-            for uv, d_ in self.original_timpass.var_p.items()
+            ij: self.rng.random()
+            for ij in self.original_timpass.data.activities_routable.keys()
+            # for uv, d_ in self.original_timpass.var_p.items()
         }
         new_obj = lpSum([
-            p * random_preferences[uv][ij]
+            p * random_preferences[ij]
             for uv, d in self.original_timpass.var_p.items()
             for ij, p in d.items()
         ])
