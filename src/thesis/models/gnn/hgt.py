@@ -83,6 +83,7 @@ class Predictor(lightning.LightningModule):
         #     out_channels=hidden_channels,
         #     heads=4,
         # )
+        self.dropout = torch.nn.Dropout(p=0.2, inplace=True)
         self.node_embed_mapping = torch.nn.Linear(hidden_channels, hidden_channels)
         for _ in range(num_layers):
             layer = HGTConv(
@@ -129,6 +130,8 @@ class Predictor(lightning.LightningModule):
         edges = data.edge_index_dict
         for layer, norm in zip(self.convs, self.norms):
             x = layer(x, edges)
+            for value in x.values():
+                self.dropout(value)
             x = norm(x)
         
         # one less norm that conv -> last conv needs to be applied separately
