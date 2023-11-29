@@ -121,6 +121,7 @@ def run_train(args: Namespace):
             lr_monitor_callback,
         ],
     )
+    torch.set_float32_matmul_precision('medium')
     logger.info('Training')
 
     trainer.fit(model=model, train_dataloaders=train, val_dataloaders=val)
