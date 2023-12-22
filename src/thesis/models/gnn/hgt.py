@@ -195,7 +195,7 @@ class Predictor(lightning.LightningModule):
     #     )
     #     return [optimizer], [scheduler]
     def configure_optimizers(self) -> Any:
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=0.0)
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=0.00)
         # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         #     optimizer,
         #     mode='min',

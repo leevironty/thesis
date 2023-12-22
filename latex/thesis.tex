@@ -25,6 +25,10 @@
 \usepackage{ifthen}
 \usepackage{algorithm}
 \usepackage{algpseudocodex}
+
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{makecell}  % table line wrap within one cell
 % \usepackage[usenames,dvipsnames]{color}
 
 
@@ -33,6 +37,7 @@
 \newtheorem{lemma}{Lemma}
 \newtheorem{corollary}{Corollary}
 \newtheorem{proposition}{Proposition}
+\newtheorem{notation}{Notation}
 
 \newcommand{\N}{\mathbb{N}}
 \newcommand{\Z}{\mathbb{Z}}
@@ -65,12 +70,16 @@
 \newcommand{\incidence}{\mathbf{M}}
 \newcommand{\preprocessed}{\mathcal{P}}
 \newcommand{\shortestpath}{\mathit{SP}}
-\newcommand{\Klin}{\textrm{K-lin}}
-\newcommand{\Qlin}{\textrm{Q-lin}}
-\newcommand{\Vlin}{\textrm{V-lin}}
-\newcommand{\Alin}{\textrm{A-lin}}
-\newcommand{\msg}{\textrm{Msg}}
-\newcommand{\len}{\textrm{Len}}
+\newcommand{\Klin}{\operatorname{K-lin}}
+\newcommand{\Qlin}{\operatorname{Q-lin}}
+\newcommand{\Vlin}{\operatorname{V-lin}}
+\newcommand{\Alin}{\operatorname{A-lin}}
+\newcommand{\msg}{\operatorname{Msg}}
+\newcommand{\att}{\operatorname{Att}}
+\newcommand{\len}{\operatorname{Len}}
+\newcommand{\agg}{\operatorname{Aggregate}}
+
+\newcommand{\draft}[1]{\textcolor{red}{\em (DRAFT) #1}}
 
 
 
@@ -177,14 +186,14 @@ Public transportation systems play a role in many people's lives. As such, it is
 
 % From the passenger's point of view, an efficient public transportation system allows the passengers to travel to their destination quickly. The time spent 
 
-The schedule determines when the vehicles arrive and depart from the stops in a public transport system. From the passenger's point of view, an efficient schedule minimizes the expected travel time. However, optimizing for the travel time is not easy. The optimal schedule depends on the routes the passengers choose to get to their destination, but at the same time the chosen routes depend on the schedule. This means, that to guarantee optimal solutions, we must optimize both the schedule and the passenger routes at the same time. This is much more difficult than optimizing the schedule with a pre-determined passenger routing, as the number of routes that each passenger can choose from can be very large, and in a realistic scenario, we will have a large number of passengers. In practice, we can't solve this problem optimally for realistically-sized problems.
+The schedule determines when the vehicles arrive and depart from the stops in a public transport system. From the passenger's point of view, an efficient schedule minimizes the expected travel time. However, optimizing for the travel time is not easy. The optimal schedule depends on the routes the passengers choose to get to their destination, but at the same time the chosen routes depend on the schedule. This means, that to guarantee optimal solutions, we must optimize both the schedule and the passenger routes at the same time. This is much more challenging than optimizing the schedule with a pre-determined passenger routing, as the number of routes that each passenger can choose from can be very large, and in a realistic scenario, we will have a large number of passengers. In practice, we are not able to solve this problem optimally for realistically-sized problems.
 
-In this thesis, we will attempt to develop a heuristic solution method to this integrated optimization problem by trying to predict the optimal routing before solving for the timetable. This would allow us to exclude routing from the optimization problem, making the problem easier to solve. We will study if a graph neural network model would be able to predict these routes and how the model's predictions would fare against previous heuristics with both small and large public transport networks.
+In this thesis, we develop a heuristic solution method to this integrated optimization problem by trying to predict the optimal routing before solving for the timetable. This would allow us to exclude routing from the optimization problem, making the problem easier to solve. We study if a graph neural network model is able to predict these routes and how the model's predictions would fare against previous heuristics with both small and large public transport networks.
 
-Note, that in this case, we don't differentiate between transportation modes
+Note, that in this case, we do not differentiate between transportation modes
 like busses and trains. In general, a real public transportation system would have multiple modes of transportation, but we ignore this for now, as the developed heuristic could be easily extended to a multimodal case. 
 
-We begin by first reviewing the literature related to the topics of the thesis. We continue by covering the theoretical background for the problem, some simple previous heuristics, and graph neural networks. Then we describe the data generation and the experiments, after which we conclude by presenting the results and analyzing what we learned.
+We begin by reviewing the literature related to the topics of the thesis. We continue by covering the theoretical background for the problem, some simple previous heuristics, and graph neural networks. Then we describe the data generation and the experiments, after which we conclude by presenting the results and analyzing what we learned.
 
 \subsection{Literature review}
 
@@ -199,33 +208,26 @@ Darwish et al. \cite{darwish2020optimising} used a deep reinforcement learning m
 
 Yan et al. \cite{yan2022distributed} applied a multiagent reinforcement learning approach to optimize the timetables for selected bus lines in Beijing. In their approach, the individual passengers and bus drivers are modelled by an agent, that can take real-time information such as weather into account. The proposed solutions yields a 20\% improvement of the operating cost against the real-world timetable.
 
-
-
-
-
-
-Three perspectives:
-\begin{itemize}
-        \item Advances in TimPass tms.?
-        \item Previous NN / RL applications in public transport
-        \item NN in combinatorial optimization
-\end{itemize}
-
-\begin{itemize}
-    \item SAT formulations
-    \item ???
-\end{itemize}
-
-\begin{itemize}
-    \item Some RL agents in aperiodic scheduling
-    \item 
-    \item 
-\end{itemize}
-
-\begin{itemize}
-    \item "Neural branching and diving" (google)
-    \item Some review papers
-\end{itemize}
+\draft{
+    Better review structure, three perspectives:
+    \begin{itemize}
+            \item Advances in TimPass and PESP etc. \begin{itemize}
+                \item SAT formulations, these exist and yield promising results
+                \item What are the other research directions???
+            \end{itemize}
+            \item Previous NN / RL applications in public transport \begin{itemize}
+                \item Some RL agents in aperiodic scheduling
+                \item Deep RL in TNDFSP
+                \item Estimating robustness of public transport schedules with ML
+                \item Solving periodic timetabling problems with SAT and machine learning (RL)
+            \end{itemize}
+            \item NN in combinatorial optimization \begin{itemize}
+                \item "Neural branching and diving" (google)
+                \item RL for MIP, smart feasibility pump (maybe not very relevant)
+                \item Few review papers about this topic exist
+            \end{itemize}
+    \end{itemize}
+}
 
 \clearpage
 \section{Methods}
@@ -255,13 +257,13 @@ Before we can define event activity networks, we have to define a few other thin
     A \textit{public transport network} (PTN) is a simple undirected graph PTN = $(S, R)$ with a set of stops $S$ and a set of direct connections between the stops $R$. 
 \end{definition}
 
-A PTN describes the underlying transportation infrastructure of a public transport system. We consider the connections to be undirected. This only makes the modelling a bit easier, but one could also have a PTN with directed edges. The PTN could also be non-simple, but that notation would make a difference only if there were either capacity constraints per connection or if multiple modalities were used.
+A PTN describes the underlying transportation infrastructure of a public transport system. We consider the connections to be undirected. This simplifies the modeling, but one could also have a PTN with directed edges. The PTN could also be non-simple, but that notation would make a difference only if there were either capacity constraints per connection or if multiple modalities were used.
 
 \begin{definition}[Periodic scheduling]  % TODO: this after EAN definition
     A period $\period \in \N$ defines the time interval at which various events and activities are repeated.
 \end{definition}
 
-We are interested in the periodic instead of the aperiodic scheduling problem. This period could be for example 60 minutes, one day, or something else. The appropriate period length depends on what kind of schedule we aim to optimise. Note that in general, the period could be a positive real number, but we consider it to be an integer to follow the convention established in \cite{schiewe2020periodic}.
+We are interested in the periodic instead of the aperiodic scheduling problem. This period could be for example 60 minutes, one day, or something else. The appropriate period length depends on what kind of schedule we aim to optimise. %Note that in general, the period could be a positive real number, but we consider it to be an integer to follow the convention established in \cite{schiewe2020periodic}.
 
 \begin{definition}[Line concept]
     A \textit{line} $l \subset R$ is a simple directed path in a PTN. A \textit{line concept} is a set of lines $L$ with associated frequencies $f_l \in \N$ for all $l \in L$. A frequency determines how often a line is served within the period $T$.
@@ -270,13 +272,13 @@ We are interested in the periodic instead of the aperiodic scheduling problem. T
 % TODO: miten merkataan simple path tässä tapauksessa? Onko siis ordered setti / lista stoppeja?
 %A \textit{line} $l \subset R$ is a simple directed path in a PTN. A \textit{line concept} is a set of lines $L$ with associated frequencies $f_l \in \N$ for all $l \in L$. A frequency determines how often a line is served within the period $T$. %We assume the lines to be bidirectional, meaning that the vehicles travel the line in both directions.
 
-In this case, we assume the lines to be directed, meaning that vehicles travel the line only in one direction. Usually, in real-world lines, the vehicles travel in both directions, but this can also be modeled here by including the reverse direction as a separate line instance. %This notation of the line including the direction just makes the rest of the notation a bit simpler, while at the same time allowing more flexibility in what kinds of lines can be expressed.
+Here we assume the lines to be directed, meaning that vehicles travel the line only in one direction. Usually, in real-world lines, the vehicles travel in both directions, but this can also be modeled here by including the reverse direction as a separate line instance. %This notation of the line including the direction just makes the rest of the notation a bit simpler, while at the same time allowing more flexibility in what kinds of lines can be expressed.
 
 From the line concept, we can construct the event activity network (EAN).
 \begin{definition}[Event Activity Network]\label{def:ean}
     The event activity network $EAN$ is a directed graph $\textit{EAN} = (E, A)$ with a set of events $E$ and a set of activities $A$ connecting the events.
 \end{definition}
-For the events, we have the disjoint arrival and departure types: $E = \Earr \cup \Edep$. As the names suggest, the sets $\Earr$ and $\Edep$ contain the events describing vehicle arrivals and departures from the stops. To simplify the notation, we define the set of available repetition numbers as $R_l = \{1, \dots, f_l\}$. More formally, the sets are defined as follows:
+For the events, we have the disjoint arrival and departure types: $E = \Earr \cup \Edep$. As the names suggest, the sets $\Earr$ and $\Edep$ contain the events describing vehicle arrivals and departures at the stops. To simplify the notation, we define the set of available repetition numbers as $R_l = \{1, \dots, f_l\}$. More formally, the sets are defined as follows:
 \begin{align*}
     \Earr &= \{
         (\text{arr}, u, l, r) : l \in L, u \in l, r \in R_l
@@ -307,7 +309,7 @@ For the activities, we also have multiple distinct types: drive, wait, change, a
     ): (t, u, l, r) \in E, r \geq 2 \}
 \end{align*}
 
-In plain English, the drive activities correspond to the driving activity between stops. The activities connect the line's departure events to the corresponding arrival events. The wait activities correspond to the vehicle staying at the station, waiting to e.g. load and unload passengers. The wait activities connect arrival events to departure events. The drive and wait activities are demonstrated in \cref{fig:drive-wait-demo}. The change activities denote the line transfers that the passengers may take. The activities link the arrivals to departures within the same stop that do not belong to the same line. The idea of change activities and multiple lines at the same stop is shown in \cref{fig:change-demo}. The sync activities are a bit different from the other activities, as the passengers can't travel along those edges. For defining the optimization models, we note the set of activities usable for passenger routing as $\Ar = A \setminus \Async$. The only use for sync activities is for defining constraints on the timetable to have some predefined spacing among the repetitions of the lines. How sync activities are connected is shown in \cref{fig:sync-demo}. Defining the constraints on all sync activities is not mandatory. In that case, the sync activities without constraints are redundant.
+The drive activities correspond to the driving activity between stops. The activities connect the line's departure events to the corresponding arrival events. The wait activities correspond to the vehicle staying at the station, waiting to e.g. load and unload passengers. The wait activities connect arrival events to departure events. The drive and wait activities are demonstrated in \cref{fig:drive-wait-demo}. The change activities denote the line transfers that the passengers may take. The activities link the arrivals to departures within the same stop that do not belong to the same line. The idea of change activities and multiple lines at the same stop is shown in \cref{fig:change-demo}. The sync activities are slightly different from the other activities, as the passengers can not travel along those edges. For defining the optimization models, we note the set of activities usable for passenger routing as $\Ar = A \setminus \Async$. The purpose of sync activities is to define constraints on the timetable to have some predefined spacing among the repetitions of the lines. How sync activities are connected is shown in \cref{fig:sync-demo}. Defining the constraints on all sync activities is not mandatory. In that case, the sync activities without constraints are redundant.
 
 
 \begin{figure}
@@ -364,20 +366,26 @@ In plain English, the drive activities correspond to the driving activity betwee
 % \item Two lines on a stop, omit the reverse direction of the lines to keep the graph a bit clearer, freq > 1 for one line. Points to demonstrate: How transfers, headways, and sync edges are used.
 % \end{itemize}
 
-\subsection{Integer programming problems}
+\subsection{Integer programming formulations for timetabling and passenger routing}
 
-We can define a schedule for the events in an EAN. The event times are noted as $\pi_i \in \{0, \dots, T-1\}$ for all events $i \in E$. As we are working with a periodic schedule, all the event occurrence times must be lower than the period of the schedule $T$. As noted previously, we could have a real-valued schedule instead of a discrete one, but once again we follow the previous formulation.
+We can define a schedule for the events in an EAN. The event times are noted as $\pi_i \in \{0, \dots, T-1\}$ for all events $i \in E$. As we are working with a periodic schedule, all the event occurrence times must be lower than the period of the schedule $T$. %As noted previously, we could have a real-valued schedule instead of a discrete one, but once again we follow the previous formulation.
 
 The activities in the EAN are used to define constraints on the upper and lower bounds for activity durations. For all activities $a \in A$, we have the lower bound $L_a \in \N$ and upper bound $U_a \in \N$. For the bounds, we of course must also have that $0 \leq L_a \leq U_a$. The activity duration for activity $a = (i, j)$ itself is calculated as $(\pi_j - \pi_i - L_a)\ \text{mod}\ T + L_a$. The lower bound term outside of the modulo ensures, that the lower bound is respected. The term inside the modulo is the "slack" time we have due to the schedule not aligning perfectly with the lower bound. As formulated, the duration is guaranteed to be greater or equal to the lower bound. For the given timetable $\pi$ to be feasible, for all activities $a \in A$ we must have that the upper bound holds: $(\pi_j - \pi_i - L_a)\ \text{mod}\ T + L_a\leq U_a$.
 
 As the modulo operator does not fit well into linear programming as is, we replace the modulo with an integer multiple of the period $T$. The multiplier $z_a \in \Z$ becomes a decision variable. The lower bounds terms cancel out and the expression for the edge duration is now $\pi_j - \pi_i + z_aT$. As the multiplier $z_a$ can be chosen freely, this is equivalent to the formulation with the modulo.
 
 
-Along the EAN, we need information on the passenger demand between the stops of the PTN. We note the number of passengers wanting to travel from stop $u$ to stop $v$ as $\od_{u, v} \in \N$. Not all stop pairs have demand: we express the set of stop pairs with non-zero demand as $\od = \{(u,v): (u, v) \in S^2, \od_{u,v} > 0\}$.
+In addition to the EAN, we need information on the passenger demand between the stops of the PTN. We note the number of passengers wanting to travel from stop $u$ to stop $v$ as $\od_{u, v} \in \N$. Not all stop pairs have demand: we express the set of stop pairs with non-zero demand as $\od = \{(u,v): (u, v) \in S \times S, \od_{u,v} > 0\}$.
 
-For routing of the passengers, we assume a fixed routing that is given beforehand. When routing the passengers, each OD pair assumes some path from $i$ to $j$ through the EAN, and for the chosen path edges the weight $w_a$ is incremented by the number of passengers using that route. We will later return to routing in a subsequent section. For now, it's enough to recognize, that we have a weight $w_a \in \N$ for all routable activities $a \in \Ar$ of the EAN.
+For routing of the passengers, we assume a fixed routing that is given beforehand. When routing the passengers, each OD pair assumes some path from $u$ to $v$ through the EAN, and for the chosen path edges the weight $w_a$ is incremented by the number of passengers using that route. We will later return to routing in a subsequent section. For now, it's enough to recognize, that we have a weight $w_a \in \N$ for all routable activities $a \in \Ar$ of the EAN.
 
-Now we can express the PESP problem. Instead of minimizing the real total travel time $\sum_{a=(i,j) \in \Ar} w_a (\pi_j - \pi_i + z_aT)$, we minimize the total perceived travel time. In perceived travel time, we add the "perceived penalty" duration to the real duration. In principle, the penalty $b_a$ could be any real value, but in this case, we consider it to be a non-negative integer. This models the dissatisfaction of the people who have to change lines to get to their destination. Note, that the objective only considers the routable activities, but the constraints take all activities into account.
+The total travel time given a timetable is expressed as $\sum_{a=(i,j) \in \Ar} w_a (\pi_j - \pi_i + z_aT) $. In PESP, we try to minimise this by searching for good timetables $\pi$. However, when routing the passengers given a timetable, the passengers may not always choose the fastest route, as inconveniences, e.g. transfers, affect the route decision. We model this by including a penalty $b_a > 0$, $a \in A$  that is considered when routing the passengers. In practice, we use shortest path routing but add the penalty to the transfer activity duration.
+
+The total penalised travel time is $\sum_{a=(i,j) \in \Ar} w_a (\pi_j - \pi_i + z_aT + b_a)$. Note, that as $w_a$ and $b_a$ do not depend on $\pi$, we can substitute this as the PESP objective without affecting the optimal timetable. The new objective is equal to the total travel time plus a constant $\sum_{a \in \Ar}w_ab_a$. However, we prefer this objective formulation, as it will be directly comparable with the TimPass model objective defined in \cref{eq:timpass-obj}.
+
+%Now we can express the PESP problem. Instead of minimizing the real total travel time $\sum_{a=(i,j) \in \Ar} w_a (\pi_j - \pi_i + z_aT)$, we minimize the total perceived travel time. In perceived travel time, we add the "perceived penalty" duration to the real duration. In principle, the penalty $b_a$ could be any real value, but in this case, we consider it to be a non-negative integer. This models the dissatisfaction of the people who have to change lines to get to their destination.
+
+Note, that the objective only considers the routable activities, but the constraints take all activities into account.
 \begin{align}
     \mathbf{(PESP)}\quad\min&\ \sum_{a \in \Ar} w_{a} (\pi_j-\pi_i+z_aT + b_a) \\
     \textrm{s.t.} \quad L_a &\leq \pi_j-\pi_i+z_aT  \leq U_a  &a &=(i,j)\in A \\
@@ -473,7 +481,7 @@ Now, if $p_a^{uv} = 0$, we must have that $\textit{lin}_a^{uv} = 0$. If $p_a^{uv
 
 Now we can finally express the TimPass problem with the cycle basis formulation. We omit the linearization term and constraints for clarity, but in practice, the linearization must be done for commonly available solvers to function properly.
 \begin{align}
-    \textbf{(TimPass)}\ \min&\sum_{\mathit{uv} \in \textrm{OD}} \od_{\mathit{uv}} \sum_{a \in \Ar} p_{a}^{\mathit{uv}} (x_a + b_a) \\
+    \textbf{(TimPass)}\ \min&\sum_{\mathit{uv} \in \textrm{OD}} \od_{\mathit{uv}} \sum_{a \in \Ar} p_{a}^{\mathit{uv}} (x_a + b_a) \label{eq:timpass-obj}\\
     % \textrm{min.} \quad  \sum_{\mathit{uv} \in \textrm{OD}} \od_{\mathit{uv}} \sum_{a \in A_\text{routable}} lin_a^{uv}) \\
     \textrm{s.t.} \quad  z_c T &= \sum_{a\in c^+} x_a - \sum_{a\in c^-} x_a &c& \in C \\
     L_a &\leq x_a \leq U_a &a& \in A \\
@@ -643,35 +651,74 @@ We use the Laplacian PE implementation from \cite{LaPE-implementation-2020}.
 
 \subsubsection{Network architecture}
 
-The typical MPGNNs are designed for homogenous graphs, meaning that the nodes and edges have the same semantic meaning. However in this thesis, we need to include also non-homogenous information, as on top of the events and activities we have the OD demands. This pushes us to use more contemporary methods that allow us to model heterogeneous graphs. We chose to use the Heterogenous Graph Transformer (HGT) architecture \cite{hgt-2020}. The HGT architecture also includes methods for dealing with "web-scale networks" and temporal graphs, but we will just omit those, as the networks we are dealing with are much smaller and do not vary over time.
+The typical MPGNNs are designed for homogenous graphs, meaning that the nodes and edges have the same semantic meaning. However in this thesis, we need to include also non-homogenous information, as on top of the events and activities we have the OD demands. This pushes us to use more contemporary methods that allow us to model heterogeneous graphs. We chose to use the Heterogenous Graph Transformer (HGT) architecture \cite{hgt-2020}. The HGT architecture also includes methods for dealing with "web-scale networks" and temporal graphs, but we will just omit those methods, as the networks we are dealing with are much smaller and do not vary over time.
 
 In heterogenous graphs $G = (\mathcal{V}, \mathcal{E}, \mathcal{A}, \mathcal{R})$, the nodes $v \in \mathcal{V}$ and edges $e \in \mathcal{E}$ are associated to node types $\mathcal{A}$ and edge types $\mathcal{R}$ by mapping functions $\tau(v): \mathcal{V} \to \mathcal{A}$ and $\phi(e): \mathcal{E} \to \mathcal{R}$. This allows us to define the meta-relation $\langle \tau(u), \phi(e), \tau(v)\rangle$ of an edge $e=(u,v)$. This meta-relation is the tuple of the origin and destination node types and the edge relation. Using the meta-relation we can comprehensively state what kind of interaction an edge expresses. This will be used later when defining the message-passing methods of the network. Note, that a node-type pair may have multiple kinds of relations, this is why we need to also include the type of the edge to the meta-relation.
 
-As in the MPGNN architecture, the HGT also generates messages and aggregates them over the neighbourhood of a node $v$ to generate the updated hidden state $h_v^t$. However, in a heterogeneous setting, the feature distributions of the nodes of different types are also assumed to be different. This motivates the use of different message generation and update functions for different meta-relations and node types. The architecture also uses an attention mechanism to give more weight to messages coming from nodes that the model estimates to be important.
+% TODO: definne hyperparameters: layer count, hidden dim size, attention head count
 
-We introduce three affine transformations that will be used in the message-generation procedure. The functions map the hidden state to vectors called key, query, and value:
+As in the MPGNN architecture, the HGT also consists of multiple layers that generate messages and aggregate them over the neighbourhood of a node $v$ to generate the updated hidden state $h_v^t$. However, in a heterogeneous setting, the feature distributions of the nodes of different types are also assumed to be different. This motivates the use of different message generation and update functions for different meta-relations and node types. The architecture also uses an attention mechanism to give more weight to messages coming from nodes that the model estimates to be important.
+
+We define the set of edges from node $u$ to $v$ as $E(u, v)$. 
+
+At a high level, the HGT layer's embedding update function $U_t$ is defined as
 \begin{align}
-    \Klin_{\tau(v)}(h_)
+    % h^{t+1}_v = \underset{s \in N(v)}{\agg}(\tilde{h}_v^t)\\
+    h^{t+1}_v &= U_t(h_v^t, m_v^t) = \Alin_{\tau(v)}(\sigma(m_v^t))+h_v^t \\
+%     \tilde{h}_v^{t+1} &= \mathit{Vec}(\sum_{(u, v) \in \mathit{NE}(v)}\att(u, e, v) \odot \msg(u, e, v))\\
+%     \att(u, e, v) &\in \R^{\text{num-heads}} \\
+%     \msg(u, e, v) &\in \R^{\text{num-heads} \times \text{hidden-ch / num-heads}}
+    % \tilde{h}_v^{t+1} &= \mathbin{\|}_{i \in {1, \dots, n_{h}}}\sum_{(u, v) \in \mathit{NE}(v)} \mathit{Att}^i(u, e, v) \mathit{Msg}^i(u, e, v) \\
+    % \mathit{Att^i}(u, e, v) &= \mathit{Softmax}(\mathit{ATT-head^i}(u, e, v))_i
 \end{align}
+First, the update functions applies a non-linear transformation $\sigma$ and then a node-type dependent linear mapping $\Alin$. The mapped value is then added to the residual connection $h_v^t$ to obtain the updated state. The non-linear transformation used is the Gaussian Error Linear Unit \cite{gelus}.
+% The incumbent update $\tilde{h_v^{t+1}}$ is 
+
+The HGT architecture uses multi-head attention when aggregating the messages from various neighbors. Attention is a mechanism that estimates the importance of various messages. The attention values are used to multiply the messages, essentially resulting in a weighted sum aggregation. The multi-head part means, that instead of doing the step above only once, we have multiple attention heads doing the same message-generation and weighted sums in parallel. This allows the model to better pay attention to multiple important inputs.
+
+The aggregated message $m_v^t$ is calculated as:
+\begin{align*}
+    m_v^t = \sum_{(u, e) \in \mathit{NE}(v)} \operatorname{\Big\Vert}_{i = 1}^{n_{\mathit{heads}}} \underset{i, u, e, v}{\operatorname{SoftMax}}(\operatorname{Att-head}^i(u, e, v))\operatorname{MSG-head}^i(u, e, v)
+\end{align*}
+To obtain the aggregated message, we concatenate the weighted sums obtained from the attention heads.
+
+We will return to attention and the SoftMax shortly, but let us first define the message heads. 
+\begin{align*}
+    \operatorname{MSG-head}^i(u, e, v) = \operatorname{M-Linear}^i_{\tau(u)}(h^{t}_u)W^{\text{msg}}_{\phi(e)}
+\end{align*}
+The message head value is calculated by first calculating a source node type-dependent linear mapping. This is then projected with an edge-type dependant matrix to form the message head.
+
+The attention head yields scalar values that are then normalised with the SoftMax function over the neighbourhood of the node. The attention  head is defined as
+\begin{align*}
+    \operatorname{Att-head}^i(u, e, v) = \operatorname{K-linear}^i_{\tau(u)}(h^t_u)W^\text{att}_{\phi(e)}\operatorname{Q-linear}^i_{\tau(v)}(h^t_v)\frac{\mu_{u, e, v}}{\sqrt{d}}
+\end{align*}
+The attention head first maps the hidden states to a key and a query vector. Typically in attention calculation, we would then directly take the dot product of the vectors. However, this would not take the relation type into consideration. For this reason, we introduce a relation-dependant projection before the dot product. Finally, we scale the result based on a learnable scalar and the number of hidden dimensions $d$.
+ 
 
 
-Let us begin by describing the attention mechanism. As the HGT can work with multigraphs, we denote the set of edges between nodes $u$ and $v$ as $E(u,v)$. We will calculate $\text{Attention}(u, e, v) \in \R$ for all $u \in N(v), e \in E(u,v)$. Attention uses
-% TODO: make this neat
-
-\begin{align}
-    NE(v) = \{u, e : u \in N(v), e \in E(u, v)\}\\
-    Q^t(v) = \{\Qlin^t_{\tau(u)}(h^t_u): u \in N(v)\} \\
-    K^t(v) = \{\Klin^t_{\tau(u)}(h^t_u): u \in N(v)\}\\
-    ATT^t(v) = \{K^t(v)_uW^{ATT}_{\phi(e)}Q^\top_v : (u, e) \in NE(v) \} \\
-    \text{Attention}(u, v) = \frac{e^{ATT^t(v)_u}}{\sum_{i \in N(v)} e^{ATT^t(v)_i}} 
-\end{align}
+% We introduce three affine transformations that will be used in the message-generation procedure. The functions map the hidden state to vectors called key, query, and value:
+% \begin{align}
+%     \Klin_{\tau(v)}(h_)
+% \end{align}
 
 
-\begin{align}
-    A^t(v) = \{\Alin^t_{\tau(u)}(h^t_u): u \in N(v)\} \\
-    \msg(u, e, v) = \\
-    h^{t+1}_v = h^t_v + A^t_v \text{Relu}\left(\sum_{(u, e) \in NE(v)} \text{Attention}(u, e, v) \msg(u, e, v)\right)
-\end{align}
+% Let us begin by describing the attention mechanism. As the HGT can work with multigraphs, we denote the set of edges between nodes $u$ and $v$ as $E(u,v)$. We will calculate $\text{Attention}(u, e, v) \in \R$ for all $u \in N(v), e \in E(u,v)$. Attention uses
+% % TODO: make this neat
+
+% \begin{align}
+%     NE(v) = \{u, e : u \in N(v), e \in E(u, v)\}\\
+%     Q^t(v) = \{\Qlin^t_{\tau(u)}(h^t_u): u \in N(v)\} \\
+%     K^t(v) = \{\Klin^t_{\tau(u)}(h^t_u): u \in N(v)\}\\
+%     ATT^t(v) = \{K^t(v)_uW^{ATT}_{\phi(e)}Q^\top_v : (u, e) \in NE(v) \} \\
+%     \text{Attention}(u, v) = \frac{e^{ATT^t(v)_u}}{\sum_{i \in N(v)} e^{ATT^t(v)_i}} 
+% \end{align}
+
+
+% \begin{align}
+%     A^t(v) = \{\Alin^t_{\tau(u)}(h^t_u): u \in N(v)\} \\
+%     \msg(u, e, v) = \\
+%     h^{t+1}_v = h^t_v + A^t_v \text{Relu}\left(\sum_{(u, e) \in NE(v)} \text{Attention}(u, e, v) \msg(u, e, v)\right)
+% \end{align}
 
 % Q_tau: updated node query for attention
 % K_tau: other node value for attention
@@ -683,13 +730,13 @@ Let us begin by describing the attention mechanism. As the HGT can work with mul
 % repeat for all layers
 % NOTE: parameters not shared between layers, but the layer index left out to keep notation cleaner
 
-\begin{itemize}
-    \item Using HGT for generating node embeddings, MLP for turning node embeddings to predictions.
-    \item Injecting PEs to the problem instances before HGT
-    \item Describe how hgt generates messages w/ relation information and how message aggregation with attention works.
-    \item Justify the choice of architecture: can use information about relation type, good benchmark results
-    \item Include a diagram describing the architecture
-\end{itemize}
+% \begin{itemize}
+%     \item Using HGT for generating node embeddings, MLP for turning node embeddings to predictions.
+%     \item Injecting PEs to the problem instances before HGT
+%     \item Describe how hgt generates messages w/ relation information and how message aggregation with attention works.
+%     \item Justify the choice of architecture: can use information about relation type, good benchmark results
+%     \item Include a diagram describing the architecture
+% \end{itemize}
 
 
 \subsection{Heuristic evaluation method}
@@ -724,7 +771,12 @@ We calculate the objective value for the heuristic from \cref{eq:eval-obj} by se
 \section{Experiment setup}
 \subsection{Data generation}
 
-To train the neural network, we generated a large number of EANs and ODs for which we could solve the TimPass problem. The problem typically has multiple solutions, but for reasons explained in \cref{sec:solution-preference-reasoning} we need to control which of the optimal solutions we obtain. All problems use the same PTN with varying lines, duration bounds, frequencies, demands, and penalties. We use a period $T$ of 60 minutes. The used PTN is drawn in \cref{fig:base-ptn}.
+To train the neural network, we generated a large number of EANs and ODs for which we could solve the TimPass problem. The problem typically has multiple solutions, but for reasons explained in \cref{sec:solution-preference-reasoning} we need to control which of the optimal solutions we obtain. All problems use the same PTN with varying lines, duration bounds, frequencies, demands, and penalties. We use a period $T$ of 60 minutes. The PTN is drawn in \cref{fig:base-ptn}.
+
+Next we will define the notation used for the uniform distribution in the algorithms. We use sampling of distributions to generate variations in the training data.
+\begin{notation}[Uniform distributions]
+    By $\mathcal{U}\{x, y\}$ we denote the discrete uniform distribution between $x \in \Z$ and $y\in \Z$, including endpoints. The continuous counterpart $\mathcal{U}[x, y]$ is the continuous uniform distribution between $x \in \R$ and $y \in \R$, excluding $y$. Please note that the bracket type differentiates the continuous distribution from the discrete one.
+\end{notation}
 
 
 \begin{figure}
@@ -735,16 +787,16 @@ To train the neural network, we generated a large number of EANs and ODs for whi
 \end{figure}
 
 
-First, we listed all available lines as the set $\mathcal{L}$ with at least three stops and filtered the reversed line versions out. To keep the line plan realistic, we would later add the reverse line directions back to the plan. Then, we sampled the line plan size $|L| \sim \unif{2, 4}$. Knowing the size, we sampled the lines belonging to the plan uniformly without replacement from the set of lines: $L \subset \mathcal{L}$. As we want to emulate real EANs, we checked the resulting EAN would be connected if the reverse directions for the lines were also included. If this was not the case, we sampled the $L$ again.
+First, we listed all available lines as the set $\mathcal{L}$ with at least three stops and filtered the reversed line versions out. To keep the line plan realistic, we would later add the reverse line directions back to the plan. Then, we sampled the line plan size $|L| \sim \unif{2, 4}$. Knowing the size, we sampled the lines belonging to the plan uniformly without replacement from the set of lines: $L \subset \mathcal{L}$. As we want to emulate real EANs, we checked whether the resulting EAN would be connected if the reverse directions for the lines were also included. If this was not the case, we sampled the $L$ again.
 
 
 
-After the set of lines was determined, we would sample the line frequencies $f_l$ with the discrete probability mass function $p(r_l) = \sqrt[|L| - 1]{r_l / 4} - \sqrt[|L| - 1]{(r_l - 1) / 4}$. The probability mass function is visualised in \cref{fig:generation-rl-mass}. The function is designed to give a larger weight for the low line frequencies in case we have only a few lines in total. This regulates the variations in solving times for the generated problems. In practice, the samples are generated from a uniform distribution: $f_l = \lfloor x ^{|L| - 1} / 4 \rfloor + 1, x \sim \unifcont{0, 1}$.
+After the set of lines was determined, we would sample the line frequencies $f_l$ with the discrete probability mass function $p(f_l) = \sqrt[|L| - 1]{f_l / 4} - \sqrt[|L| - 1]{(f_l - 1) / 4}$. The probability mass function is visualised in \cref{fig:generation-rl-mass}. The function is designed to give a larger weight for the low line frequencies in case we have only a few lines in total. This regulates the variations in solving times for the generated problems. %In practice, the samples are generated from a uniform distribution: $f_l = \lfloor x ^{|L| - 1} / 4 \rfloor + 1, x \sim \unifcont{0, 1}$.  % skip, may be be confusing even though the methods are equivalent
 
 \begin{figure}
     \centering
     \includegraphics[width=0.8\textwidth]{figures/generation-rl-sample-density.pdf}
-    \caption{Probability mass functions for the sampling distribution of $r_l$ with various sizes $|L|$.}
+    \caption{Probability mass functions for the sampling distribution of $f_l$ with various sizes $|L|$.}
     \label{fig:generation-rl-mass}
 \end{figure}
 
@@ -803,20 +855,28 @@ The bounds for wait activities are sampled with the same idea of not having the 
 
 For the change activities, the sampling process is a bit different. First, we sample the lower bound $\lambda_u \sim \unif{1, 5}\ \forall u \in S$. Then, $L_a = \lambda_u,\ U_a = \lambda_u + T - 1$ for all activities $a = [(\text{arr}, u, l_1, r_1), (\text{dep}, u, l_2, r_2)] \in A_\text{change}$. In this case, the difference between the upper and lower bound is always $T-1$. This ensures, that the change is always feasible. We have the same bounds for all transfers that happen at the same stop.
 
-By the definition used here, we could have different penalties for all the change activities, and nothing limits us to having penalties only for those activities too. However, to keep things simple and aligned with other datasets, we just sample $\rho \sim \unif{1, 5}$ and set $b_a = \rho$ for all $a \in A_\text{change}$.
+By the definition used here, we could have different penalties for all the change activities, and nothing limits us to having penalties only for those activities too. However, to keep things simple and aligned with other datasets, we just sample $\rho \sim \unif{1, 5}$ and set $b_a = \rho$ for all $a \in A_\text{change}$ and $b_a = 0$ otherwise.
 
 For sync activities, we don't sample the bounds. Instead, we simply set
 \begin{align}
     L_a, U_a = T / f_l\quad  \forall a = [(t, u, l, r_1), (t, u, l, r_1)] \in \Async
 \end{align}
+Note, that $L_a, U_a \in \N$ as we chose $T$ and $f_l$ sampling to enforce this. This is necessary, as the TimPass model formulation is defined in terms of integers.
 
-Finally, we must come up with an OD matrix for the problem instance. Only the stops that belong to a line are present in the EAN. As the lines are randomly chosen, the set of stops is also random. If we were to consider the demand for all stop pairs, we could end up with a difficult problem to solve, as we could have many OD-pairs for which we need to solve the best route. Instead, if the number of possible OD-pairs is greater than 40, we sample $|\od| \sim \unif{30, 40}$ and then take the random subset $\od \subset S^2$. If we did not sample $|\od|$, we just use all possible OD-pairs. For all OD-pairs we sample the demand as $\od_{uv} \sim \unif{1, 20}\ \forall uv \in \od$.
+Finally, we must come up with an OD matrix for the problem instance. Only the stops that belong to a line are present in the EAN. As the lines are randomly chosen, the set of stops is also random. The shares of varying node set sizes in the dataset are presented in \cref{fig:data-node-count-shares}. If we were to consider the demand for all stop pairs, we could end up with a difficult problem to solve, as we could have many OD-pairs for which we need to solve the best route. Instead, if the number of possible OD-pairs is greater than 40, we sample $|\od| \sim \unif{30, 40}$ and then take the random subset $\od \subset S^2$. If we did not sample $|\od|$, we just use all possible OD-pairs. For all OD-pairs we sample the demand as $\od_{uv} \sim \unif{1, 20}$ for all $uv \in \od$.
 
-Now we can define the TimPass problem and attempt to solve it. We would try to solve the obtained problem with Gurobi with a time limit of 20 seconds. If the optimal solution was not obtained within this limit, we would deem the problem difficult to solve and try sampling the problem again. As stated previously, we need to be able to control which of the multiple solutions we actually get. This is done by first solving the problem as usual. We denote the calculated optimal objective value $V^*$. To obtain other solutions, we create add a new constraint and change the objective function. The new constraint is that the objective must be equal to $V^*$:
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\textwidth]{data_node_count_shares.pdf}
+    \caption{Shares of node set sizes in the generated dataset.}
+    \label{fig:data-node-count-shares}
+\end{figure}
+
+Now we can define the TimPass problem and attempt to solve it. We would try to solve the obtained problem with Gurobi with a time limit of 20 seconds. If the optimal solution was not obtained within this limit, we would deem the problem difficult to solve and try sampling the problem again. This happened in approximately $48\%$ of the sampled problem variations. As stated previously, we need to be able to control which of the multiple solutions we actually get. This is done by first solving the problem as usual. We denote the calculated optimal objective value $V^*$. To obtain other solutions, we add a new constraint and change the objective function. The new constraint is that the objective must be equal to $V^*$:
 \begin{align}
     \sum_{\mathit{uv} \in \textrm{OD}} \od_{\mathit{uv}} \sum_{a \in \Ar} p_{a}^{\mathit{uv}} (x_a + b_a)  = V^*
 \end{align}
-For the new objective, we change it to be the weighted sum of the flow variables. The weights are sampled randomly between zero and one:
+For the new objective, we change it to be  the weighted sum of the flow variables. The weights are sampled randomly between zero and one:
 \begin{align}
     \min\ \sum_{uv \in \od}\sum_{a\in \Ar}w_a^{uv}p_{a}^{\mathit{uv}} (x_a + b_a),\quad w_a^{uv} \sim \unifcont{0, 1}
 \end{align}
@@ -848,82 +908,219 @@ With the problem given above, we attempted to generate 10 solutions for each pro
 
 \subsection{Data representation as a heterogenous graph}
 
-The simplified overview of the node types and their relations is expressed in \cref{fig:hetero-relations}. We use 
+% The simplified overview of the node types and their relations is expressed in \cref{fig:hetero-relations}. We use 
+On top of the EAN data, we have the OD data we need to include as input to the GNN. We will use a heterogenous graph for this, as it allows us to include multiple kinds of nodes and relations in a graph.
 
-% TODO: is simplified, as edge features not included in HGT -> tricks are required :(
-% TODO: data transformaatio on salee väärin koodissa! :( -> investigoi, jos oikeesti väärin, niin uutta transformaatiota tulille ja sit uutta ajoa. Tosin: preferenssit pitää salee muuttaa action-kohtaisiksi, että tässä formuloinnissa olis mitään järkeä. Vaihtoehtoisesti vois linkata actionin, OD:n ja preferenssin, mut olisko tää aika työlästä? Joka tapauksessa pitänee kouluttaa uudestaan >:(
-% 
+The set of node types is $\mathcal{A} = \{\text{event}, \text{stop}, \text{line}\}$. As the line and stop ids are essentially meaningless on their own, we chose to represent the identity of a line and a stop as a separate node in the graph. This allows us to meaningfully represent which events belong to which stop and line without needing to e.g. permute the ids when training the model. The node type defines what kinds of features the node has. The line and stop type nodes do not have any features. The event-type nodes have one-hot encoded the event type, either arrival or departure.
+
+The set of edge types is $\mathcal{R} = \{\text{activity}, \text{demand}, \text{belongs}\}$. The activity-type nodes have the activity type one-hot encoded. The activity duration lower bound $L_a$, upper bound $U_a$, and penalty $b_a$ are included as a share of the period $T$. The normalised shortest path routing weight is also included. In the preprocessing step we deduced that some of the flow variables must be zero. We chose to not encode this information as is, but as an aggregate of the share of flow variables that were preprocessed. We controlled for the optimal solution we obtained from the TimPass model with the preference variables. The preferences are also included in the features, as otherwise we could not determine which solution the GNN should aim for. The demand edges store the number of customers wanting to travel between the stops. The value is normalised to have a maximum value of one across all edges. The belongs edge type does not contain any features.
+
+Unfortunately, the implementation of HGT we are using does not use edge features directly. Instead, we will encode the edge features by connecting the line graph representation of the edges to the rest of the graph. A similar trick is used in \cite{line-graph-trick}. The method is visualised in \cref{fig:line-graph}. We applied the line-graph conversion one edge type at a time for the activity and demand edge types.
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.3\textwidth]{figures/hetero-graph-relations.png}
+    \includegraphics[width=\textwidth]{figures/line-graphs.jpeg}
+    \caption{Demonstration of how the line graph trick is used to include edge features in the graph. The original graph with edge features is top left. The line graph of the edges on top right turns edges into nodes and connects the new nodes that were previously connected to a same node. The graphs are then joined by connecting the edge nodes to corresponding original nodes.}
+    \label{fig:line-graph}
+\end{figure}
+ 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.3\textwidth]{figures/hetero-graph-relations.jpg}
     \caption{The node and relation types of the heterogenous representation.}
     \label{fig:hetero-relations}
 \end{figure}
-\begin{itemize}
-    \item Describe how heterogenous graphs are represented in torch\_geometric -> some data conversions are needed
-    \item Edge features not included in the architecture -> we turn edges with features to nodes, connecting them with special edges to the original edge endpoints
-    \item Remove stop and line ids from features, describe how stops and lines are represented as only the identity of the id is important, not the ordering of the ids.
-    \item Additional feature: shortest path weights
-    \item Type one-hot encodings
-    \item Normalizations for values, easier for neural networks to learn this way
-    \item OD demand representation
-    \item Included metapaths, as otherwise edge feature nodes could suffer from the lack of connections.
-\end{itemize}
+% \begin{itemize}
+    % \item Describe how heterogenous graphs are represented in torch\_geometric -> some data conversions are needed
+    % \item Edge features not included in the architecture -> we turn edges with features to nodes, connecting them with special edges to the original edge endpoints
+    % \item Remove stop and line ids from features, describe how stops and lines are represented as only the identity of the id is important, not the ordering of the ids.
+    % \item Additional feature: shortest path weights
+    % \item Type one-hot encodings
+    % \item Normalizations for values, easier for neural networks to learn this way
+    % \item OD demand representation
+    % \item Included metapaths, as otherwise edge feature nodes could suffer from the lack of connections. (part of the line graph trick)
+% \end{itemize}
 
 
 \subsection{Training}
-\begin{itemize}
-    \item Describe hyperparameters and hyperparameter optimization with Bayesian search
-    \item Trained on triton with xyz hardware
-\end{itemize}
+
+The HGT architecture and the training process are parametrized by hyperparameters. The hyperparameters for the HGT architecture are the number of hidden layers, the dimension of the hidden layers, and the number of attention heads used. The training process is 
+
+\draft{   
+    Hyperparams:
+    - batch size (Mostly memory limit, also affects step )
+    - number of layers
+    - number of attention heads
+    - number of hidden channels
+    - learning rate
+    Parallel training: multiple training agents, fetch testable parameters from the coordinating server
+    Server assigns parameters based on strategy.
+    Strategies:
+    - grid (discrete "design space"?? check wording here), easily unnecessarily many combinations to test
+    - random (works also with continuous variables), not too bad, but we can do better
+    - bayesian (models expected value and expected variation, pick new samples from design space based on ?)
+}
+    
+\draft{
+    \begin{itemize}
+        \item Describe hyperparameters and hyperparameter optimization with Bayesian search
+        \item Trained on triton with xyz hardware
+        \item Results in \cref{app:hyperparams}
+    \end{itemize}
+}
 \clearpage
 \section{Results}
-\begin{itemize}
-    \item Should hyperparameter optimization results be listed here or put in an appendix? Maybe not very relevant for the thesis apart from the number of layers and how that relates to long-range dependencies.
-\end{itemize}
 \subsection{Heuristic performance}
 
-\begin{itemize}
-    \item We compared heuristic performances on generated evaluation problems and some problems from Timpasslib
-    \item Table: mean, median, and std of optimality gap and loss for both heuristics on the generated problem instances
-    \item Scatter plot of GNN gap vs SPR gap
-    \item (Scatter plot of GNN loss vs SPR loss, would this be useful?)
-    \item Calculate how often GNN beats SPR
-    \item Calculate how often we get optimal solutions
-\end{itemize}
+\begin{figure}
+    \begin{subfigure}{0.5\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/loss-loss.pdf}
+        \caption{Shortest path heuristic loss vs GNN loss.}
+        \label{fig:results-ll}
+    \end{subfigure}
+    \begin{subfigure}{0.5\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/gap-gap.pdf}
+        \caption{Shortest path heuristic gap vs GNN gap.}
+        \label{fig:results-gg}
+    \end{subfigure}
+    \caption{Join distributions for the shortest path heuristic and GNN performance metrics. Marginal distributions as histograms along the edges. The views are clipped slightly and the clipped values are collected in the last bins of the histograms.}
+    \label{fig:results-ll-gg}
+\end{figure}
+
+We calculated the performance metrics on a test dataset with over 5000 samples. This dataset was not used in the training of the GNN heuristic.
+
+For each problem instance, we calculated the GNN heuristic loss (as MSE against the optimal activity weights) and optimality gap as described in \cref{sec:heur-eval}. We also calculated the metrics for the shortest path heuristic weights. The heuristic is called the "trivial heuristic" in the figures. First, in \cref{fig:results-ll-gg} we compare the joint distributions of the losses and optimality gaps of the heuristic against each other.
+
+For the calculated losses in \cref{fig:results-ll} we can clearly see, that the GNN heuristic typically achieves lower losses than the trivial heuristic. This indicates that the trained network did at least partially work as intended, as the heuristic was trained to minimise the loss. The loss is smaller for the GNN in 79\% of the problem instances.
+
+However, observing the results in \cref{fig:results-gg} is more difficult. For the trivial heuristic, the gap is zero in 91\% of the cases and for the GNN heuristic in 61\%. Notably, the trivial heuristic finds the optimal solution more often than the GNN heuristic despite having larger losses. More on that in \cref{sec:loss-gap-relation}. However, we will now restrict our comparison to only cases where the trivial heuristic optimality gap is nonzero. We justify this condition by stating that the optimality of the trivial heuristic is easy to verify beforehand. As we are interested in improving the found solutions, we limit our focus only to cases where we know beforehand that improvements are possible. We use the name trivial problem for the problems where the shortest path heuristic achieves zero optimality gap.
+
+In \cref{fig:results-gg-excl-trivial} we represent the optimality gap joint distribution without the trivial problems. Note, how the histograms are no longer concentrated around zero. With this filtering, the GNN heuristic achieves a better gap in 41\% of the problems. Likewise, the trivial heuristic has a better gap for 47\% of the problems. When the solutions differ, the difference is often quite large: if GNN gap is smaller, on average it is only about 31\% of the trivial heuristic gap. This means, that the proposed heuristic can find solutions that are vastly better than the baseline shortest path heuristic. However, this is not consistent.
+
+In \cref{tab:results} we present the calculated heuristic performance metrics in tabular form. 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{figures/gap-gap-excl-trivials.pdf}
+    \caption{Optimality gap joint distribution for trivial and GNN heuristics. Excluding trivial problems.}
+    \label{fig:results-gg-excl-trivial}
+\end{figure}
+
+% TODO: include results for generalisation to a larger problem instance ":D"
+
+% \begin{itemize}
+%     \item We compared heuristic performances on generated evaluation problems and some problems from Timpasslib
+%     \item Table: mean, median, and std of optimality gap and loss for both heuristics on the generated problem instances
+%     \item Scatter plot of GNN gap vs SPR gap
+%     \item (Scatter plot of GNN loss vs SPR loss, would this be useful?)
+%     \item Calculate how often GNN beats SPR
+%     \item Calculate how often we get optimal solutions
+% \end{itemize}
+
+\begin{table}[]
+    \centering
+    \caption{Heuristic performance metrics both before and after filtering for trivial problem instances.}
+    \label{tab:results}
+    \footnotesize
+    \begin{tabular}{l|ll|ll}
+                                     & All problems  &                   & Non-trivial problems &                   \\
+    Metric                           & GNN heuristic & Trivial heuristic & GNN heuristic        & Trivial heuristic \\ \hline
+    Loss mean                        & \textbf{0.018526} & 0.045599          & \textbf{0.016793}    & 0.032772          \\
+    Loss median                      & \textbf{0.013557} & 0.034702          & \textbf{0.013480}    & 0.022635          \\
+    Gap mean                         & 0.011484          & \textbf{0.002880} & 0.036789             & \textbf{0.034759} \\
+    Gap median                       & \textbf{0.000000} & \textbf{0.000000} & \textbf{0.019865}    & 0.025327          \\
+    Loss smaller share               & \textbf{0.7851}   & 0.2149            & \textbf{0.7210}      & 0.2790            \\
+    Gap smaller share                & 0.0349            & \textbf{0.3532}   & 0.4066               & \textbf{0.4657}   \\
+    \makecell{Average relative\\gap improvement} &               &                   & 0.31                 &                  
+    \end{tabular}
+    \end{table}
+
 
 \subsection{Relation of loss and heuristic optimality gap}
+\label{sec:loss-gap-relation}
 
-\begin{itemize}
-    \item GNN heuristic has an inbuilt assumption that the optimality gap gets smaller as loss decreases
-    \item True when loss is very small, otherwise correlation is low
-    \item Plot of gap vs loss with both GNN and shortest path routing, points colored by heuristic
-\end{itemize}
+The chosen GNN heuristic training has the inbuilt assumption, that achieving good predictions for the optimal weights $w$ leads to low optimality gaps. However, after observing the achieved losses and optimality gaps for both the GNN and the trivial heuristic, this does not seem to be so straightforward.
+
+In \cref{fig:gap-loss} we observe the loss vs optimality gap plots for both heuristics. If the assumption was correct, we would observe some kind of positive correlation between the metrics. However, the metrics are virtually independent of each other. Only when we focus on very small losses as in \cref{fig:gap-loss-gnn-zoomed} we see any dependence. For very small losses the optimality gaps tend to also be very small.
 
 
-\subsection{Theoretical lower bound without preference of solutions}
+\begin{figure}
+    \begin{subfigure}{0.5\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/gap-loss-trivial.pdf}
+        \caption{Gap vs loss trivial heuristic}
+        \label{fig:gap-loss-trivial}
+    \end{subfigure}
+    \begin{subfigure}{0.5\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/gap-loss-gnn.pdf}
+        \caption{Gap vs loss GNN heuristic}
+        \label{fig:gap-loss-gnn}
+    \end{subfigure}
+    \caption{Relationship between the heuristic loss and the achieved optimality gap.}
+    \label{fig:gap-loss}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{figures/gap-loss-gnn-zoomed.pdf}
+    \caption{Zoomed view to \cref{fig:gap-loss-gnn}. We observe, that for very low loss values the gap tends to also be zero.}
+    \label{fig:gap-loss-gnn-zoomed}
+
+\end{figure}
+
+% \begin{itemize}
+%     \item GNN heuristic has an inbuilt assumption that the optimality gap gets smaller as loss decreases
+%     \item True when loss is very small, otherwise correlation is low
+%     \item Plot of gap vs loss with both GNN and shortest path routing, points colored by heuristic
+% \end{itemize}
+
+
+\subsection{Theoretical loss lower bound without preference of solutions}
 \label{sec:solution-preference-reasoning}
-\begin{itemize}
-    \item Multiple solutions to TimPass exist, we pick the "right" one essentially at random
-    \item We are using mse loss -> the loss would be minimized when we predict the expected value of the optimal solution
-    \item Multiple solutions -> we are actually not predicting an optimal solution, but something else
-    \item Empirically, the lower bound for the loss would be the variance of the obtained weights
-    \item Got an estimate of 0.00199 -> we couldn't get a loss lower than that with this dataset without the preference order.
-\end{itemize}
+
+We will next investigate what would be the theoretically lowest obtainable loss if we did not include the preference information for the flow variables. As observed, for a given problem instance, we may have multiple optimal solutions to the TimPass problem. We assume that the optimal solution which we obtain is uniformly random between all optimal solutions if we do not control for this with the preference mechanism.
+
+The neural network is trained to minimise the expected average squared error of the weight predictions. The loss for an individual problem is defined as $\ell(\hat{w}, w) = 1 / |A| \sum_{a \in A}(\hat{w}_a-w_a)^2$. If we don't consider preference information, then $w$ can be viewed as a random variable. In this case, the optimal predictor would predict $\hat{w}_a^* = \mathbb{E}[w_a]$. By substituting this back to the loss formula, we get that the lowest obtainable expected loss is the mean population variance of the weights, with the population here being the set of optimal solutions for one problem instance and the average being taken over all problem instances.
+
+We can estimate this lowest obtainable loss by calculating the sample variances for the weights. With this method, we get that $\mathbb{E}[\ell(\hat{w}^*, w)] \approx 0.0091$. As this is lower than the best loss achieved with the preferences, we can deduce that the lack of preference information would not have limited the performance of the model significantly.
+
+% \label{sec:solution-preference-reasoning}
+% \begin{itemize}
+%     \item Multiple solutions to TimPass exist, we pick the "right" one essentially at random
+%     \item We are using mse loss -> the loss would be minimized when we predict the expected value of the optimal solution
+%     \item Multiple solutions -> we are actually not predicting an optimal solution, but something else
+%     \item Empirically, the lower bound for the loss would be the variance of the obtained weights
+%     \item Got an estimate of 0.00199 -> we couldn't get a loss lower than that with this dataset without the preference order.
+% \end{itemize}
 
 
 \clearpage
 \section{Discussion}
-\begin{itemize}
-    \item Overview of the results: no consistent improvement, 
-    \item Discuss limitations of GNNs: e.g. information squashing, long range dependencies (many benchmarks for tasks with short-range dependencies), other points discussed in the papers related to gnn limitations
-    \item Any potential new ideas to make GNNs work in this problem setting?
-\end{itemize} 
+\draft{
+    \begin{itemize}
+        \item Overview of the results: no consistent improvement
+        \item On "non-trivial" problems, can improve the results, but is bit of a coin toss. However, can be useful to try both heuristics and pick the best solution.
+        \item Generalization: TODO
+        \item Weak / non-existent correlation of loss and gap -> minimising $l^2$ loss of $\hat{w}$ is likely not a feasible approach
+        \item Discuss limitations of GNNs: e.g. information squashing, long range dependencies (many benchmarks for tasks with short-range dependencies), other points discussed in the papers related to gnn limitations
+        \item ideas to make GNNs work in this problem setting \begin{itemize}
+            \item More PESP tricks, reduce the size of the input EAN (Maybe improves results, but does it improve GNN contribution to the solution? Easier problem should be easier to solve with all methods.)
+            \item Splitting OD pairs to groups by potential, predict only high-potential od pairs.
+        \end{itemize}
+        \item Predicting weights could be tricky (low loss correlation). How about predicting the routes directly instead? Transformers (grap -> sequence of flow variables), RNNs with GNN components, or reinforcement learning could potentially be applied here. Additional benefit: architectures could incorporate global information of the graph by default.
+        \item GraphFormers (something Microsoft has been developing, equivalence of GNNs and transformers with suitable neighbourhoods)
+    \end{itemize} 
+}
 
 \clearpage
 \section{Summary}
 \label{sec:summary}
+
+\
 
 \clearpage
 \thesisbibliography
@@ -935,5 +1132,23 @@ The simplified overview of the node types and their relations is expressed in \c
 
 \clearpage
 \thesisappendix
+
+\section{Hyperparameter tuning}
+\label{app:hyperparams}
+Used hyperparams:
+- batch size: 64
+- lr: 0.003
+- hidden channels: 16
+- attention heads: 8
+- layers: 15
+
+
+\draft{
+    \begin{itemize}
+        \item Results from hyperparameter tuning
+        \item Graphs from WandB
+        \item Conclusion: not very sensitive to parameters, most models are equally bad, but performance for some is extraordinarily terrible.
+    \end{itemize}
+}
 
 \end{document}

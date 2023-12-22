@@ -115,6 +115,8 @@ def run_train(args: Namespace):
         accelerator=args.accelerator,
         max_epochs=args.max_epochs,
         logger=experiment_logger,
+        accumulate_grad_batches=16,
+        gradient_clip_val=0.5,
         callbacks=[
             checkpoint_callback,
             early_stopping_callback,

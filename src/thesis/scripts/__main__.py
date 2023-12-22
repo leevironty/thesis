@@ -11,6 +11,7 @@ from thesis.scripts.multi_solution_check import attach_ms_checker
 from thesis.scripts.multi_solution_generation import attach_multi_solution_generation
 from thesis.scripts.big_eval import attach_big_eval
 from thesis.scripts.filter import attach_filter_parser
+from thesis.scripts.eval_timpasslib import attach_eval_timpasslib
 
 
 
@@ -79,6 +80,7 @@ def main():
     attach_multi_solution_generation(main_subparsers)
     attach_big_eval(main_subparsers)
     attach_filter_parser(main_subparsers)
+    attach_eval_timpasslib(main_subparsers)
 
     args = parser.parse_args()
     args.func(args)

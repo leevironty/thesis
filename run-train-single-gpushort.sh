@@ -18,9 +18,9 @@ srun -p gpushort --gpus=1 -c 4 --mem=12G thesis --threads=4 train \
     --num-layers 16 \
     --num-heads 16 \
     --num-workers 4 \
-    --hidden-channels 512 \
+    --hidden-channels 352 \
     --lr 0.001 \
     --accelerator auto \
     --max-epochs 40 \
     --patience 40 \
-    --run-name deep-test-wide-dropout
+    --run-name deep-test-wide-dropout-clips-grad-acc

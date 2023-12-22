@@ -5,6 +5,7 @@ import os
 from enum import Enum
 import gzip
 import pickle
+import random
 
 from thesis.data.schema import (
     Activity,
@@ -254,3 +255,11 @@ class Data:
         df = read(filename)
         ods = [OD(**row.to_dict()) for _, row in df.iterrows()]
         return {(od.origin, od.destination): od for od in ods}
+
+    def assign_random_preferences(self):
+        prefs = {
+            act: random.random()
+            for act in self.activities_routable.keys()
+        }
+        self.preferences = prefs
+        return self
