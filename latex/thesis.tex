@@ -193,13 +193,13 @@ In this thesis, we develop a heuristic solution method to this integrated optimi
 Note, that in this case, we do not differentiate between transportation modes
 like busses and trains. In general, a real public transportation system would have multiple modes of transportation, but we ignore this for now, as the developed heuristic could be easily extended to a multimodal case. 
 
-We begin by reviewing the literature related to the topics of the thesis. We continue by covering the theoretical background for the problem, some simple previous heuristics, and graph neural networks. Then we describe the data generation and the experiments, after which we conclude by presenting the results and analyzing what we learned.
+We begin by reviewing the literature related to the topics of the thesis in \cref{sec:lit-review}. We continue by covering the theoretical background for the problem in \cref{sec:ean-def,sec:ips}, some simple previous heuristics (\cref{sec:sp-heur}), and graph neural networks (\cref{sec:gnns}). Then we describe the data generation and the experiments in \cref{sec:experiments}, after which we conclude by presenting the results (\cref{sec:results}) and analyzing what we learned in \cref{sec:discussion}.
 
-\subsection{Literature review}
+\subsection{Literature review}\label{sec:lit-review}
 
 % As we are aiming to <> a new GNN heuristic for the TimPass problem, we 
 
-We will study the previous literature from three perspectives. First, we will explore the previous heuristics, solving methods, and formulations related to the TimPass problem as seen in \cite{schmidt2014integrating, schiewe2020periodic}. Next, we review the literature for ML methods in public transport optimization, and lastly, we take a look at ML methods in combinatorial optimization.
+We will study the existing literature from three perspectives. First, we explore the existing heuristics, methods, and formulations related to the timetabling and passenger routing problem as seen in \cite{schmidt2014integrating, schiewe2020periodic}. Next, we review the literature for machine learning (ML) methods in public transport optimization, and lastly, we take a look at ML methods in combinatorial optimization.
 
 The TimPass formulation of \cite{schiewe2020periodic} can be viewed as an extension to the periodic event scheduling problem as described in ???. 
 
@@ -231,6 +231,8 @@ Yan et al. \cite{yan2022distributed} applied a multiagent reinforcement learning
 
 \clearpage
 \section{Methods}
+In this section, we introduce the used methods and their definitions. First, we define the mathematical representation of the public transport system. Next we present the integer programming formulations and the graph neural network (GNN) methods. Lastly, we define how the GNN is used as a heuristic for the TimPass problem.
+
 In \cref{fig:process-flow} we show the overview of how all the different methods are related to each other to finally get to the results, i.e. heuristic evaluation.
 \begin{figure}
     \centering
@@ -259,8 +261,14 @@ Before we can define event activity networks, we have to define a few other thin
 
 A PTN describes the underlying transportation infrastructure of a public transport system. We consider the connections to be undirected. This simplifies the modeling, but one could also have a PTN with directed edges. The PTN could also be non-simple, but that notation would make a difference only if there were either capacity constraints per connection or if multiple modalities were used.
 
-\begin{definition}[Periodic scheduling]  % TODO: this after EAN definition
-    A period $\period \in \N$ defines the time interval at which various events and activities are repeated.
+Stops and connections are not enough to model the public transport network. We will use an event activity network (EAN) for that.
+\begin{definition}[Event Activity Network]\label{def:ean}
+    The event activity network $EAN$ is a directed graph $\textit{EAN} = (E, A)$ with a set of events $E$ and a set of activities $A$ connecting the events.
+\end{definition}
+We will define the set of events $E$ and activities $A$ a bit later, as we need the notation of a line concept for that first.
+
+\begin{definition}[Periodic scheduling] 
+    A period $\period \in \N$ defines the time interval at which various events are repeated.
 \end{definition}
 
 We are interested in the periodic instead of the aperiodic scheduling problem. This period could be for example 60 minutes, one day, or something else. The appropriate period length depends on what kind of schedule we aim to optimise. %Note that in general, the period could be a positive real number, but we consider it to be an integer to follow the convention established in \cite{schiewe2020periodic}.
@@ -274,10 +282,10 @@ We are interested in the periodic instead of the aperiodic scheduling problem. T
 
 Here we assume the lines to be directed, meaning that vehicles travel the line only in one direction. Usually, in real-world lines, the vehicles travel in both directions, but this can also be modeled here by including the reverse direction as a separate line instance. %This notation of the line including the direction just makes the rest of the notation a bit simpler, while at the same time allowing more flexibility in what kinds of lines can be expressed.
 
-From the line concept, we can construct the event activity network (EAN).
-\begin{definition}[Event Activity Network]\label{def:ean}
-    The event activity network $EAN$ is a directed graph $\textit{EAN} = (E, A)$ with a set of events $E$ and a set of activities $A$ connecting the events.
-\end{definition}
+From the line concept, we can define the set of events $E$ and activities $A$ used in the EAN.
+% \begin{definition}[Event Activity Network]\label{def:ean}
+%     The event activity network $EAN$ is a directed graph $\textit{EAN} = (E, A)$ with a set of events $E$ and a set of activities $A$ connecting the events.
+% \end{definition}
 For the events, we have the disjoint arrival and departure types: $E = \Earr \cup \Edep$. As the names suggest, the sets $\Earr$ and $\Edep$ contain the events describing vehicle arrivals and departures at the stops. To simplify the notation, we define the set of available repetition numbers as $R_l = \{1, \dots, f_l\}$. More formally, the sets are defined as follows:
 \begin{align*}
     \Earr &= \{
@@ -309,7 +317,7 @@ For the activities, we also have multiple distinct types: drive, wait, change, a
     ): (t, u, l, r) \in E, r \geq 2 \}
 \end{align*}
 
-The drive activities correspond to the driving activity between stops. The activities connect the line's departure events to the corresponding arrival events. The wait activities correspond to the vehicle staying at the station, waiting to e.g. load and unload passengers. The wait activities connect arrival events to departure events. The drive and wait activities are demonstrated in \cref{fig:drive-wait-demo}. The change activities denote the line transfers that the passengers may take. The activities link the arrivals to departures within the same stop that do not belong to the same line. The idea of change activities and multiple lines at the same stop is shown in \cref{fig:change-demo}. The sync activities are slightly different from the other activities, as the passengers can not travel along those edges. For defining the optimization models, we note the set of activities usable for passenger routing as $\Ar = A \setminus \Async$. The purpose of sync activities is to define constraints on the timetable to have some predefined spacing among the repetitions of the lines. How sync activities are connected is shown in \cref{fig:sync-demo}. Defining the constraints on all sync activities is not mandatory. In that case, the sync activities without constraints are redundant.
+The drive activities correspond to the driving activity between stops. The activities connect the line's departure events to the corresponding arrival events. The wait activities correspond to the vehicle staying at the station, waiting for the passengers to board and disembark the vehicle. The wait activities connect arrival events to departure events. The drive and wait activities are demonstrated in \cref{fig:drive-wait-demo}. The change activities denote the line transfers that the passengers may take. The activities link the arrivals to departures within the same stop that do not belong to the same line. The idea of change activities and multiple lines at the same stop is shown in \cref{fig:change-demo}. The sync activities are slightly different from the other activities, as the passengers can not travel along those edges. For defining the optimization models, we note the set of activities usable for passenger routing as $\Ar = A \setminus \Async$. The purpose of sync activities is to define constraints on the timetable to have some predefined spacing among the repetitions of the lines. How sync activities are connected is shown in \cref{fig:sync-demo}. Defining the constraints on all sync activities is not mandatory. In that case, the sync activities without constraints are redundant.
 
 
 \begin{figure}
@@ -366,9 +374,14 @@ The drive activities correspond to the driving activity between stops. The activ
 % \item Two lines on a stop, omit the reverse direction of the lines to keep the graph a bit clearer, freq > 1 for one line. Points to demonstrate: How transfers, headways, and sync edges are used.
 % \end{itemize}
 
-\subsection{Integer programming formulations for timetabling and passenger routing}
+\subsection{Integer programming formulations}
+\label{sec:ips}
 
-We can define a schedule for the events in an EAN. The event times are noted as $\pi_i \in \{0, \dots, T-1\}$ for all events $i \in E$. As we are working with a periodic schedule, all the event occurrence times must be lower than the period of the schedule $T$. %As noted previously, we could have a real-valued schedule instead of a discrete one, but once again we follow the previous formulation.
+Next we will define the integer programming formulations used. We will start with the periodic event scheduling problem (PESP) and it's cycle basis formulation. Then, we extend the PESP problem with passenger routing to obtain the time tabling and passenger routing (TimPass) problem.
+
+\subsubsection{Periodic event scheduling problem}
+
+The PESP problem in first presented in \cite{pesp-original-1989}. We will follow the formulation in \cite{schiewe2020periodic} with notation adapted to be in line with our definition of the EAN. In periodic scheduling, we have a periodic schedule $\pi$ defined for the events in the EAN. The event times are noted as $\pi_i \in \{0, \dots, T-1\}$ for all events $i \in E$. As we are working with a periodic schedule, all the event occurrence times must be lower than the period of the schedule $T$. %As noted previously, we could have a real-valued schedule instead of a discrete one, but once again we follow the previous formulation.
 
 The activities in the EAN are used to define constraints on the upper and lower bounds for activity durations. For all activities $a \in A$, we have the lower bound $L_a \in \N$ and upper bound $U_a \in \N$. For the bounds, we of course must also have that $0 \leq L_a \leq U_a$. The activity duration for activity $a = (i, j)$ itself is calculated as $(\pi_j - \pi_i - L_a)\ \text{mod}\ T + L_a$. The lower bound term outside of the modulo ensures, that the lower bound is respected. The term inside the modulo is the "slack" time we have due to the schedule not aligning perfectly with the lower bound. As formulated, the duration is guaranteed to be greater or equal to the lower bound. For the given timetable $\pi$ to be feasible, for all activities $a \in A$ we must have that the upper bound holds: $(\pi_j - \pi_i - L_a)\ \text{mod}\ T + L_a\leq U_a$.
 
@@ -392,15 +405,14 @@ Note, that the objective only considers the routable activities, but the constra
     \pi_i &\in \{0, \dots, T-1\} &i &\in E\\
     z_a &\in \Z &a &\in A
 \end{align}
-Cite this: \cite{schiewe2020periodic}.
 
 % From the OD demand, we use some routing scheme to obtain weights.  % TODO: more formally, good points in prev. literature.
 
 
-The formulation for the PESP problem using the schedule $\pi$ is correct, but it's not the most efficient one available. Instead of explicitly defining the times for the events, we could instead define just the activity durations directly. We note the activity duration as $x_a \in \N$. Now the constraint on activity durations is much simpler: $L_a \leq x_a \leq U_a\ \forall a \in A$. This formulation also reduced the number of symmetrical solutions: when defining the event times explicitly, we could always transform a feasible timetable into another by rotating the event times through the period $T$.
+The formulation for the PESP problem using the schedule $\pi$ is correct, but it's not the most efficient one available. As presented in \cite{cycle-basis-original-2001}, instead of explicitly defining the times for the events, we could instead define just the activity durations directly. We note the activity duration as $x_a \in \N$. Now the constraint on activity durations is much simpler: $L_a \leq x_a \leq U_a\ \forall a \in A$. This formulation also implicitly reduces the number of symmetrical solutions: when directly defining the event times by $\pi$ we would need to fix some event time explicitly to prevent symmetrical solutions from being considered.
 % TODO: any research on why the cycle-basis is more efficient?
 
-However, now we need to take the cycles in the EAN into account. In \cref{fig:cycle-example}, we have the activities a, b, c, d, e, and f. For the activity durations to be consistent, we must have that the difference of duration of the upper path $x_a + x_b + x_c$ and lower path $x_f + x_e + x_d$ must be an integer multiple of the period $T$. More formally, $x_a + x_b + x_c - x_d - x_e - x_f = zT$ for some $z\in \Z$. The difference can be a multiple of the period as we are dealing with a periodic timetable, otherwise the difference should be zero.
+We still need to take the cycles and their feasibility in the EAN into account. In \cref{fig:cycle-example}, we have the activities a, b, c, d, e, and f. For the activity durations to be consistent, we must have that the difference of duration of the upper path $x_a + x_b + x_c$ and lower path $x_f + x_e + x_d$ must be an integer multiple of the period $T$. More formally, $x_a + x_b + x_c - x_d - x_e - x_f = zT$ for some $z\in \Z$. The difference can be a multiple of the period as we are dealing with a periodic timetable, otherwise the difference should be zero.
 
 \begin{figure}
     \centering
@@ -409,12 +421,19 @@ However, now we need to take the cycles in the EAN into account. In \cref{fig:cy
     \label{fig:cycle-example}
 \end{figure}
 
+\begin{definition}{(Cycles in a directed graph)}
+    A list of activities $(a_1, a_2, \dots, a_n)$ is a simple cycle if 
+    adjacent activities share one event: $|a_i\cap a_{j}| = 1$ for all $i = {1, \dots, n}$ and $j = (i - 1 ) \mod n$, and the events of the activities are visited exactly once: $|\cup_{i=1,\dots, n}a_i| = n$. The cycle activities are divided into a set of positive edges $c^+$ and negative edges $c^-$. The positive edges are defined as $c^+ = \{a_i = (e_1, e_2) : e_1 \in a_j, j = (i - 1) \mod n\}$. Likewise, $c^- = \{a_i : a_i \notin c^+\}$.
+    % - all adjacent activities share a node
+    % - no duplicated verticies
+\end{definition}
+
 In the cycle basis formulation, we consider cycles regardless of the edge direction, but the cycle does have a direction. All the edges of a cycle $c$ belong either to the set of "positive edges" $c^+$ or the set of "negative edges" $c^-$, based on the direction of the edges along the cycle. In the example of \cref{fig:cycle-example}, we would have that $c^+ = \{a, b, c\}$ and $c^- = \{d, e, f\}$. In more general terms, for a cycle $c$ to be consistent, for some $z \in \Z$ we must have:
 \begin{align}
     \sum_{a\in c^+}x_a - \sum_{a \in c^-}x_a = zT
 \end{align}
 
-An EAN may have many cycles, but luckily we don't have to check the condition for all cycles. We can construct a cycle basis for the EAN and checking the condition for that basis is enough. We denote the cycle basis as $C$. As the cycle inconsistency can be a problem only with activities with constraints, we calculate the cycle basis for activities that can have constraints, i.e. the set $A$.
+An EAN may have many cycles, but luckily we do not have to check the condition for all of them. Following \cite{cycle-basis-original-2001}, we can construct a cycle basis for the EAN and checking the condition only for the basis is enough. In short, a cycle basis is a subset of the graph's cycles that can be used to construct every other cycle in the graph. We denote the cycle basis as $C$. As the cycle inconsistency can be a problem only with activities with constraints, we calculate the cycle basis for activities that can have constraints, i.e. the set $A$.
 
 % TODO: proof / cite a source showing that cycle basis is enough to check. Maybe some words on how the cycle basis is constructed?
 
@@ -428,15 +447,47 @@ Now we may define the cycle basis formulation for the PESP problem. The formulat
     x_a &\in \Z &a& \in A
 \end{align}
 
-In the TimPass problem, we are free to choose the route used for each OD pair as we minimise the total perceived travel time. However, to represent the routes from stop $i$ to stop $j$, we would prefer to have all the possible paths start and end to the same nodes. To achieve this, we introduce the auxiliary events $\Eaux$ and auxiliary activities $\Aaux$. For the auxiliary events, we have one origin and departure event for each stop: $\Eaux = \{(t, u) : t \in \{\text{orig}, \text{dest}\}, u \in S\}$. For the auxiliary activities, we have an edge from all auxiliary origin events to the corresponding stop's events and an edge from all stop's events to the corresponding destination auxiliary event:
-\begin{align}
-    % \Aaux = \{((\text{orig}, u), e): e = (t, u, l, r) \in E\} \cup 
-    % \{(e, (\text{dest}, u)): e = (t, u, l, r) \in E\}\\
-    \Aaux = \bigcup_{i = (t, u, l, r) \in E}\{((\text{orig}, u), i), (i, (\text{dest}, u))\}
-\end{align}
-To denote the set of all routable activities, we note $\Arp = \Ar \cup \Aaux$. Similarly, to denote all events including the auxiliary events, we note $\Ep = E \cup \Eaux$. Extended activities are not considered to be real activities in the sense of having a duration. As such, the auxiliary activities are not subject to duration constraints and are not part of the objective function.
 
-To note if the activity $a$ is part of the chosen path between stops $u$ and $v$, we have the flow variable $p_a^{uv} \in \{0, 1\}, (a, uv) \in \Arp \times \od$. This allows us to set up some constraints on what is considered a valid path. For a from stop $u$ to stop $v$ to be valid, it must start at the event $(\text{orig}, u)$ and end at $(\text{dest}, v)$. Additionally, the path must be connected from the origin all the way to the destination, i.e. for all events that are not auxiliary events we must have an equal number of ingoing and outgoing edges active.
+\subsubsection{Timetabling and passenger routing problem}
+
+
+In the TimPass problem presented in \cite{timpass-original-2014}, we are free to choose the route used for each OD pair in addition to the timetable as we minimise the total perceived travel time. In PESP, we have fixed passenger counts $w_a$ per activity. In TimPass, we optimise the passenger routing and consequently the weights $w_a$ at the same time as we optimise the timetable. This yields better solutions, as it takes passenger behaviour into account. In general, the passengers prefer to use routes with the shortest travel time to get to their destination.
+
+%This means, that we can find better solutions that also model the passenger behaviour as a consequence of the timetable at the same time.
+
+
+
+However, to represent the routes from stop $u$ to stop $v$ in an EAN, we would prefer to have a single predefined node representing the start of paths from stop $u$ and likewise a single node representing the end of the path at stop $v$. This is contrast to the path starting from or ending at some node in the set of events belonging to a stop. To achieve this, we introduce the auxiliary events $\Eaux$ and auxiliary activities $\Aaux$. 
+
+\begin{definition}[Auxiliary events and activities]
+    Each stop $u \in S$ of a PTN is associated with an auxiliary origin and destination event: \begin{align*}
+        \Eaux = \{(t, u) : t \in \{\text{orig}, \text{dest}\}, u \in S\}
+    \end{align*}
+    Each auxiliary event is connected via auxiliary activities to the corresponding events in the EAN:
+    \begin{align*}
+        \Aaux = \bigcup_{i = (t, u, l, r) \in E}\{((\text{orig}, u), i), (i, (\text{dest}, u))\}
+    \end{align*} 
+\end{definition}
+The auxiliary event and activity construction is demonstrated in \ref{fig:aux-events-demo}. Now, when considering a route from stop $u$ to $v$, we know that the path starts from $(\text{orig}, u)$ and ends at $(\text{dest}, v)$.
+
+To denote the set of all routable activities, we note $\Arp = \Ar \cup \Aaux$. Similarly, to denote all events including the auxiliary events, we note $\Ep = E \cup \Eaux$. Auxiliary activities are not considered to be actual activities in the sense of not having a duration. As such, the auxiliary activities are not subject to duration constraints and are not part of the objective function.
+
+% For the auxiliary events, we have one origin and destination event for each stop: $\Eaux = \{(t, u) : t \in \{\text{orig}, \text{dest}\}, u \in S\}$. For the auxiliary activities, we have an edge from all auxiliary origin events to the corresponding stop's events and an edge from all stop's events to the corresponding destination auxiliary event:
+% \begin{align}
+    %     \Aaux = \bigcup_{i = (t, u, l, r) \in E}\{((\text{orig}, u), i), (i, (\text{dest}, u))\}
+%     % \Aaux = \{((\text{orig}, u), e): e = (t, u, l, r) \in E\} \cup 
+%     % \{(e, (\text{dest}, u)): e = (t, u, l, r) \in E\}\\
+% \end{align}
+
+
+\begin{figure}[b]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/aux-events-demo.jpeg}
+    \caption{Demonstration of how auxiliary events are connected to the rest of the EAN.}
+    \label{fig:aux-events-demo}
+\end{figure}
+
+To note if the activity $a$ is part of the chosen path between stops $u$ and $v$, we have the flow variable $p_a^{uv} \in \{0, 1\}, (a, uv) \in \Arp \times \od$. This allows us to set up some constraints on what is considered a valid path. For a path from stop $u$ to stop $v$ to be valid, it must start at the event $(\text{orig}, u)$ and end at $(\text{dest}, v)$. Additionally, the path must be connected from the origin all the way to the destination, i.e., for all events that are not auxiliary events we must have an equal number of ingoing and outgoing activities that are used in the path. The activity is used to route from $u$ to $v$ if the corresponding flow variable is one: $p_a^{uv} = 1$.
 
 We can formalise this by introducing a node-arc-incidence matrix $\incidence$ and an origin-destination vector $q^\mathit{uv} =(q_i^\mathit{uv})_{i\in \Ep}$. For a origin-destination pair $(u, v) \in \od$, the origin-destination vector elements are:
 \begin{align}
@@ -466,7 +517,7 @@ We can express the total perceived travel time as the sum of perceived travel ti
 \begin{align}
     \sum_{uv \in \od}\od_{uv} \sum_{a \in \Ar}p_a^{uv}(x_a + b_a)
 \end{align}
-However, we have a problem as we hope to get a linear integer programming problem. Now we have $p_a^{uv}x_a$, which is not linear as both terms are decision variables. Luckily, as the flow variable $p_a^{uv}$ can only be either 0 or 1, we can linearise this expression quite easily.
+However, we have a problem as we hope to get a linear integer programming problem. Now we have $p_a^{uv}x_a$, which is not linear as both terms are decision variables. Luckily, as the flow variable $p_a^{uv}$ can only be either 0 or 1, we can linearise this expression easily.
 
 We create the linearization decision variable $\textit{lin}_a^{uv}$ for all $a \in \Ar$ and $uv \in \od$. We aim to always have $\textit{lin}_a^{uv} = p_a^{uv}(x_a + b_a)$ without explicitly stating this equality, as the right-hand side has the non-linear term. We achieve this by constructing suitable constraints for the linearization term.
 
@@ -504,7 +555,7 @@ The given formulation for the TimPass problem works, but we are left with many f
 
 To formalise the preprocessing, we will need a notation for the shortest paths. In practice, the shortest paths will be calculated with Dijkstra's algorithm.
 \begin{definition}[Shortest Path]
-    Let $D$ be the set of durations for activities so that $D_a \in \N$. We calculate the length of a path $P$ as $\len(P, D) = \sum_{a \in P} D_a$. We define the function $\shortestpath_{i,j}(D)$ to return a shortest path between the events $i$ and $j$, i.e. \begin{align}
+    Let $D$ be the vector of durations for activities so that $D_a \in \N$. We calculate the length of a path $P$ as $\len(P, D) = \sum_{a \in P} D_a$. We define the function $\shortestpath_{i,j}(D)$ to return a shortest path between the events $i$ and $j$, i.e. \begin{align}
         \min_P\  \len(P, D) = \len(\shortestpath_{i, j}(D), D)
     \end{align}
     Where $P$ is a valid path between events $i$ and $j$.
@@ -514,9 +565,11 @@ To formalise the preprocessing, we will need a notation for the shortest paths. 
 
 The upper and lower bounds can be used as the duration in both $\len$ and $\shortestpath$. However, as in the TimPass problem we are dealing with perceived travel times, we should include the penalty term in the duration. Thus, let us define $L^b = \{L_a + b_a:a\in A\}$ and $U^b = \{U_a + b_a:a \in A\}$. Now we can use these to calculate which flow variables $p_a^{uv}$ can never be active in the optimal solution.
 
-In \cref{alg:preprocessing} we present the algorithm for calculating which flow variables can be safely set to zero. We need to run the algorithm for each OD pair for which we want to reduce the number of flow variables. In high level, the algorithm first calculates the longest possible route that can belong to an optimal solution. The length of that route under the upper bound edge durations is $\beta$. Then, for each activity, we check if the activity can belong to an optimal solution by checking if including the activity would increase the lowest possible perceived travel time for the path above $\beta$. In the end, we obtain a set of activities $\preprocessed$, for which we can set the corresponding flow variable to zero. Let us note the set of preprocessed activities for the OD pair $uv \in \od$ as $P_{uv}$. This is the variable $P$ for running the algorithm for the given OD pair. Then we can include the following constraint to handle the preprocessed flow variables:
+In \cref{alg:preprocessing} we present the algorithm for calculating which flow variables can be safely set to zero. We need to run the algorithm for each OD pair for which we want to reduce the number of flow variables. On a high level, the algorithm first calculates the longest possible route that can belong to an optimal solution. The length of that route under the upper bound edge durations is $\beta$. Then, for each activity, we check if the activity can belong to an optimal solution by checking if including the activity would increase the lowest possible perceived travel time for the path above $\beta$. In the end, we obtain a set of activities $\preprocessed_{uv}$, for which we can set the corresponding flow variable to zero. We handle the preprocessing by including the following constraint in the model:
+%Let us note the set of preprocessed activities for the OD pair $uv \in \od$ as $P_{uv}$. This is the variable $P$ for running the algorithm for the given OD pair. 
+%Then we can include the following constraint to handle the preprocessed flow variables:
 \begin{align}
-    p_a^{uv} = 0 \quad \forall uv \in \od, a \in P_{uv}
+    p_a^{uv} = 0 \quad \forall uv \in \od, a \in \preprocessed_{uv}
 \end{align}
 
 % % TODO: does this even make sense to represent this way? Definitions in a for loop may not be the most interesting thing.
@@ -530,18 +583,18 @@ In \cref{alg:preprocessing} we present the algorithm for calculating which flow 
     \begin{algorithmic}
         \State Auxiliary event $i = (\text{orig}, u)$
         \State Auxiliary event $j = (\text{dest}, v)$
-        \State Initialise $\preprocessed \gets \emptyset$
+        \State Initialise $\preprocessed_{uv} \gets \emptyset$
         \State Calculate $\beta := \mathit{len}(\shortestpath_{i, j}(U^b), U^b)$
         \Comment{Longest possible route length from $i$ to $j$.}
-        \For{$k \in E$}
+        \For{$k \in \Ep$}
             \State Calculate $\gamma_k := \mathit{len}(\shortestpath_{i,k}(L^b), L^b)$
             \Comment{Shortest possible path length from $i$ to $k$}
             \State Calculate $\delta_k := \mathit{len}(\shortestpath_{k,j}(L^b), L^b)$
             \Comment{Shortest possible path length from $k$ to $j$}
         \EndFor
-        \For{$a = (i, j) \in \Ar$}
+        \For{$a = (i, j) \in \Arp$}
             \If{$\gamma_i + L_a^b + \delta_j > \beta$}
-                \State $\preprocessed \gets \preprocessed \cup \{a\}$
+                \State $\preprocessed_{uv} \gets \preprocessed_{uv} \cup \{a\}$
                 \Comment{The activity can never belong to the shortest path with any timetable, so we ignore it.}
             \EndIf
         \EndFor
@@ -549,6 +602,7 @@ In \cref{alg:preprocessing} we present the algorithm for calculating which flow 
 \end{algorithm}
     
 \subsection{Shortest path routing heuristic}
+\label{sec:sp-heur}
 
 A simple baseline heuristic to the TimPass problem is to route the passengers according to the lower bound shortest paths and to then solve the timetable with PESP. Formally, we calculate the weights with \cref{alg:weights} by using the penalised lower bounds $L^b$ as the activity durations. As we don't have capacity constraints on the activities, we can route each OD pair independently of each other.
 
@@ -564,7 +618,8 @@ A simple baseline heuristic to the TimPass problem is to route the passengers ac
             \State $i = (\mathrm{orig}, u)$
             \State $j = (\mathrm{dest}, v)$
             \For{$a \in \shortestpath_{i, j}(D)$}
-                \State $w_a \gets w_a + D_a$
+                % \State $w_a \gets w_a + D_a$
+                \State $w_a \gets w_a + \od_\mathit{u,v}$
             \EndFor
         \EndFor
     \end{algorithmic}
@@ -582,6 +637,7 @@ We use the obtained weights in the PESP to obtain a timetable. The timetable eva
 % \end{itemize}
 
 \subsection{GNNs}
+\label{sec:gnns}
 
 In general, neural networks are machine learning models with a large number of learnable parameters. The networks consist of multiple additions and multiplications in many layers. Even though the individual operations seem simple, surprisingly complex behaviour can emerge. Graph neural networks are a set of architectures that operate on graph data. To be specific, we focus here on message-passing architectures \cite{mpgnn-into-2017}, but other methods for processing graph data do exist.
 
@@ -769,13 +825,15 @@ We calculate the objective value for the heuristic from \cref{eq:eval-obj} by se
 
 \clearpage
 \section{Experiment setup}
+\label{sec:experiments}
 \subsection{Data generation}
+\label{sec:data-gen}
 
-To train the neural network, we generated a large number of EANs and ODs for which we could solve the TimPass problem. The problem typically has multiple solutions, but for reasons explained in \cref{sec:solution-preference-reasoning} we need to control which of the optimal solutions we obtain. All problems use the same PTN with varying lines, duration bounds, frequencies, demands, and penalties. We use a period $T$ of 60 minutes. The PTN is drawn in \cref{fig:base-ptn}.
+To train the neural network, we generated a large number of EANs and ODs for which we can solve the TimPass problem. The problem typically has multiple solutions, but for reasons explained in \cref{sec:solution-preference-reasoning} we need to control which of the optimal solutions we obtain. All problems use the same PTN with varying lines, duration bounds, frequencies, demands, and penalties. We use a period $T$ of 60 minutes. The PTN is drawn in \cref{fig:base-ptn}.
 
-Next we will define the notation used for the uniform distribution in the algorithms. We use sampling of distributions to generate variations in the training data.
+Next we define the notation used for the uniform distribution in the algorithms. We use sampling of distributions to generate variations in the training data.
 \begin{notation}[Uniform distributions]
-    By $\mathcal{U}\{x, y\}$ we denote the discrete uniform distribution between $x \in \Z$ and $y\in \Z$, including endpoints. The continuous counterpart $\mathcal{U}[x, y]$ is the continuous uniform distribution between $x \in \R$ and $y \in \R$, excluding $y$. Please note that the bracket type differentiates the continuous distribution from the discrete one.
+    By $\mathcal{U}\{x, y\}$ we denote the discrete uniform distribution between $x \in \Z$ and $y\in \Z$, including endpoints. The continuous counterpart $\mathcal{U}[x, y]$ is the continuous uniform distribution between $x \in \R$ and $y \in \R$, excluding $y$. Note that the bracket type differentiates the continuous distribution from the discrete one.
 \end{notation}
 
 
@@ -787,7 +845,7 @@ Next we will define the notation used for the uniform distribution in the algori
 \end{figure}
 
 
-First, we listed all available lines as the set $\mathcal{L}$ with at least three stops and filtered the reversed line versions out. To keep the line plan realistic, we would later add the reverse line directions back to the plan. Then, we sampled the line plan size $|L| \sim \unif{2, 4}$. Knowing the size, we sampled the lines belonging to the plan uniformly without replacement from the set of lines: $L \subset \mathcal{L}$. As we want to emulate real EANs, we checked whether the resulting EAN would be connected if the reverse directions for the lines were also included. If this was not the case, we sampled the $L$ again.
+First, we list all available lines as the set $\mathcal{L}$ with at least three stops and filter the reversed line versions out. To keep the line plan realistic, we later add the reverse line directions back to the plan. Then, we sample the line plan size $|L| \sim \unif{2, 4}$. Knowing the size, we sampled the lines belonging to the plan uniformly without replacement from the set of lines: $L \subset \mathcal{L}$. As we want to emulate real EANs, we check whether the resulting EAN would be connected if the reverse directions for the lines were also included. If this is not the case, we sample the line concept $L$ again.
 
 
 
@@ -907,6 +965,7 @@ With the problem given above, we attempted to generate 10 solutions for each pro
 % \end{itemize}
 
 \subsection{Data representation as a heterogenous graph}
+\label{sec:data-repr-graph}
 
 % The simplified overview of the node types and their relations is expressed in \cref{fig:hetero-relations}. We use 
 On top of the EAN data, we have the OD data we need to include as input to the GNN. We will use a heterogenous graph for this, as it allows us to include multiple kinds of nodes and relations in a graph.
@@ -944,6 +1003,7 @@ Unfortunately, the implementation of HGT we are using does not use edge features
 
 
 \subsection{Training}
+\label{sec:training}
 
 The HGT architecture and the training process are parametrized by hyperparameters. The hyperparameters for the HGT architecture are the number of hidden layers, the dimension of the hidden layers, and the number of attention heads used. The training process is 
 
@@ -971,7 +1031,9 @@ The HGT architecture and the training process are parametrized by hyperparameter
 }
 \clearpage
 \section{Results}
+\label{sec:results}
 \subsection{Heuristic performance}
+\label{sec:heur-perf}
 
 \begin{figure}
     \begin{subfigure}{0.5\textwidth}
@@ -1100,6 +1162,7 @@ We can estimate this lowest obtainable loss by calculating the sample variances 
 
 \clearpage
 \section{Discussion}
+\label{sec:discussion}
 \draft{
     \begin{itemize}
         \item Overview of the results: no consistent improvement
