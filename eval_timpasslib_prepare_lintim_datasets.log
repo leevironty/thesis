@@ -1,0 +1,24 @@
+INFO : 2024-01-22 15:29:33,869 : thesis.scripts.eval_timpasslib : loading toy_2
+INFO : 2024-01-22 15:29:34,090 : thesis.scripts.eval_timpasslib : loaded toy_2
+INFO : 2024-01-22 15:29:34,091 : thesis.scripts.eval_timpasslib : loading grid
+INFO : 2024-01-22 15:29:35,295 : thesis.scripts.eval_timpasslib : loaded grid
+INFO : 2024-01-22 15:29:35,295 : thesis.scripts.eval_timpasslib : Calculating weights with method gnn on dataset toy_2
+INFO : 2024-01-22 15:29:35,890 : thesis.scripts.eval_timpasslib : Got weights!
+INFO : 2024-01-22 15:29:35,890 : thesis.scripts.eval_timpasslib : Preparing lintim dataset
+INFO : 2024-01-22 15:29:35,894 : thesis.scripts.eval_timpasslib : Copied the template
+INFO : 2024-01-22 15:29:35,903 : thesis.scripts.eval_timpasslib : Wrote the events and activities
+INFO : 2024-01-22 15:29:35,903 : thesis.scripts.eval_timpasslib : Calculating weights with method gnn on dataset grid
+INFO : 2024-01-22 15:29:40,705 : thesis.scripts.eval_timpasslib : Got weights!
+INFO : 2024-01-22 15:29:40,705 : thesis.scripts.eval_timpasslib : Preparing lintim dataset
+INFO : 2024-01-22 15:29:40,707 : thesis.scripts.eval_timpasslib : Copied the template
+INFO : 2024-01-22 15:29:40,720 : thesis.scripts.eval_timpasslib : Wrote the events and activities
+INFO : 2024-01-22 15:29:40,720 : thesis.scripts.eval_timpasslib : Calculating weights with method sp on dataset toy_2
+INFO : 2024-01-22 15:29:40,781 : thesis.scripts.eval_timpasslib : Got weights!
+INFO : 2024-01-22 15:29:40,781 : thesis.scripts.eval_timpasslib : Preparing lintim dataset
+INFO : 2024-01-22 15:29:40,783 : thesis.scripts.eval_timpasslib : Copied the template
+INFO : 2024-01-22 15:29:40,790 : thesis.scripts.eval_timpasslib : Wrote the events and activities
+INFO : 2024-01-22 15:29:40,790 : thesis.scripts.eval_timpasslib : Calculating weights with method sp on dataset grid
+INFO : 2024-01-22 15:29:44,047 : thesis.scripts.eval_timpasslib : Got weights!
+INFO : 2024-01-22 15:29:44,048 : thesis.scripts.eval_timpasslib : Preparing lintim dataset
+INFO : 2024-01-22 15:29:44,049 : thesis.scripts.eval_timpasslib : Copied the template
+INFO : 2024-01-22 15:29:44,059 : thesis.scripts.eval_timpasslib : Wrote the events and activities

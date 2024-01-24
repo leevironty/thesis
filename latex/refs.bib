@@ -20,7 +20,7 @@
 
 # Philinen TimPass formulaatio, lisäksi SAT-näkökulma, kun tää kuitenkin on PESP ekstensio
 # Tässä kans node-arc incidence matrix kuvaus
-@inproceedings{gattermann2016integrating,
+@inproceedings{sat-philine-gattermann2016integrating,
   title={Integrating passengers' routes in periodic timetabling: a SAT approach},
   author={Gattermann, Philine and Gro{\ss}mann, Peter and Nachtigall, Karl and Sch{\"o}bel, Anita},
   booktitle={16th Workshop on Algorithmic Approaches for Transportation Modelling, Optimization, and Systems (ATMOS 2016)},
@@ -112,8 +112,8 @@
 
 # --------------------------- ML in public transport ---------------------------
 
-
-@inproceedings{darwish2020optimising,
+# inproceedings
+@comment{darwish2020optimising,
   title={Optimising public bus transit networks using deep reinforcement learning},
   author={Darwish, Ahmed and Khalil, Momen and Badawi, Karim},
   booktitle={2020 IEEE 23rd International Conference on Intelligent Transportation Systems (ITSC)},
@@ -122,7 +122,8 @@
   organization={IEEE}
 }
 
-@article{yan2022distributed,
+# article
+@comment{yan2022distributed,
   title={Distributed Multiagent Deep Reinforcement Learning for Multiline Dynamic Bus timetable optimization},
   author={Yan, Haoyang and Cui, Zhiyong and Chen, Xinqiang and Ma, Xiaolei},
   journal={IEEE Transactions on Industrial Informatics},
@@ -149,14 +150,6 @@
   publisher={Elsevier}
 }
 
-
-# Google preprint
-@article{nair2020solving,
-  title={Solving mixed integer programs using neural networks},
-  author={Nair, Vinod and Bartunov, Sergey and Gimeno, Felix and Von Glehn, Ingrid and Lichocki, Pawel and Lobov, Ivan and O'Donoghue, Brendan and Sonnerat, Nicolas and Tjandraatmadja, Christian and Wang, Pengming and others},
-  journal={arXiv preprint arXiv:2012.13349},
-  year={2020}
-}
 
 
 
@@ -301,3 +294,150 @@
   year={2001},
   publisher={Springer}
 }
+
+
+@unpublished{helmi,
+  author = {Hankimaa, Helmi},
+  note   = {Unpublished MSc thesis},
+  title  = {Optimising energy and reserve offers in the Nordic markets under uncertainty},
+  year   = {2023},
+  url = {https://urn.fi/URN:NBN:fi:aalto-202308275171}
+}
+# CITED
+
+
+### Deep L & public transport
+
+@article{DRL-timetabling-yan2022distributed,
+  title={Distributed Multiagent Deep Reinforcement Learning for Multiline Dynamic Bus timetable optimization},
+  author={Yan, Haoyang and Cui, Zhiyong and Chen, Xinqiang and Ma, Xiaolei},
+  journal={IEEE Transactions on Industrial Informatics},
+  volume={19},
+  number={1},
+  pages={469--479},
+  year={2022},
+  publisher={IEEE}
+}
+# file:///Users/leevi/Downloads/Distributed_Multiagent_Deep_Reinforcement_Learning_for_Multiline_Dynamic_Bus_Timetable_Optimization.pdf
+# Multi-agent bus timetable optimization, aperiodic setting, Beijin case study
+# Action space: drive / don't drive
+# RL method: Ape-X Deep Q network (eli replay ish)
+# CITED
+
+@inproceedings{darwish2020optimising,
+  title={Optimising public bus transit networks using deep reinforcement learning},
+  author={Darwish, Ahmed and Khalil, Momen and Badawi, Karim},
+  booktitle={2020 IEEE 23rd International Conference on Intelligent Transportation Systems (ITSC)},
+  pages={1--7},
+  year={2020},
+  organization={IEEE}
+}
+# file:///Users/leevi/Downloads/optimising_Public_Bus_Transit_Networks_Using_Deep_Reinforcement_Learning.pdf
+# TNDFPS, eli käytännössä lince concept-suunnittelu
+# Deep RL, ilmeisesti policy gradient?
+# käytännössä enc-dec transformeri
+# CITED
+
+@article{kool2018attention,
+  title={Attention, learn to solve routing problems!},
+  author={Kool, Wouter and Van Hoof, Herke and Welling, Max},
+  journal={arXiv preprint arXiv:1803.08475},
+  year={2018}
+}
+# https://arxiv.org/pdf/1803.08475.pdf
+# Routing w/ reinforcement learning & transformers, inspiraatio ylemmälle
+# CITED
+
+
+@article{matos2021solving,
+  title={Solving periodic timetabling problems with SAT and machine learning},
+  author={Matos, Gon{\c{c}}alo P and Albino, Lu{\'\i}s M and Saldanha, Ricardo L and Morgado, Ernesto M},
+  journal={Public Transport},
+  volume={13},
+  number={3},
+  pages={625--648},
+  year={2021},
+  publisher={Springer}
+}
+# https://link.springer.com/article/10.1007/s12469-020-00244-y
+# SAT approach w/ RL heuristic
+# RL guides the SAT solver -> decision problem
+# menee vähän vikaan kategoriaan, mut kans tähän, koska PESP
+# CITED
+
+
+@article{MULLERHANNEMANN2022103566,
+    title = {Estimating the robustness of public transport schedules using machine learning},
+    journal = {Transportation Research Part C: Emerging Technologies},
+    volume = {137},
+    pages = {103566},
+    year = {2022},
+    issn = {0968-090X},
+    doi = {https://doi.org/10.1016/j.trc.2022.103566},
+    url = {https://www.sciencedirect.com/science/article/pii/S0968090X22000146},
+    author = {Matthias Müller-Hannemann and Ralf Rückert and Alexander Schiewe and Anita Schöbel},
+    keywords = {Public transportation, Scheduling, Timetabling, Machine learning, Robustness, Optimization},
+abstract = {The planning of attractive and cost efficient public transport schedules, i.e., timetables and corresponding vehicle schedules is a highly complex optimization process involving many steps. Integrating robustness from a passenger’s point of view makes the task even more challenging. With numerous different definitions of robustness in the literature, a standard way to evaluate the robustness of a public transport system is to simulate its performance under a large number of possible scenarios. Unfortunately, this is computationally very expensive. In this paper, we therefore explore a new way of such a scenario-based robustness approximation by using regression models from machine learning. Training of these models is based on carefully selected key features of public transport systems and passenger demand. The trained model is then able to predict the robustness of untrained instances with high accuracy using only its key features, allowing for a robustness oracle for transport planners that approximates the robustness in constant time. Such an oracle can be used as black box to increase the robustness of public transport schedules. We provide a first proof of concept for the special case of robust timetabling, using a local search framework. In computational experiments with different benchmark instances we demonstrate an excellent quality of our predictions.}
+}
+# https://www.sciencedirect.com/science/article/pii/S0968090X22000146#fig5
+# Timetable robustness estimation w/ trad. ML methods
+# monta mallia, ei deep learning tms.
+# CITED
+
+
+### NN in optimization
+
+@article{BENGIO2021405,
+    title = {Machine learning for combinatorial optimization: A methodological tour d’horizon},
+    journal = {European Journal of Operational Research},
+    volume = {290},
+    number = {2},
+    pages = {405-421},
+    year = {2021},
+    issn = {0377-2217},
+    doi = {https://doi.org/10.1016/j.ejor.2020.07.063},
+    url = {https://www.sciencedirect.com/science/article/pii/S0377221720306895},
+    author = {Yoshua Bengio and Andrea Lodi and Antoine Prouvost},
+    keywords = {Combinatorial optimization, Machine learning, Branch and bound, Mixed-integer programming solvers},
+    abstract = {This paper surveys the recent attempts, both from the machine learning and operations research communities, at leveraging machine learning to solve combinatorial optimization problems. Given the hard nature of these problems, state-of-the-art algorithms rely on handcrafted heuristics for making decisions that are otherwise too expensive to compute or mathematically not well defined. Thus, machine learning looks like a natural candidate to make such decisions in a more principled and optimized way. We advocate for pushing further the integration of machine learning and combinatorial optimization and detail a methodology to do so. A main point of the paper is seeing generic optimization problems as data points and inquiring what is the relevant distribution of problems to use for learning on a given task.}
+}
+# https://www.sciencedirect.com/science/article/pii/S0377221720306895
+# CITED
+
+@article{cappart2023combinatorial,
+  title={Combinatorial optimization and reasoning with graph neural networks},
+  author={Cappart, Quentin and Ch{\'e}telat, Didier and Khalil, Elias B and Lodi, Andrea and Morris, Christopher and Veli{\v{c}}kovi{\'c}, Petar},
+  journal={Journal of Machine Learning Research},
+  volume={24},
+  number={130},
+  pages={1--61},
+  year={2023}
+}
+# https://www.jmlr.org/papers/volume24/21-0449/21-0449.pdf
+
+
+
+@article{nair2020solving,
+  title={Solving mixed integer programs using neural networks},
+  author={Nair, Vinod and Bartunov, Sergey and Gimeno, Felix and Von Glehn, Ingrid and Lichocki, Pawel and Lobov, Ivan and O'Donoghue, Brendan and Sonnerat, Nicolas and Tjandraatmadja, Christian and Wang, Pengming and others},
+  journal={arXiv preprint arXiv:2012.13349},
+  year={2020}
+}
+# https://arxiv.org/pdf/2012.13349.pdf
+# Salee ihan tosi irrelevantti??
+
+
+@article{ZHANG2023205,
+    title = {A survey for solving mixed integer programming via machine learning},
+    journal = {Neurocomputing},
+    volume = {519},
+    pages = {205-217},
+    year = {2023},
+    issn = {0925-2312},
+    doi = {https://doi.org/10.1016/j.neucom.2022.11.024},
+    url = {https://www.sciencedirect.com/science/article/pii/S0925231222014035},
+    author = {Jiayi Zhang and Chang Liu and Xijun Li and Hui-Ling Zhen and Mingxuan Yuan and Yawen Li and Junchi Yan},
+    keywords = {Mixed integer programming, Machine learning, Combinatorial optimization},
+    abstract = {Machine learning (ML) has been recently introduced to solving optimization problems, especially for combinatorial optimization (CO) tasks. In this paper, we survey the trend of leveraging ML to solve the mixed-integer programming problem (MIP). Theoretically, MIP is an NP-hard problem, and most CO problems can be formulated as MIP. Like other CO problems, the human-designed heuristic algorithms for MIP rely on good initial solutions and cost a lot of computational resources. Therefore, researchers consider applying machine learning methods to solve MIP since ML-enhanced approaches can provide the solution based on the typical patterns from the training data. Specifically, we first introduce the formulation and preliminaries of MIP and representative traditional solvers. Then, we show the integration of machine learning and MIP with detailed discussions on related learning-based methods, which can be further classified into exact and heuristic algorithms. Finally, we propose the outlook for learning-based MIP solvers, the direction toward more combinatorial optimization problems beyond MIP, and the mutual embrace of traditional solvers and ML components. We maintain a list of papers that utilize machine learning technologies to solve combinatorial optimization problems, which is available at https://github.com/Thinklab-SJTU/awesome-ml4co.}
+}
+# CITED

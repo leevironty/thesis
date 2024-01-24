@@ -1,0 +1,19 @@
+TY  - JOUR
+AU  - Matos, Gonçalo P.
+AU  - Albino, Luís M.
+AU  - Saldanha, Ricardo L.
+AU  - Morgado, Ernesto M.
+PY  - 2021
+DA  - 2021/10/01
+TI  - Solving periodic timetabling problems with SAT and machine learning
+JO  - Public Transport
+SP  - 625
+EP  - 648
+VL  - 13
+IS  - 3
+AB  - In this research work we address periodic timetabling, namely the optimisation of public transport timetables with respect to travel times using Boolean satisfiability problem (SAT) and reinforcement learning approaches. While in previous work this optimisation problem has been addressed with mixed integer linear programming, genetic algorithms, SAT, the modulo network simplex, among other techniques, in this work we use an approximation method based on SAT, reinforcement learning and multiagents, a combination of techniques which (to our knowledge) has never been applied in this field. Finally, we present promising results which show that our approach applied to real-world data performs better than existing SAT approaches and even outperforms the current state-of-the-art algorithms (based on the modulo network simplex, mixed integer programming and heuristics) on some problems.
+SN  - 1613-7159
+UR  - https://doi.org/10.1007/s12469-020-00244-y
+DO  - 10.1007/s12469-020-00244-y
+ID  - Matos2021
+ER  - 

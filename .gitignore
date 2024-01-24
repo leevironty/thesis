@@ -16,4 +16,4 @@ checkpoints
 *.ckpt
 *.pkl
 *.prof
-lintim
+lintim*
