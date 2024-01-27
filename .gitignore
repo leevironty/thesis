@@ -17,3 +17,6 @@ checkpoints
 *.pkl
 *.prof
 lintim*
+**/.*
+!.pre-commit-config.yaml
+*.code-workspace

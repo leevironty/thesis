@@ -25,11 +25,14 @@
 \usepackage{ifthen}
 \usepackage{algorithm}
 \usepackage{algpseudocodex}
+\usepackage{tikz}
 
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{makecell}  % table line wrap within one cell
 % \usepackage[usenames,dvipsnames]{color}
+
+\usetikzlibrary{positioning}
 
 
 \newtheorem{definition}{Definition}
@@ -166,25 +169,8 @@ Otaniemi, 9 February 2023\\
 \cleardoublepage
 \section{Introduction}
 \label{sec:intro}
-% \thispagestyle{empty}
-% \begin{itemize}
-%     % \item Public transportation affects the lives of many
-%     % \item Low wait times are one component of a good transportation system
-%     % \item One way to affect the transfer wait times is to have schedules that play well together
-%     % \item Bonus: changing the schedule is very cheap, compared to introducing new lines or increasing the frequency of the lines.
-%     % \item Problem: optimal timetable depends on routes used, but routes used depend on the timetable
-%     % \item For optimality, these must be considered at the same time
-%     % \item This is infeasible with the current models
-%     % \item If routes are fixed, it's easier to solve for a good timetable TODO: word this better in the text
-%     % \item Objective of the thesis: study how we could predict the optimal routing so that we would be left with the easier-to-solve PESP problem.
-%     % \item Overview of the thesis: we generated data, fitted a GNN on it, evaluated on both generated and given data, checked for generalization, benchmarked etc.
-% \end{itemize}
 
 Public transportation systems play a role in many people's lives. As such, it is of great public interest to have transportation systems that are both cheap and offer high-quality services. One perspective on quality is the expected travel time between often-used journey origins and destinations. Typically, the customers of public transport appreciate getting to their destination faster. 
-
-
-
-% From the passenger's point of view, an efficient public transportation system allows the passengers to travel to their destination quickly. The time spent 
 
 The schedule determines when the vehicles arrive and depart from the stops in a public transport system. From the passenger's point of view, an efficient schedule minimizes the expected travel time. However, optimizing for the travel time is not easy. The optimal schedule depends on the routes the passengers choose to get to their destination, but at the same time the chosen routes depend on the schedule. This means, that to guarantee optimal solutions, we must optimize both the schedule and the passenger routes at the same time. This is much more challenging than optimizing the schedule with a pre-determined passenger routing, as the number of routes that each passenger can choose from can be very large, and in a realistic scenario, we will have a large number of passengers. In practice, we are not able to solve this problem optimally for realistically-sized problems.
 
@@ -389,39 +375,6 @@ The drive activities correspond to the driving activity between stops. The activ
     \label{fig:sync-demo}
 \end{figure}
 
-% joku PTN-kuvaus, pari esimerkkilinjaa
-% käppyröitä, joilla havainnollistetaan miltä eanit näyttää
-
-% MIP-ongelmien osuuteen:
-    % ODs
-    % schedule
-    % bounds & penalties on events
-
-
-% We model the public transport system to have a set of stops, and some demand between those stops. The demand represents the number of passengers wishing to travel from a given node to another node. The demand is directed, i.e. we allow the demand to be different from stop $a$ to stop $b$ than from $b$ to $a$.  % TODO: tähän joku matemaattinen notaatio, millä demandia merkataan??
-
-% Before diving deeper into the networks, we must recognize the two types of event activity networks: periodic and aperiodic. In the periodic setting, we assume the timetable to repeat periodically, e.g. every 60 minutes. Aperiodic timetable does not assume this repetition, making it suitable for modelling instances with varying line frequencies. For example, the interval between departures could be shorter during the rush hour than in the middle of the night.
-
-% In this study, we consider only the periodic case. Firstly, for the aperiodic formulation to be useful, we would also need time-dependent demand between stops. Realistic data for this is harder to come by. Secondly, we are still testing if this heuristic method is even feasible. Testing the approach on periodic problems is fine, as extending it to the aperiodic case should be simple.
-
-% Event activity networks are directed graphs that consist of nodes called events and the edges connecting the events called activities. This structure is used to model how passengers travel in the transportation system on an individual vehicle level.
-
-% The network has two types of nodes: arrivals and departures. On top of node type, each event has the following attributes: stop id, line id, line direction, and in the case of periodic EANs, the repetition number. These attributes are enough to uniquely identify all nodes.
-
-% The activities connecting events 
-
-
-% \begin{itemize}
-%     \item Describe the difference between periodic and aperiodic, briefly justify focusing only on the periodic case. 
-%     \item OD pairs: how many customers wish to travel from one stop to another. In general could be time-dependent, but easier if it's not.
-% \item Specification for an EAN with plenty of graphs: node types and features, edge types and features, how these are combined to describe a public transportation system.
-% \item Change penalty and the perceived travel time, related to the edge features.
-% \item Note about capacity limits: in general we could have bounds on the passenger count, but the problem is much easier without this.
-% \item Graphs:
-% \item One line going through few stops, both ways. Points to demonstrate: how one line is described with the EAN
-% \item Two lines on a stop, omit the reverse direction of the lines to keep the graph a bit clearer, freq > 1 for one line. Points to demonstrate: How transfers, headways, and sync edges are used.
-% \end{itemize}
-
 \subsection{Integer programming formulations}
 \label{sec:ips}
 
@@ -468,6 +421,29 @@ We still need to take the cycles and their feasibility in the EAN into account. 
     \caption{Cycle consistency example.}
     \label{fig:cycle-example}
 \end{figure}
+
+% \begin{figure}
+%     \centering
+%     % \begin{tikzpicture}[
+%     %     roundnode/.style={circle, draw=green!60, fill=green!5, very thick, minimum size=7mm},
+%     %     squarednode/.style={rectangle, draw=red!60, fill=red!5, very thick, minimum size=5mm},
+%     %     ]
+%     %     %Nodes
+%     %     \node[squarednode]      (maintopic)                              {2};
+%     %     \node[roundnode]        (uppercircle)       [above=of maintopic] {1};
+%     %     \node[squarednode]      (rightsquare)       [right=of maintopic] {3};
+%     %     \node[roundnode]        (lowercircle)       [below=of maintopic] {4};
+        
+%     %     %Lines
+%     %     \draw[->] (uppercircle.south) -- (maintopic.north);
+%     %     \draw[->] (maintopic.east) -- (rightsquare.west);
+%     %     \draw[->] (rightsquare.south) .. controls +(down:7mm) and +(right:7mm) .. (lowercircle.east);
+        
+%     % \end{tikzpicture}
+%     \input{figures/tikz/cycle-basis.tex}
+%     \caption{Cycle consistency example.}
+%     \label{fig:cycle-example-tikz}
+% \end{figure}
 
 \begin{definition}{(Cycles in a directed graph)}
     A list of activities $(a_1, a_2, \dots, a_n)$ is a simple cycle if 
@@ -620,11 +596,8 @@ In \cref{alg:preprocessing} we present the algorithm for calculating which flow 
     p_a^{uv} = 0 \quad \forall uv \in \od, a \in \preprocessed_{uv}
 \end{align}
 
-% % TODO: does this even make sense to represent this way? Definitions in a for loop may not be the most interesting thing.
-% {
-%     \color{red}
-%     \textbf{TODO:} \textit{Does expressing the preprocessing in this way even make sense? ofc. this is how it's calculated, but the definition does not benefit from the for-loops.}
-% }
+% TODO: does this even make sense to represent this way? Definitions in a for loop may not be the most interesting thing.
+
 \begin{algorithm}
     \caption{Flow variable preprocessing for OD pair $(u, v)$.}
     \label{alg:preprocessing}
@@ -708,20 +681,6 @@ Typically, an optimization method for neural networks uses some variation of the
 
 One desirable quality of MPGNNs is that the same model can be used with networks of varying sizes. This does not limit us to always have the same number of nodes and edges in the problem.
 
-% TODO: note about graph transformers
- 
-
-
-% \begin{itemize}
-% %     \item Neural networks in general: lots of additions and multiplications, with some non-linear layers
-% %     \item How message passing works in general: node embedding to message, send msg to neighbouring nodes, aggregate msgs in some order-invariant way (e.g. attention, sum, max, mean), update node embedding
-% %     \item Can be repeated multiple times -> node embeddings
-%     % \item Node embeddings can be used for downstream tasks
-%     % \item Trained with backpropagation of loss gradient
-%     % \item 
-%     % \item Mention optimization methods, adam
-%     \item Note about scale: network size is not fixed -> possible scaling benefits
-% \end{itemize}
 
 
 \subsubsection{Positional encodings}
@@ -743,15 +702,6 @@ A naive way of implementing the positional encoding would be to just use some ra
 
 We use the Laplacian PE implementation from \cite{LaPE-implementation-2020}.
 
-
-% TODO: possibly add a fourier-series like visualisation of LaPE over some graph
-
-% \begin{itemize}
-%     % \item Describe why PEs are often used to enable GNNs to distinguish different structures
-%     \item Used laplacian eigenvector positional encodings
-%     \item Briefly describe how this PE method works
-%     \item Briefly discuss other alternatives for PE choices
-% \end{itemize}
 
 \subsubsection{Network architecture}
 
@@ -796,50 +746,6 @@ The attention head yields scalar values that are then normalised with the SoftMa
     \operatorname{Att-head}^i(u, e, v) = \operatorname{K-linear}^i_{\tau(u)}(h^t_u)W^\text{att}_{\phi(e)}\operatorname{Q-linear}^i_{\tau(v)}(h^t_v)\frac{\mu_{u, e, v}}{\sqrt{d}}
 \end{align*}
 The attention head first maps the hidden states to a key and a query vector. Typically in attention calculation, we would then directly take the dot product of the vectors. However, this would not take the relation type into consideration. For this reason, we introduce a relation-dependant projection before the dot product. Finally, we scale the result based on a learnable scalar and the number of hidden dimensions $d$.
- 
-
-
-% We introduce three affine transformations that will be used in the message-generation procedure. The functions map the hidden state to vectors called key, query, and value:
-% \begin{align}
-%     \Klin_{\tau(v)}(h_)
-% \end{align}
-
-
-% Let us begin by describing the attention mechanism. As the HGT can work with multigraphs, we denote the set of edges between nodes $u$ and $v$ as $E(u,v)$. We will calculate $\text{Attention}(u, e, v) \in \R$ for all $u \in N(v), e \in E(u,v)$. Attention uses
-% % TODO: make this neat
-
-% \begin{align}
-%     NE(v) = \{u, e : u \in N(v), e \in E(u, v)\}\\
-%     Q^t(v) = \{\Qlin^t_{\tau(u)}(h^t_u): u \in N(v)\} \\
-%     K^t(v) = \{\Klin^t_{\tau(u)}(h^t_u): u \in N(v)\}\\
-%     ATT^t(v) = \{K^t(v)_uW^{ATT}_{\phi(e)}Q^\top_v : (u, e) \in NE(v) \} \\
-%     \text{Attention}(u, v) = \frac{e^{ATT^t(v)_u}}{\sum_{i \in N(v)} e^{ATT^t(v)_i}} 
-% \end{align}
-
-
-% \begin{align}
-%     A^t(v) = \{\Alin^t_{\tau(u)}(h^t_u): u \in N(v)\} \\
-%     \msg(u, e, v) = \\
-%     h^{t+1}_v = h^t_v + A^t_v \text{Relu}\left(\sum_{(u, e) \in NE(v)} \text{Attention}(u, e, v) \msg(u, e, v)\right)
-% \end{align}
-
-% Q_tau: updated node query for attention
-% K_tau: other node value for attention
-% W^ATT_(phi(e)): ??? -> softmax = attention-multiplier
-% V_tau -> W^MSG_phi = msg
-% aggregation: attention dot msg
-% A_tau: state update func
-% state update: relu -> A_tau -> new h
-% repeat for all layers
-% NOTE: parameters not shared between layers, but the layer index left out to keep notation cleaner
-
-% \begin{itemize}
-%     \item Using HGT for generating node embeddings, MLP for turning node embeddings to predictions.
-%     \item Injecting PEs to the problem instances before HGT
-%     \item Describe how hgt generates messages w/ relation information and how message aggregation with attention works.
-%     \item Justify the choice of architecture: can use information about relation type, good benchmark results
-%     \item Include a diagram describing the architecture
-% \end{itemize}
 
 
 \subsection{Heuristic evaluation method}
@@ -999,24 +905,9 @@ With the problem given above, we attempt to generate 10 solutions for each probl
 % TODO: comment on the number of solutions found???
 
 
-% TODO: could we cite Helmi's work here?
-
-
 
 % For the lines with a frequency greater than one, we generate sync activities between all events in sequential line repetitions. By setting the sync upper and lower bounds to be equal to the period divided by the line frequency, we ensure even spacing of the departures.
 
-
-
-
-
-% \begin{itemize}
-%     % \item Base ptn on top of which lines are generated (include graph)
-%     % \item Generation process goes roughly like this:
-%     % \item Enumerated all lines with at least three stops
-%     % \item Sampled random lines and line frequencies, with a weight on frequencies to reduce the probability of instances being very large
-%     % \item Randomized drive durations
-%     % \item Generate random demands for all OD pairs
-% \end{itemize}
 
 \subsection{Data representation as a heterogenous graph}
 \label{sec:data-repr-graph}
@@ -1158,19 +1049,6 @@ The PESP time limit was set to 6 hours for the evaluation. The evaluation was pe
     \label{fig:eval-timpasslib}
 \end{figure}
 
-
-
-% TODO: include results for generalisation to a larger problem instance ":D"
-
-% \begin{itemize}
-%     \item We compared heuristic performances on generated evaluation problems and some problems from Timpasslib
-%     \item Table: mean, median, and std of optimality gap and loss for both heuristics on the generated problem instances
-%     \item Scatter plot of GNN gap vs SPR gap
-%     \item (Scatter plot of GNN loss vs SPR loss, would this be useful?)
-%     \item Calculate how often GNN beats SPR
-%     \item Calculate how often we get optimal solutions
-% \end{itemize}
-
 \begin{table}[]
     \centering
     \caption{Heuristic performance metrics both before and after filtering for trivial problem instances.}
@@ -1252,21 +1130,29 @@ We can estimate this lowest obtainable loss by calculating the sample variances 
 \clearpage
 \section{Discussion}
 \label{sec:discussion}
-\draft{
-    \begin{itemize}
-        \item Overview of the results: no consistent improvement
-        \item On "non-trivial" problems, can improve the results, but is bit of a coin toss. However, can be useful to try both heuristics and pick the best solution.
-        \item Generalization: TODO
-        \item Weak / non-existent correlation of loss and gap -> minimising $l^2$ loss of $\hat{w}$ is likely not a feasible approach
-        \item Discuss limitations of GNNs: e.g. information squashing, long range dependencies (many benchmarks for tasks with short-range dependencies), other points discussed in the papers related to gnn limitations
-        \item ideas to make GNNs work in this problem setting \begin{itemize}
-            \item More PESP tricks, reduce the size of the input EAN (Maybe improves results, but does it improve GNN contribution to the solution? Easier problem should be easier to solve with all methods.)
-            \item Splitting OD pairs to groups by potential, predict only high-potential od pairs.
-        \end{itemize}
-        \item Predicting weights could be tricky (low loss correlation). How about predicting the routes directly instead? Transformers (grap -> sequence of flow variables), RNNs with GNN components, or reinforcement learning could potentially be applied here. Additional benefit: architectures could incorporate global information of the graph by default.
-        \item GraphFormers (something Microsoft has been developing, equivalence of GNNs and transformers with suitable neighbourhoods)
-    \end{itemize} 
-}
+
+As an overview of the obtained results, the GNN heuristic does not bring a consistent improvement against the SP heuristic. On non-trivial problems sampled from the same distribution as the training data, the new method may improve the results, but whether improvements are possible can not be known beforehand.
+
+The instances in TimPassLib represent a different data distribution than the training data. By testing the GNN heuristic against the benchmark instances, we found that the GNN heuristic does not generalise well to distributions outside of the training data. One of the reasons we chose the GNN architecture for our heuristic was the technical feasibility of using the same network for problem instances of different sizes. As the capability to generalise was very weak, we did not manage to observe if the problem instance size plays a role in performance. The possible performance degradation due to scaling the instances was masked by the large optimality gaps due to generalisation issues.
+
+The question remains if predicting the weights is a good idea in the first place. As we compared the optimality gaps against the $l^2$ loss on the weight prediction in \cref{sec:loss-gap-relation}, we did not observe any strong correlation between the values. This indicates, that training the model to predict the weight does not necessarily result in a lower gap against the reference solution. Additionally, as the allowed predictions were continuous, sometimes the low but non-zero weight values caused the subsequent PESP solving to be considerably slower than solving the PESP with the SP weights. % Pointti: vaikee ennustaa just nollaa
+
+To get around these issues, we came up with two ideas for further research into the topic of using a NN heuristics for the routing part of the TimPass problem. First, instead of training the model to predict the weights, we could instead try to predict the routes. This would make sure, that the resulting weights are consistent with the passenger demands, allowing us to skip the SP rerouting in the evaluation phase. The second idea is to try to minimise the TimPass objective value itself by means of reinforcement learning. As improvements in the regression task do not directly translate to better objective values, we could try to to minimise the objective instead. However, RL training is much more difficult to get right than the simple supervised regression task.
+
+Another point of discussion is the suitability of the HGT architecture for this problem. The family of convolutional graph networks are well-suited for tasks with local dependencies. This is also reflected in the typical benchmarks, e.g. (\# TODO: paper-author, joku muu kans). However, the task of routing the passengers optimally depends on global interactions: a small difference in the network, e.g. a high lower bound for an edge, may have large consequences far away, as now it's optimal to route the passengers with a completely different path to their destination.
+
+GNNs also have some well-known limitations. The message-passing architecture is susceptible to over-squashing of information, as the nodes become a bottleneck for the messages \cite{alon2020bottleneck}. This hinders the architecture's performance on tasks that depend on long-range interactions. The attention mechanism does help with this issue.
+
+The mechanism of passing messages within the one-hop neighbourhood acts as an inductive bias. It guides the model towards discovering short-range patters and as such, this mechanism may not be well-suited for tasks involving long-range interactions. Some recent research directions involve omiting this bias by letting the nodes communicate globally, essentially creating a transformer for graphs \cite{ying2021transformers,hussain2022global}. The resulting models have achieved good results on e.g. the quantum-chemical
+regression task on the OGB-LSC PCQM4Mv2 dataset, which depends on global interactions \cite{hu2021ogblsc}.
+
+Another area for improvement is the training dataset we used to train the model. We did have a large number of training instances, but the instances could have been more diverse: most of the instances were trivial in the sense that the SP heuristic was optimal, and the base PTN was shared between all instances. It is not clear if the model would learn anything useful when introduced to the trivial problems, as the SP heuristic weights are also included in the training data. Not being introduced to various PTNs could hinder the generalisation to other datasets. Due to practical concerns, we were forced to limit the computation time for the TimPass problem when generating the training samples. This could introduce bias, as the training examples are very hard to solve by existing methods while generating heuristics for difficult problems is ultimately our goal.
+
+As we saw in \cref{sec:results}, at least for the training dataset the SP heuristic was often very good. On the other hand, when the SP heuristic failed, the GNN heuristic was at times able to find improvements. Combining these heuristics to a joint heuristic where the GNN prediction would be used in cases where the SP weights are predicted to be non-optimal could thus yield solutions that are better than a singe heuristic could achieve. One approach to predicting where the SP heuristic may fail is to investigate the tightness of the bounds for the edge durations. This way we could classify the OD pairs to two groups by the potential for improvement. Training the GNN heuristic only on the high-potential OD pairs could in part alleviate the issue of lack of variation in the training data.
+
+Lastly, as this thesis was focused on investigating the idea of using a GNN heuristic, we did not invest in incorporating the latest solving methods and tricks for the TimPass and PESP problems. As noted earlier, the time limitation on the TimPass problem could introduce some bias. As we are required to solve the PESP problem in the evaluation phase, introducing the best available solution methods could help us evaluate the large-scale problems more accurately.
+
+
 
 \clearpage
 \section{Summary}

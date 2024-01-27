@@ -1,0 +1,20 @@
+\begin{tikzpicture}[
+    round/.style={circle, draw=black, fill=white, very thick, minimum size=7mm},
+    ]
+
+    %Nodes
+    \node[round] (s1-a1) at (0,0) {};
+    \node[round] (s1-d1) at (2,0) {};
+    \node[round] (s1-d2) at (4,0) {};
+    \node[round] (s2-a1) at (0,-2) {};
+    \node[round] (s2-a2) at (2,-2) {};
+    \node[round] (s2-d1) at (4,-2) {};
+    
+
+    %Lines
+    \draw[->] (s1-a1.east) -- (s1-d1.west);
+    \draw[->] (s1-d1) -- (s2-a1);
+    \draw[->] (s2-a1) -- (s2-d1);
+    
+    
+\end{tikzpicture}
