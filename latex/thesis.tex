@@ -1101,12 +1101,6 @@ In \cref{fig:gap-loss} we observe the loss vs optimality gap plots for both heur
 
 \end{figure}
 
-% \begin{itemize}
-%     \item GNN heuristic has an inbuilt assumption that the optimality gap gets smaller as loss decreases
-%     \item True when loss is very small, otherwise correlation is low
-%     \item Plot of gap vs loss with both GNN and shortest path routing, points colored by heuristic
-% \end{itemize}
-
 
 \subsection{Theoretical loss lower bound without preference of solutions}
 \label{sec:solution-preference-reasoning}
@@ -1116,15 +1110,6 @@ We will next investigate what would be the theoretically lowest obtainable loss 
 The neural network is trained to minimise the expected average squared error of the weight predictions. The loss for an individual problem is defined as $\ell(\hat{w}, w) = 1 / |A| \sum_{a \in A}(\hat{w}_a-w_a)^2$. If we don't consider preference information, then $w$ can be viewed as a random variable. In this case, the optimal predictor would predict $\hat{w}_a^* = \mathbb{E}[w_a]$. By substituting this back to the loss formula, we get that the lowest obtainable expected loss is the mean population variance of the weights, with the population here being the set of optimal solutions for one problem instance and the average being taken over all problem instances.
 
 We can estimate this lowest obtainable loss by calculating the sample variances for the weights. With this method, we get that $\mathbb{E}[\ell(\hat{w}^*, w)] \approx 0.0091$. As this is lower than the best loss achieved with the preferences, we can deduce that the lack of preference information would not have limited the performance of the model significantly.
-
-% \label{sec:solution-preference-reasoning}
-% \begin{itemize}
-%     \item Multiple solutions to TimPass exist, we pick the "right" one essentially at random
-%     \item We are using mse loss -> the loss would be minimized when we predict the expected value of the optimal solution
-%     \item Multiple solutions -> we are actually not predicting an optimal solution, but something else
-%     \item Empirically, the lower bound for the loss would be the variance of the obtained weights
-%     \item Got an estimate of 0.00199 -> we couldn't get a loss lower than that with this dataset without the preference order.
-% \end{itemize}
 
 
 \clearpage
@@ -1139,7 +1124,7 @@ The question remains if predicting the weights is a good idea in the first place
 
 To get around these issues, we came up with two ideas for further research into the topic of using a NN heuristics for the routing part of the TimPass problem. First, instead of training the model to predict the weights, we could instead try to predict the routes. This would make sure, that the resulting weights are consistent with the passenger demands, allowing us to skip the SP rerouting in the evaluation phase. The second idea is to try to minimise the TimPass objective value itself by means of reinforcement learning. As improvements in the regression task do not directly translate to better objective values, we could try to to minimise the objective instead. However, RL training is much more difficult to get right than the simple supervised regression task.
 
-Another point of discussion is the suitability of the HGT architecture for this problem. The family of convolutional graph networks are well-suited for tasks with local dependencies. This is also reflected in the typical benchmarks, e.g. (\# TODO: paper-author, joku muu kans). However, the task of routing the passengers optimally depends on global interactions: a small difference in the network, e.g. a high lower bound for an edge, may have large consequences far away, as now it's optimal to route the passengers with a completely different path to their destination.
+Another point of discussion is the suitability of the HGT architecture for this problem. The family of convolutional graph networks are well-suited for tasks with local dependencies. This is also reflected in the typical benchmarks, e.g. the Open Academic Graph link prediction \cite{oag-dataset}, on which the solutions do not depend on long-range interactions. However, the task of routing the passengers optimally depends on global interactions: a small difference in the network, e.g. a high lower bound for an edge, may have large consequences far away, as now it's optimal to route the passengers with a completely different path to their destination.
 
 GNNs also have some well-known limitations. The message-passing architecture is susceptible to over-squashing of information, as the nodes become a bottleneck for the messages \cite{alon2020bottleneck}. This hinders the architecture's performance on tasks that depend on long-range interactions. The attention mechanism does help with this issue.
 
@@ -1158,7 +1143,17 @@ Lastly, as this thesis was focused on investigating the idea of using a GNN heur
 \section{Summary}
 \label{sec:summary}
 
-\
+In this thesis, we study a novel graph neural network-based heuristic for the timetabling and passenger routing problem (TimPass). Heuristical approaches to the problem are interesting, as including routing makes the problem more realistic but also much more challenging to solve optimally. Improvements to solutions for large-scale problems could be helpful in public transport planning and by extension lower the transportation costs for everyone involved.
+
+We conduct a literary review focused on recent advancements and research directions in timetabling for public transportation, machine learning applications in public transport planning, and how neural networks have been used to support solving combinatorial optimization (CO) problems. We found, that the proposed heuristic has not been studied before, and that graph neural networks have seen popularity in CO applications.
+
+We present the methodological foundation for the event activity network representation, optimization problem formulation, and the heuristic model architecture. The practical problem representation issues of connecting the novel heuristic to the established formulation are also discussed and the workarounds are demonstrated. As the heuristic output by itself could be arbitrarily scaled, we also devise a process for consistently evaluating the weight predictions.
+
+In the results section, we demonstrate how the new heuristic performed with various problem instance types. First, we examine the performance on the validation data generated by the same data generation process as for the training data. Second, we apply the heuristic to larger and more varied benchmark instances and compare the results to the shortest path heuristic and the found best solutions to the problem. We observe, that at times the new heuristic is able to yield improvements over the SP heuristic, but this is mostly limited to the distribution of instances the model is trained with. With the benchmark instances, the model does not seem to generalise well to the new distribution. The results on the impact of the instance size on performance are inconclusive, as no generalization was observed at all.
+
+Finally, we discuss the limitations and caveats related to the new method and the training process. We identify multiple possible reasons for the poor performance, starting from the relevance of the regression task itself and ending with contemplation on the architecture choice and recent advancements in the field of machine learning with graphs. Lastly, we propose a method of splitting the workload between two heuristics to possibly get the best of the two approaches in one method.
+
+To conclude, we explored heuristical approaches for the TimPass problem and investigated the capabilities of the proposed novel heuristic while critically commenting on the choice of methodology. In the process, we learned a lot about how graph neural networks could be applied to the problem and proposed multiple promising avenues for future research. Our first attempt at cracking the problem was not a complete success, but after all, research is an iterative process.
 
 \clearpage
 \thesisbibliography
