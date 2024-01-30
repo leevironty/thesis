@@ -1,0 +1,5 @@
+INFO : 2024-01-30 08:47:46,888 : thesis.scripts.eval_amend : Loading results
+INFO : 2024-01-30 08:47:47,132 : thesis.scripts.eval_amend : Testing with fake data
+INFO : 2024-01-30 08:47:47,155 : thesis.scripts.eval_amend : calculating statistics
+INFO : 2024-01-30 08:47:47,166 : thesis.scripts.eval_amend : Dumping to a pickle file
+INFO : 2024-01-30 08:47:47,167 : thesis.scripts.eval_amend : Done

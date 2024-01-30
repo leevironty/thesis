@@ -174,7 +174,7 @@ Public transportation systems play a role in many people's lives. As such, it is
 
 The schedule determines when the vehicles arrive and depart from the stops in a public transport system. From the passenger's point of view, an efficient schedule minimizes the expected travel time. However, optimizing for the travel time is not easy. The optimal schedule depends on the routes the passengers choose to get to their destination, but at the same time the chosen routes depend on the schedule. This means, that to guarantee optimal solutions, we must optimize both the schedule and the passenger routes at the same time. This is much more challenging than optimizing the schedule with a pre-determined passenger routing, as the number of routes that each passenger can choose from can be very large, and in a realistic scenario, we will have a large number of passengers. In practice, we are not able to solve this problem optimally for realistically-sized problems.
 
-In this thesis, we develop a heuristic solution method to this integrated optimization problem by trying to predict the optimal routing before solving for the timetable. This would allow us to exclude routing from the optimization problem, making the problem easier to solve. We study if a graph neural network model is able to predict these routes and how the model's predictions would fare against previous heuristics with both small and large public transport networks.
+In this thesis, we develop a heuristic solution method to this integrated optimization problem by trying to predict the optimal routing before solving for the timetable. Good predictions allow us to exclude routing from the optimization problem, making the problem easier to solve. We study if a graph neural network model is able to predict these routes and how the model's predictions will fare against previous heuristics with both small and large public transport networks.
 
 Note, that in this case, we do not differentiate between transportation modes
 like busses and trains. In general, a real public transportation system would have multiple modes of transportation, but we ignore this for now, as the developed heuristic can be easily extended to a multimodal case. 
@@ -266,8 +266,9 @@ In this section, we introduce the used methods and their definitions. First, we 
 In \cref{fig:process-flow} we show the overview of how all the different methods are related to each other to finally get to the results, i.e. heuristic evaluation.
 
 \draft{
-    Metaa, sido paremmin käppyrään. "lopuksi repr as hetetogenous graph ties the gnn to the IP problems"
+    Use the graph above to introduce the structure of the methods-section. Maybe create the graph in tikz, so that we can have links to relevant sections. Idea is to have "two sides", one for the IP formulations, one for the graph neural network. Then the sections "Data representation as a heterogenous graph" and the evaluation scheme tie these methods together.
 }
+
 \begin{figure}
     \centering
     \includegraphics[width=\textwidth]{figures/process-flow.png}
@@ -293,7 +294,7 @@ Before we can define event activity networks, we have to define a few other thin
     A \textit{public transport network} (PTN) is a simple undirected graph PTN = $(S, R)$ with a set of stops $S$ and a set of direct connections between the stops $R$. 
 \end{definition}
 
-A PTN describes the underlying transportation infrastructure of a public transport system. We consider the connections to be undirected. This simplifies the modeling, but one could also have a PTN with directed edges. The PTN could also be non-simple, but that notation would make a difference only if there were either capacity constraints per connection or if multiple modalities were used.
+A PTN describes the underlying transportation infrastructure of a public transport system. We consider the connections to be undirected. This simplifies the modeling, but one can also have a PTN with directed edges. The PTN can also be non-simple, but that notation would make a difference only if there were either capacity constraints per connection or if multiple modalities were used.
 
 Stops and connections are not enough to model the public transport network. We will use an event activity network (EAN) for that.
 \begin{definition}[Event Activity Network]\label{def:ean}
@@ -410,7 +411,7 @@ Note, that the objective only considers the routable activities, but the constra
 % From the OD demand, we use some routing scheme to obtain weights.  % TODO: more formally, good points in prev. literature.
 
 
-The formulation for the PESP problem using the schedule $\pi$ is correct, but it's not the most efficient one available. As presented in \cite{cycle-basis-original-2001}, instead of explicitly defining the times for the events, we could instead define just the activity durations directly. We note the activity duration as $x_a \in \N$. Now the constraint on activity durations is much simpler: $L_a \leq x_a \leq U_a\ \forall a \in A$. This formulation also implicitly reduces the number of symmetrical solutions: when directly defining the event times by $\pi$ we would need to fix some event time explicitly to prevent symmetrical solutions from being considered.
+The formulation for the PESP problem using the schedule $\pi$ is correct, but it's not the most efficient one available. As presented in \cite{cycle-basis-original-2001}, instead of explicitly defining the times for the events, we can instead define just the activity durations directly. We note the activity duration as $x_a \in \N$. Now the constraint on activity durations is much simpler: $L_a \leq x_a \leq U_a\ \forall a \in A$. This formulation also implicitly reduces the number of symmetrical solutions: when directly defining the event times by $\pi$ we would need to fix some event time explicitly to prevent symmetrical solutions from being considered.
 % TODO: any research on why the cycle-basis is more efficient?
 
 We still need to take the cycles and their feasibility in the EAN into account. In \cref{fig:cycle-example}, we have the activities a, b, c, d, e, and f. For the activity durations to be consistent, we must have that the difference of duration of the upper path $x_a + x_b + x_c$ and lower path $x_f + x_e + x_d$ must be an integer multiple of the period $T$. More formally, $x_a + x_b + x_c - x_d - x_e - x_f = zT$ for some $z\in \Z$. The difference can be a multiple of the period as we are dealing with a periodic timetable, otherwise the difference should be zero.
@@ -452,7 +453,7 @@ We still need to take the cycles and their feasibility in the EAN into account. 
     % - no duplicated verticies
 \end{definition}
 
-In the cycle basis formulation, we consider cycles regardless of the edge direction, but the cycle does have a direction. All the edges of a cycle $c$ belong either to the set of "positive edges" $c^+$ or the set of "negative edges" $c^-$, based on the direction of the edges along the cycle. In the example of \cref{fig:cycle-example}, we would have that $c^+ = \{a, b, c\}$ and $c^- = \{d, e, f\}$. In more general terms, for a cycle $c$ to be consistent, for some $z \in \Z$ we must have:
+In the cycle basis formulation, we consider cycles regardless of the edge direction, but the cycle does have a direction. All the edges of a cycle $c$ belong either to the set of "positive edges" $c^+$ or the set of "negative edges" $c^-$, based on the direction of the edges along the cycle. In the example of \cref{fig:cycle-example}, we have that $c^+ = \{a, b, c\}$ and $c^- = \{d, e, f\}$. In more general terms, for a cycle $c$ to be consistent, for some $z \in \Z$ we must have:
 \begin{align}
     \sum_{a\in c^+}x_a - \sum_{a \in c^-}x_a = zT
 \end{align}
@@ -677,7 +678,7 @@ The state update function maps the current hidden state and the obtained aggrega
 
 The obtained node embeddings $h_v^T$ of the last layer are used as inputs for the downstream tasks. For example, in the case of a regression problem, we can have a single-layer perceptron, mapping $h_v^T \mapsto \hat{y} \in \R$. Then, in a supervised setting, we can calculate the loss $\ell(y, \hat{y}) \in \R$ against the true label $y$ and use some optimization algorithm to update the model parameters to minimise the loss.
 
-Typically, an optimization method for neural networks uses some variation of the stochastic gradient descent (SGD). In SGD, the gradient of the loss w.r.t. $\hat{y}$ is propagated back through the network to obtain the gradient with respect to the parameters. In standard SGD, the gradients multiplied by a suitable step size would be used as the parameter update. However, it has been noted that this method is susceptible to getting stuck on local minima. In this thesis, we will be using the Adam optimizer \cite{adam-2014}, which can be viewed as an extension of SGD with momentum and step size adaption.
+Typically, an optimization method for neural networks uses some variation of the stochastic gradient descent (SGD). In SGD, the gradient of the loss w.r.t. $\hat{y}$ is propagated back through the network to obtain the gradient with respect to the parameters. In standard SGD, the gradients multiplied by a suitable step size is used as the parameter update. However, it has been noted that this method is susceptible to getting stuck on local minima. In this thesis, we will be using the Adam optimizer \cite{adam-2014}, which can be viewed as an extension of SGD with momentum and step size adaption.
 
 One desirable quality of MPGNNs is that the same model can be used with networks of varying sizes. This does not limit us to always have the same number of nodes and edges in the problem.
 
@@ -694,7 +695,7 @@ Let $A$ be the adjacency matrix of a graph. The elements of the Laplacian matrix
         \sum_{k \in V} A_{ik},\ i = j
     \end{cases}
 \end{align}
-The Laplacian eigenvectors $\mathbf{f_i}$ are the eigenvectors of the Laplacian matrix. For the positional encoding, we would take the eigenvectors with $m$ largest corresponding eigenvalues and inject the resulting vector values to the nodes.
+The Laplacian eigenvectors $\mathbf{f_i}$ are the eigenvectors of the Laplacian matrix. For the positional encoding, we take the eigenvectors with $m$ largest corresponding eigenvalues and inject the resulting vector values to the nodes.
 
 The sign of the eigenvectors can be arbitrary. This is why we choose only top-$m$ vectors, as when training the model we need to pick a random combination of signs. The model can learn the invariance to the sings symmetries much easier, as we have a limited number of possible combinations.
 
@@ -745,7 +746,7 @@ The attention head yields scalar values that are then normalised with the SoftMa
 \begin{align*}
     \operatorname{Att-head}^i(u, e, v) = \operatorname{K-linear}^i_{\tau(u)}(h^t_u)W^\text{att}_{\phi(e)}\operatorname{Q-linear}^i_{\tau(v)}(h^t_v)\frac{\mu_{u, e, v}}{\sqrt{d}}
 \end{align*}
-The attention head first maps the hidden states to a key and a query vector. Typically in attention calculation, we would then directly take the dot product of the vectors. However, this would not take the relation type into consideration. For this reason, we introduce a relation-dependant projection before the dot product. Finally, we scale the result based on a learnable scalar and the number of hidden dimensions $d$.
+The attention head first maps the hidden states to a key and a query vector. Typically in attention calculation, we would then directly take the dot product of the vectors. However, this does not take the relation type into consideration. For this reason, we introduce a relation-dependant projection before the dot product. Finally, we scale the result based on a learnable scalar and the number of hidden dimensions $d$.
 
 
 \subsection{Heuristic evaluation method}
@@ -866,7 +867,7 @@ The bounds for wait activities are sampled with the same idea of not having the 
 
 For the change activities, the sampling process is a bit different. First, we sample the lower bound $\lambda_u \sim \unif{1, 5}$ for all $ u \in S$. Then, $L_a = \lambda_u,\ U_a = \lambda_u + T - 1$ for all activities $a = [(\text{arr}, u, l_1, r_1), (\text{dep}, u, l_2, r_2)] \in A_\text{change}$. In this case, the difference between the upper and lower bound is always $T-1$. This ensures, that the change is always feasible. We have the same bounds for all transfers that happen at the same stop.
 
-By the definition used here, we could have different penalties for all the change activities, and nothing limits us to having penalties only for those activities either. However, to keep things simple and aligned with other datasets, we just sample $\rho \sim \unif{1, 5}$ and set $b_a = \rho$ for all $a \in A_\text{change}$ and $b_a = 0$ otherwise.
+By the definition used here, we can have different penalties for all the change activities, and nothing limits us to having penalties only for those activities either. However, to keep things simple and aligned with other datasets, we just sample $\rho \sim \unif{1, 5}$ and set $b_a = \rho$ for all $a \in A_\text{change}$ and $b_a = 0$ otherwise.
 
 For sync activities, we don't sample the bounds. Instead, we simply set
 \begin{align}
@@ -1000,7 +1001,7 @@ The HGT architecture and the training process are parametrized by hyperparameter
 \subsection{Heuristic performance}
 \label{sec:heur-perf}
 
-\begin{figure}
+\begin{figure} 
     \begin{subfigure}{0.5\textwidth}
         \centering
         \includegraphics[width=\linewidth]{figures/loss-loss.pdf}
@@ -1019,19 +1020,19 @@ The HGT architecture and the training process are parametrized by hyperparameter
 
 We calculated the performance metrics on a test dataset with over 5000 samples. This dataset was not used in the training of the GNN heuristic.
 
-For each problem instance, we calculated the GNN heuristic loss (as MSE against the optimal activity weights) and optimality gap as described in \cref{sec:heur-eval}. We also calculated the metrics for the shortest path heuristic weights. The heuristic is called the "trivial heuristic" in the figures. First, in \cref{fig:results-ll-gg} we compare the joint distributions of the losses and optimality gaps of the heuristic against each other.
+For each problem instance, we calculated the GNN heuristic loss (as MSE against the optimal activity weights) and optimality gap as described in \cref{sec:heur-eval}. We also calculated the metrics for the shortest path (SP) heuristic weights. First, in \cref{fig:results-ll-gg} we compare the joint distributions of the losses and optimality gaps of the heuristic against each other.
 
-For the calculated losses in \cref{fig:results-ll} we can clearly see, that the GNN heuristic typically achieves lower losses than the trivial heuristic. This indicates that the trained network did at least partially work as intended, as the heuristic was trained to minimise the loss. The loss is smaller for the GNN in 79\% of the problem instances.
+For the calculated losses in \cref{fig:results-ll} we can clearly see, that the GNN heuristic typically achieves lower losses than the SP heuristic. This indicates that the trained network did at least partially work as intended, as the heuristic was trained to minimise the loss. The loss is smaller for the GNN in 79\% of the problem instances.
 
-However, observing the results in \cref{fig:results-gg} is more difficult. For the trivial heuristic, the gap is zero in 91\% of the cases and for the GNN heuristic in 61\%. Notably, the trivial heuristic finds the optimal solution more often than the GNN heuristic despite having larger losses. More on that in \cref{sec:loss-gap-relation}. However, we will now restrict our comparison to only cases where the trivial heuristic optimality gap is nonzero. We justify this condition by stating that the optimality of the trivial heuristic is easy to verify beforehand. As we are interested in improving the found solutions, we limit our focus only to cases where we know beforehand that improvements are possible. We use the name trivial problem for the problems where the shortest path heuristic achieves zero optimality gap.
+However, observing the results in \cref{fig:results-gg} is more difficult. For the SP heuristic, the gap is zero in 91\% of the cases and for the GNN heuristic in 61\%. Notably, the SP heuristic finds the optimal solution more often than the GNN heuristic despite having larger losses. More on that in \cref{sec:loss-gap-relation}. However, we will now restrict our comparison to only cases where the SP heuristic optimality gap is nonzero. We justify this condition by stating that the optimality of the SP heuristic is easy to verify beforehand. As we are interested in improving the found solutions, we limit our focus only to cases where we know beforehand that improvements are possible. We use the name trivial problem for the problems where the shortest path heuristic achieves zero optimality gap.
 
-In \cref{fig:results-gg-excl-trivial} we represent the optimality gap joint distribution without the trivial problems. Note, how the histograms are no longer concentrated around zero. With this filtering, the GNN heuristic achieves a better gap in 41\% of the problems. Likewise, the trivial heuristic has a better gap for 47\% of the problems. When the solutions differ, the difference is often quite large: if GNN gap is smaller, on average it is only about 31\% of the trivial heuristic gap. This means, that the proposed heuristic can find solutions that are vastly better than the baseline shortest path heuristic. However, this is not consistent.
+In \cref{fig:results-gg-excl-trivial} we represent the optimality gap joint distribution without the trivial problems. Note, how the histograms are no longer concentrated around zero. With this filtering, the GNN heuristic achieves a better gap in 41\% of the problems. Likewise, the SP heuristic has a better gap for 47\% of the problems. When the solutions differ, the difference is often quite large: if GNN gap is smaller, on average it is only about 31\% of the SP heuristic gap. This means, that the proposed heuristic can find solutions that are vastly better than the baseline shortest path heuristic. However, this is not consistent.
 
 
 \begin{figure}
     \centering
     \includegraphics[width=0.75\linewidth]{figures/gap-gap-excl-trivials.pdf}
-    \caption{Optimality gap joint distribution for trivial and GNN heuristics. Excluding trivial problems.}
+    \caption{Optimality gap joint distribution for SP and GNN heuristics. Excluding trivial problems.}
     \label{fig:results-gg-excl-trivial}
 \end{figure}
 
@@ -1041,7 +1042,7 @@ We also evaluated the GNN and SP heuristics on selected TimPassLib instances. Th
 
 
 The PESP time limit was set to 6 hours for the evaluation. The evaluation was performed on a machine with CPU 8 cores and 8 GB of memory. The problem instance sizes can be found in \cite{schiewe2023introducing}.
-% TODO: aikaraja 6h, testataan generalization & scalability, kerro instanssien koosta jotain (näin monta eventtiä, aktiviteettia & od-paria)
+
 \begin{figure}
     \centering
     \includegraphics[width=\linewidth]{figures/eval-timpasslib.pdf}
@@ -1056,7 +1057,7 @@ The PESP time limit was set to 6 hours for the evaluation. The evaluation was pe
     \footnotesize
     \begin{tabular}{l|ll|ll}
                                      & All problems  &                   & Non-trivial problems &                   \\
-    Metric                           & GNN heuristic & Trivial heuristic & GNN heuristic        & Trivial heuristic \\ \hline
+    Metric                           & GNN heuristic & SP heuristic & GNN heuristic        & SP heuristic \\ \hline
     Loss mean                        & \textbf{0.018526} & 0.045599          & \textbf{0.016793}    & 0.032772          \\
     Loss median                      & \textbf{0.013557} & 0.034702          & \textbf{0.013480}    & 0.022635          \\
     Gap mean                         & 0.011484          & \textbf{0.002880} & 0.036789             & \textbf{0.034759} \\
@@ -1071,7 +1072,7 @@ The PESP time limit was set to 6 hours for the evaluation. The evaluation was pe
 \subsection{Relation of loss and heuristic optimality gap}
 \label{sec:loss-gap-relation}
 
-The chosen GNN heuristic training has the inbuilt assumption, that achieving good predictions for the optimal weights $w$ leads to low optimality gaps. However, after observing the achieved losses and optimality gaps for both the GNN and the trivial heuristic, this does not seem to be so straightforward.
+The chosen GNN heuristic training has the inbuilt assumption, that achieving good predictions for the optimal weights $w$ leads to low optimality gaps. However, after observing the achieved losses and optimality gaps for both the GNN and the SP heuristic, this does not seem to be so straightforward.
 
 In \cref{fig:gap-loss} we observe the loss vs optimality gap plots for both heuristics. If the assumption was correct, we would observe some kind of positive correlation between the metrics. However, the metrics are virtually independent of each other. Only when we focus on very small losses as in \cref{fig:gap-loss-gnn-zoomed} we see any dependence. For very small losses the optimality gaps tend to also be very small.
 
@@ -1080,13 +1081,13 @@ In \cref{fig:gap-loss} we observe the loss vs optimality gap plots for both heur
     \begin{subfigure}{0.5\textwidth}
         \centering
         \includegraphics[width=\linewidth]{figures/gap-loss-trivial.pdf}
-        \caption{Gap vs loss trivial heuristic}
+        \caption{Gap vs loss for the SP heuristic.}
         \label{fig:gap-loss-trivial}
     \end{subfigure}
     \begin{subfigure}{0.5\textwidth}
         \centering
         \includegraphics[width=\linewidth]{figures/gap-loss-gnn.pdf}
-        \caption{Gap vs loss GNN heuristic}
+        \caption{Gap vs loss for the GNN heuristic.}
         \label{fig:gap-loss-gnn}
     \end{subfigure}
     \caption{Relationship between the heuristic loss and the achieved optimality gap.}
@@ -1131,11 +1132,11 @@ GNNs also have some well-known limitations. The message-passing architecture is 
 The mechanism of passing messages within the one-hop neighbourhood acts as an inductive bias. It guides the model towards discovering short-range patters and as such, this mechanism may not be well-suited for tasks involving long-range interactions. Some recent research directions involve omiting this bias by letting the nodes communicate globally, essentially creating a transformer for graphs \cite{ying2021transformers,hussain2022global}. The resulting models have achieved good results on e.g. the quantum-chemical
 regression task on the OGB-LSC PCQM4Mv2 dataset, which depends on global interactions \cite{hu2021ogblsc}.
 
-Another area for improvement is the training dataset we used to train the model. We did have a large number of training instances, but the instances could have been more diverse: most of the instances were trivial in the sense that the SP heuristic was optimal, and the base PTN was shared between all instances. It is not clear if the model would learn anything useful when introduced to the trivial problems, as the SP heuristic weights are also included in the training data. Not being introduced to various PTNs could hinder the generalisation to other datasets. Due to practical concerns, we were forced to limit the computation time for the TimPass problem when generating the training samples. This could introduce bias, as the training examples are very hard to solve by existing methods while generating heuristics for difficult problems is ultimately our goal.
+Another area for improvement is the training dataset we used to train the model. We did have a large number of training instances, but the instances were not very diverse: most of the instances were trivial in the sense that the SP heuristic was optimal, and the base PTN was shared between all instances. It is not clear if the model learns anything useful when introduced to the trivial problems, as the SP heuristic weights are also included in the training data. Not being introduced to various PTNs could hinder the generalisation to other datasets. Due to practical concerns, we were forced to limit the computation time for the TimPass problem when generating the training samples. This could introduce bias, as the training examples are very hard to solve by existing methods while generating heuristics for difficult problems is ultimately our goal.
 
-As we saw in \cref{sec:results}, at least for the training dataset the SP heuristic was often very good. On the other hand, when the SP heuristic failed, the GNN heuristic was at times able to find improvements. Combining these heuristics to a joint heuristic where the GNN prediction would be used in cases where the SP weights are predicted to be non-optimal could thus yield solutions that are better than a singe heuristic could achieve. One approach to predicting where the SP heuristic may fail is to investigate the tightness of the bounds for the edge durations. This way we could classify the OD pairs to two groups by the potential for improvement. Training the GNN heuristic only on the high-potential OD pairs could in part alleviate the issue of lack of variation in the training data.
+As we saw in \cref{sec:results}, at least for the training dataset the SP heuristic was often very good. On the other hand, when the SP heuristic failed, the GNN heuristic was at times able to find improvements. Combining these heuristics to a joint heuristic where the GNN prediction would be used in cases where the SP weights are predicted to be non-optimal could thus yield solutions that are better than what a singe heuristic can achieve. One approach to predicting where the SP heuristic may fail is to investigate the tightness of the bounds for the edge durations. This way we could classify the OD pairs to two groups by the potential for improvement. Training the GNN heuristic only on the high-potential OD pairs could in part alleviate the issue of lack of variation in the training data.
 
-Lastly, as this thesis was focused on investigating the idea of using a GNN heuristic, we did not invest in incorporating the latest solving methods and tricks for the TimPass and PESP problems. As noted earlier, the time limitation on the TimPass problem could introduce some bias. As we are required to solve the PESP problem in the evaluation phase, introducing the best available solution methods could help us evaluate the large-scale problems more accurately.
+Lastly, as this thesis was focused on investigating the idea of using a GNN heuristic, we did not invest in incorporating the latest solving methods and tricks for the TimPass and PESP problems. As noted earlier, the time limitation on the TimPass problem could introduce some bias. As we are required to solve the PESP problem in the evaluation phase, introducing the best available solution methods can possibly help us evaluate the large-scale problems more accurately.
 
 
 
@@ -1143,11 +1144,11 @@ Lastly, as this thesis was focused on investigating the idea of using a GNN heur
 \section{Summary}
 \label{sec:summary}
 
-In this thesis, we study a novel graph neural network-based heuristic for the timetabling and passenger routing problem (TimPass). Heuristical approaches to the problem are interesting, as including routing makes the problem more realistic but also much more challenging to solve optimally. Improvements to solutions for large-scale problems could be helpful in public transport planning and by extension lower the transportation costs for everyone involved.
+In this thesis, we study a novel graph neural network-based heuristic for the timetabling and passenger routing problem (TimPass). Heuristical approaches to the problem are interesting, as including routing makes the problem more realistic but also much more challenging to solve optimally. Improvements to solutions for large-scale problems can be helpful in public transport planning and by extension lower the transportation costs for everyone involved.
 
 We conduct a literary review focused on recent advancements and research directions in timetabling for public transportation, machine learning applications in public transport planning, and how neural networks have been used to support solving combinatorial optimization (CO) problems. We found, that the proposed heuristic has not been studied before, and that graph neural networks have seen popularity in CO applications.
 
-We present the methodological foundation for the event activity network representation, optimization problem formulation, and the heuristic model architecture. The practical problem representation issues of connecting the novel heuristic to the established formulation are also discussed and the workarounds are demonstrated. As the heuristic output by itself could be arbitrarily scaled, we also devise a process for consistently evaluating the weight predictions.
+We present the methodological foundation for the event activity network representation, optimization problem formulation, and the heuristic model architecture. The practical problem representation issues of connecting the novel heuristic to the established formulation are also discussed and the workarounds are demonstrated. As the heuristic output by itself is not restricted to correspond to the passenger counts, we also devise a process for consistently evaluating the weight predictions.
 
 In the results section, we demonstrate how the new heuristic performed with various problem instance types. First, we examine the performance on the validation data generated by the same data generation process as for the training data. Second, we apply the heuristic to larger and more varied benchmark instances and compare the results to the shortest path heuristic and the found best solutions to the problem. We observe, that at times the new heuristic is able to yield improvements over the SP heuristic, but this is mostly limited to the distribution of instances the model is trained with. With the benchmark instances, the model does not seem to generalise well to the new distribution. The results on the impact of the instance size on performance are inconclusive, as no generalization was observed at all.
 

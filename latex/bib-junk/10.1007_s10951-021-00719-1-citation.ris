@@ -1,0 +1,17 @@
+TY  - JOUR
+AU  - Lindner, Niels
+AU  - Reisch, Julian
+PY  - 2022
+DA  - 2022/04/01
+TI  - An analysis of the parameterized complexity of periodic timetabling
+JO  - Journal of Scheduling
+SP  - 157
+EP  - 176
+VL  - 25
+IS  - 2
+AB  - Public transportation networks are typically operated with a periodic timetable. The periodic event scheduling problem (PESP) is the standard mathematical modeling tool for periodic timetabling. PESP is a computationally very challenging problem: For example, solving the instances of the benchmarking library PESPlib to optimality seems out of reach. Since PESP can be solved in linear time on trees, and the treewidth is a rather small graph parameter in the networks of the PESPlib, it is a natural question to ask whether there are polynomial-time algorithms for input networks of bounded treewidth, or even better, fixed-parameter tractable algorithms. We show that deciding the feasibility of a PESP instance is NP-hard even when the treewidth is 2, the branchwidth is 2, or the carvingwidth is 3. Analogous results hold for the optimization of reduced PESP instances, where the feasibility problem is trivial. Moreover, we show W[1]-hardness of the general feasibility problem with respect to treewidth, which means that we can most likely only accomplish pseudo-polynomial-time algorithms on input networks with bounded tree- or branchwidth. We present two such algorithms based on dynamic programming. We further analyze the parameterized complexity of PESP with bounded cyclomatic number, diameter, or vertex cover number. For event-activity networks with a special—but standard—structure, we give explicit and sharp bounds on the branchwidth in terms of the maximum degree and the carvingwidth of an underlying line network. Finally, we investigate several parameters on the smallest instance of the benchmarking library PESPlib.
+SN  - 1099-1425
+UR  - https://doi.org/10.1007/s10951-021-00719-1
+DO  - 10.1007/s10951-021-00719-1
+ID  - Lindner2022
+ER  - 

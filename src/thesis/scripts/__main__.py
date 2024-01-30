@@ -12,6 +12,7 @@ from thesis.scripts.multi_solution_generation import attach_multi_solution_gener
 from thesis.scripts.big_eval import attach_big_eval
 from thesis.scripts.filter import attach_filter_parser
 from thesis.scripts.eval_timpasslib import attach_eval_timpasslib
+from thesis.scripts.eval_amend import attach_eval_amend
 
 
 
@@ -81,6 +82,7 @@ def main():
     attach_big_eval(main_subparsers)
     attach_filter_parser(main_subparsers)
     attach_eval_timpasslib(main_subparsers)
+    attach_eval_amend(main_subparsers)
 
     args = parser.parse_args()
     args.func(args)
