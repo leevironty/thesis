@@ -875,19 +875,19 @@ For sync activities, we don't sample the bounds. Instead, we simply set
 \end{align}
 Note, that $L_a, U_a \in \N$ as we chose $T$ and $f_l$ sampling to enforce this. This is necessary, as the TimPass model formulation is defined in terms of integers.
 
-Finally, we must come up with an OD matrix for the problem instance. Only the stops that belong to a line are present in the EAN. As the lines are randomly chosen, the set of stops is also random. The shares of varying node set sizes in the dataset are presented in \cref{fig:data-node-count-shares}. 
+Finally, we must come up with an OD matrix for the problem instance. Only the stops that belong to a line are present in the EAN. As the lines are randomly chosen, the set of stops is also random.
 %If we were to consider the demand for all stop pairs, we could end up with a difficult problem to solve, as we could have many OD-pairs for which we need to solve the best route.
 To both keep the number of OD pairs feasible and to introduce variations in the data, we limit the number of OD pairs considered. When $|S| \geq 7$, the problem has at least $7 \cdot 6=42$ possible pairs. Instead of using them all, we take a random subset of the possible OD pairs. 
 We sample $|\od| \sim \unif{30, 40}$ and then take the random subset $\od \subset S^2$. If we did not sample $|\od|$, we just use all possible OD-pairs. For all OD-pairs we sample the demand as $\od_{uv} \sim \unif{1, 20}$ for all $uv \in \od$.
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.75\textwidth]{figures/data_node_count_shares.pdf}
-    \caption{Shares of node set sizes in the generated dataset.}
+    \includegraphics[width=0.75\textwidth]{figures/data_gen_shares.pdf}
+    \caption{The node set sizes of the generated instances before and after of discarding difficult problems.}
     \label{fig:data-node-count-shares}
 \end{figure}
 
-Now we can define the TimPass problem and attempt to solve it. We try to solve the obtained problem with Gurobi with a time limit of 20 seconds. If the optimal solution is not obtained within this limit, we deem the problem difficult to solve and try sampling the problem again. This happened in approximately $48\%$ of the sampled problem variations.
+Now we can define the TimPass problem and attempt to solve it. We try to solve the obtained problem with Gurobi with a time limit of 20 seconds. If the optimal solution is not obtained within this limit, we deem the problem difficult to solve and try sampling the problem again. This happened in approximately $48\%$ of the sampled problem variations. In \cref{fig:data-node-count-shares} we present the shares of the node set sizes for the attempted instances and the solved instances. After discarding difficult problem instances, the smaller problems are more prevalent. This means, that the larger problems were more often not solved within the time limit.
 
 As stated previously, we need to be able to control which of the multiple solutions we actually get. This is done by first solving the problem as usual. We denote the calculated optimal objective value $V^*$. To obtain other solutions, we add a new constraint and change the objective function. The new constraint is that the objective must be equal to $V^*$:
 \begin{align}
@@ -895,7 +895,7 @@ As stated previously, we need to be able to control which of the multiple soluti
 \end{align}
 The idea for using the previous objective value as a constraint comes from \cite{helmi}.
 
-For the new objective, we change it to be  the weighted sum of the flow variables. The weights are sampled randomly between zero and one:
+For the new objective, we change it to be the weighted sum of the flow variables. The weights are sampled randomly between zero and one:
 \begin{align}
     \min\ \sum_{uv \in \od}\sum_{a\in \Ar}w_a^{uv}p_{a}^{\mathit{uv}} (x_a + b_a),\quad w_a^{uv} \sim \unifcont{0, 1}
 \end{align}
@@ -1025,6 +1025,16 @@ For each problem instance, we calculated the GNN heuristic loss (as MSE against 
 For the calculated losses in \cref{fig:results-ll} we can clearly see, that the GNN heuristic typically achieves lower losses than the SP heuristic. This indicates that the trained network did at least partially work as intended, as the heuristic was trained to minimise the loss. The loss is smaller for the GNN in 79\% of the problem instances.
 
 However, observing the results in \cref{fig:results-gg} is more difficult. For the SP heuristic, the gap is zero in 91\% of the cases and for the GNN heuristic in 61\%. Notably, the SP heuristic finds the optimal solution more often than the GNN heuristic despite having larger losses. More on that in \cref{sec:loss-gap-relation}. However, we will now restrict our comparison to only cases where the SP heuristic optimality gap is nonzero. We justify this condition by stating that the optimality of the SP heuristic is easy to verify beforehand. As we are interested in improving the found solutions, we limit our focus only to cases where we know beforehand that improvements are possible. We use the name trivial problem for the problems where the shortest path heuristic achieves zero optimality gap.
+
+In \cref{fig:trivial-shares-in-data} we break down the share of trivial problems by the instance size. We note, that for problems with four or five stops, the instances are almost always (98\% of cases) trivial. The share of zero GNN gap instances is always lower than the share of trivial instances.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{figures/zero_gap_shares.pdf}
+    \caption{The share of trivial problem instances and zero GNN optimality gaps by instance size.}
+    \label{fig:trivial-shares-in-data}
+\end{figure}
+
 
 In \cref{fig:results-gg-excl-trivial} we represent the optimality gap joint distribution without the trivial problems. Note, how the histograms are no longer concentrated around zero. With this filtering, the GNN heuristic achieves a better gap in 41\% of the problems. Likewise, the SP heuristic has a better gap for 47\% of the problems. When the solutions differ, the difference is often quite large: if GNN gap is smaller, on average it is only about 31\% of the SP heuristic gap. This means, that the proposed heuristic can find solutions that are vastly better than the baseline shortest path heuristic. However, this is not consistent.
 
