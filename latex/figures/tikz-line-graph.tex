@@ -1,0 +1,45 @@
+\begin{tikzpicture}[scale=2,node distance=2cm]
+    \tikzstyle{node}=[circle,draw]
+    \tikzstyle{nodeedge}=[circle,green,fill=white]
+    \tikzstyle{nodegreen}=[circle,green,draw]
+    \node (1) [node] at (0,0) {1};
+    \node (2) [node,right of=1] {2};
+    \node (3) [node,right of=2] {3};
+    \node (4) [node,above of=2] {4};
+    \draw (1) to node [nodeedge] {a} (2);
+    \draw (2) to node [nodeedge] {b} (3);
+    \draw (2) to node [nodeedge] {c} (4);
+    \draw (1) to node [nodeedge] {d} (4);
+
+    \node at (3, 0.25) [label=above:{\scriptsize conversion to a line graph}] {$\Rightarrow$};
+
+    \begin{scope}[node distance=1cm]
+        \node (a) [nodegreen, right of=3, node distance=5cm] {a};
+        \node (d) [nodegreen, above of=a] {d};
+        \node (c) [nodegreen, right of=d] {c};
+        \node (b) [nodegreen, right of=a, node distance=2cm] {b};
+        \foreach \s/\t in {a/b,a/d,a/c,d/c,c/b}
+            \draw (\s) to (\t);
+    \end{scope}
+
+    \begin{scope}[node distance=2.5cm]
+        \node (1) [node] at (1.5,-2.5) {1};
+        \node (2) [node,right of=1] {2};
+        \node (3) [node,right of=2] {3};
+        \node (4) [node,above of=2] {4};
+        \draw (1) to node (a) [nodegreen,auto,swap] {a} (2);
+        \draw (2) to node (b) [nodegreen,auto,swap] {b} (3);
+        \draw (2) to node (c) [nodegreen,auto,swap] {c} (4);
+        \draw (1) to node (d) [nodegreen,auto,swap] {d} (4);
+
+        \foreach \s/\t in {a/b,a/d,a/c,d/c,c/b}
+            \draw[green] (\s) to (\t);
+
+        \foreach \s/\t in {1/a,a/2,2/b,b/3,1/d,d/4,4/c,c/2}
+            \draw[blue] (\s) to (\t);
+        
+    \end{scope}
+    \draw[snake=brace,mirror snake,segment amplitude=0.5cm] (0,-0.5) -- (5.5,-0.5);
+
+
+\end{tikzpicture}

@@ -1,0 +1,79 @@
+\begin{tikzpicture}[scale=2, every node/.style={text depth=0pt,text height=0.5ex}]
+    % \node {Hei moi!};
+    \tikzstyle{node}=[circle,draw]
+        
+        
+    % \foreach \x in {0,1}
+    %     \foreach \y in {0,1}
+    %         \node (s1-\x-\y) at (\x, \y) [node,label=] {};
+    % \foreach \y in {0, 1}
+    %     \node (s1-ext-\y) at (-1, \y) {};
+    
+    \node (0-0) at (0, 0) [node, label={below:arr}]{};
+    \node (1-0) at (1, 0) [node, label={below:dep}]{};
+    \node (3-0) at (4, 0) [node, label={below:arr}]{};
+    \node (4-0) at (5, 0) [node, label={below:dep}]{};
+    \node (ext1-0) at (-1, -0.5) {};
+    \node (ext2-0) at (6, -0.5) {};
+    
+    
+    \node (0-1) at (0, 1) [node, label={[shift={(-0.63cm,-1cm)}]arr}]{};
+    \node (1-1) at (1, 1) [node, label={[shift={(+0.63cm,-1cm)}]dep}]{};
+    \node (3-1) at (4, 1) [node, label={[shift={(-0.63cm,-1cm)}]arr}]{};
+    \node (4-1) at (5, 1) [node, label={[shift={(+0.63cm,-1cm)}]dep}]{};
+    \node (ext1-1) at (-1, 1.5) {};
+    \node (ext2-1) at (6, 1.5) {};
+
+    \node (aux-dest-1) at (0, 2) [node, label=left:aux dest] {};
+    \node (aux-orig-1) at (1, 2) [node, label=right:aux origin] {};
+
+    \draw [->] (0-1) to (aux-dest-1);
+    \draw [->, bend right] (0-0) to (aux-dest-1);
+
+    \draw [->] (aux-orig-1) to (1-1);
+    \draw [->, bend right] (aux-orig-1) to (1-0);
+
+    \node (aux-dest-2) at (4, 2) [node, label=left:aux dest] {};
+    \node (aux-orig-2) at (5, 2) [node, label=right:aux origin] {};
+
+    \draw [->] (3-1) to (aux-dest-2);
+    \draw [->, bend right] (3-0) to (aux-dest-2);
+
+    \draw [->] (aux-orig-2) to (4-1);
+    \draw [->, bend right] (aux-orig-2) to (4-0);
+    
+    
+    % \foreach \x in {3,4}
+    %     \foreach \y in {0,1}
+    %         \node (s2-\x-\y) at (\x, \y) [node] {};
+    % \foreach \y in {0, 1}
+    %     \node (s2-ext-\y) at (5, \y) {};
+    
+    \draw [->] (ext1-0) to (0-0);
+    \draw [->] (0-0) to node [above] {} (1-0);
+    \draw [->] (1-0) to node [above] {} (3-0);
+    \draw [->] (3-0) to node [above] {} (4-0);
+    \draw [->] (4-0) to (ext2-0);
+    
+    \draw [<-] (ext2-1) to (4-1);
+    \draw [<-] (4-1) to node [above] {} (3-1);
+    \draw [<-] (3-1) to node [above] {} (1-1);
+    \draw [<-] (1-1) to node [above] {} (0-1);
+    \draw [<-] (0-1) to (ext1-1);
+
+    \draw [->] (0-1) to node [near end, above, sloped] {} (1-0);
+    \draw [->] (0-0) to node [near start, above, sloped] {} (1-1);
+
+    \draw [->] (3-1) to node [near end, above, sloped] {} (4-0);
+    \draw [->] (3-0) to node [near start, above, sloped] {} (4-1);
+    
+    \draw [rounded corners=8, dashed] (-0.5, -0.5) -- (1.5, -0.5)
+        -- (1.5, 1.5) -- (-0.5, 1.5) -- cycle;
+    
+    \draw [rounded corners=8, dashed, xshift=4cm] (-0.5, -0.5) -- (1.5, -0.5)
+        -- (1.5, 1.5) -- (-0.5, 1.5) -- cycle;
+    
+    
+    \node at (0.5, 1.7) {stop 1};
+    \node at (4.5, 1.7) {stop 2};
+\end{tikzpicture}

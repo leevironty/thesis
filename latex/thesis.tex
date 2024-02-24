@@ -31,8 +31,10 @@
 \usepackage{subcaption}
 \usepackage{makecell}  % table line wrap within one cell
 % \usepackage[usenames,dvipsnames]{color}
+\usepackage{ifthen}
 
-\usetikzlibrary{positioning}
+
+\usetikzlibrary{positioning,snakes,quotes}
 
 
 \newtheorem{definition}{Definition}
@@ -122,10 +124,14 @@
 	\year \ \doclicenseThis}
 
 
-\keywords{concepts that are\spc central to your\spc thesis}
+\keywords{public transportation planning\spc Graph Neural Networks\spc TimPass}
 \thesisabstract{
-    Abstract placeholder.
+%     Public transporation are used by many and as such, having good timetables is important. However, optimising the timetables is not trivial, especially if combined with optimising the passenger routes at the same time.
+%     In this thesis we propose a graph neural network based heuristic for the routing of passengers. The motivation is, that if we can predict good passenger routings, then the ... to be continued
+% }
+    Timetable optimization is an important step of a typical public transport planning process. As the routes the passengers choose also affect the optimal time table and vice versa, it is beneficial to jointly optimize the two. However, this quickly becomes computationally intracable. Instead of finding exact solutions, as a heuristical approach we propose to predict the best passenger routings and then to optimize the timetable using established methods. We propose a graph neural network model for predicting the aggregated passenger counts on the event activity network edges. Our approach demonstrates occasional improvements against a shortest path routing baseline. The relationship between the weight prediction loss and the resulting optimality gap indicate, that training the network with a direct regression task may not directly result in improvements of the optimality gap, which is our ultimate objective. Further research to the topic of graph neural networks as a heuristic could explore other training tasks instead of the direct prediction approach. Generating high-quality training datasets is also an area that could be improved.
 }
+
 \begin{document}
 \makecoverpage
 \makecopyrightpage
@@ -261,20 +267,23 @@ Continuing with the combinatorial optimization reviews, \cite{cappart2023combina
 
 \clearpage
 \section{Methods}
-In this section, we introduce the used methods and their definitions. First, we define the mathematical representation of the public transport system. Next we present the integer programming formulations and the graph neural network (GNN) methods. Lastly, we define how the GNN is used as a heuristic for the TimPass problem.
+% In this section, we introduce the used methods and their definitions. First, we define the mathematical representation of the public transport system. Next we present the integer programming formulations and the graph neural network (GNN) methods. Lastly, we define how the GNN is used as a heuristic for the TimPass problem.
 
-In \cref{fig:process-flow} we show the overview of how all the different methods are related to each other to finally get to the results, i.e. heuristic evaluation.
+In this section, we introduce the used methods and their definitions. First, we present the established mathematical tools used in public transport planning. These include the mathematical representation of public transport systems and the integer programming formulations. Next, we present the graph neural network methods used. Finally, we define how the evaluation scheme ties all these methods together.
 
-\draft{
-    Use the graph above to introduce the structure of the methods-section. Maybe create the graph in tikz, so that we can have links to relevant sections. Idea is to have "two sides", one for the IP formulations, one for the graph neural network. Then the sections "Data representation as a heterogenous graph" and the evaluation scheme tie these methods together.
-}
+% In \cref{fig:process-flow} we show the overview of how all the different methods are related to each other to finally get to the results, i.e. heuristic evaluation.
 
-\begin{figure}
-    \centering
-    \includegraphics[width=\textwidth]{figures/process-flow.png}
-    \caption{The overview of how the data is generated, model trained, and the heuristic evaluated.}
-    \label{fig:process-flow}
-\end{figure}
+% \draft{
+%     Use the graph above to introduce the structure of the methods-section. Maybe create the graph in tikz, so that we can have links to relevant sections. Idea is to have "two sides", one for the IP formulations, one for the graph neural network. Then the sections "Data representation as a heterogenous graph" and the evaluation scheme tie these methods together.
+% }
+
+% \begin{figure}
+%     \centering
+%     % \includegraphics[width=\textwidth]{figures/process-flow.png}
+%     \input{figures/tikz-process-flow.tex}
+%     \caption{The overview of how the data is generated, model trained, and the heuristic evaluated. The arrows represent dependencies.}
+%     \label{fig:process-flow}
+% \end{figure}
 \subsection{Event activity network data}
 \label{sec:ean-def}
 
@@ -357,21 +366,28 @@ The drive activities correspond to the driving activity between stops. The activ
 
 \begin{figure}
     \centering
-    \includegraphics[width=1.0\textwidth]{figures/drive-wait-demo.jpg}
+    % \includegraphics[width=1.0\textwidth]{figures/drive-wait-demo.jpg}
+    \input{figures/tikz-drive-wait.tex}
+
     \caption{Demonstration for arrival and departure events, drive and wait activities, and line directions.}
     \label{fig:drive-wait-demo}
 \end{figure}
 
+
+
+
 \begin{figure}
     \centering
-    \includegraphics[width=1.0\textwidth]{figures/change-demo.jpg}
+    % \includegraphics[width=1.0\textwidth]{figures/change-demo.jpg}
+    \input{figures/tikz-change-demo.tex}
     \caption{Demonstration for multiple lines at a stop and change activities.}
     \label{fig:change-demo}
 \end{figure}
 
 \begin{figure}
     \centering
-    \includegraphics[width=1.0\textwidth]{figures/sync-demo.jpg}
+    % \includegraphics[width=1.0\textwidth]{figures/sync-demo.jpg}
+    \input{figures/tikz-sync-demo.tex}
     \caption{Demonstration for higher frequency lines and sync activities.}
     \label{fig:sync-demo}
 \end{figure}
@@ -418,7 +434,8 @@ We still need to take the cycles and their feasibility in the EAN into account. 
 
 \begin{figure}
     \centering
-    \includegraphics[width=\textwidth]{figures/cycle-basis-demo.jpg}
+    % \includegraphics[width=\textwidth]{figures/cycle-basis-demo.jpg}
+    \input{figures/tikz-cycle-basis.tex}
     \caption{Cycle consistency example.}
     \label{fig:cycle-example}
 \end{figure}
@@ -507,8 +524,9 @@ To denote the set of all routable activities, we note $\Arp = \Ar \cup \Aaux$. S
 
 \begin{figure}[b]
     \centering
-    \includegraphics[width=0.8\textwidth]{figures/aux-events-demo.jpeg}
-    \caption{Demonstration of how auxiliary events are connected to the rest of the EAN.}
+    % \includegraphics[width=0.8\textwidth]{figures/aux-events-demo.jpeg}
+    \input{figures/tikz-aux-events-demo.tex}
+    \caption{Demonstration of how auxiliary events are connected to the rest of the EAN. Note, that some annotations are left out for clarity. Apart from the auxiliary events and activities, the graph is the same as in \cref{fig:change-demo}.}
     \label{fig:aux-events-demo}
 \end{figure}
 
@@ -599,7 +617,7 @@ In \cref{alg:preprocessing} we present the algorithm for calculating which flow 
 
 % TODO: does this even make sense to represent this way? Definitions in a for loop may not be the most interesting thing.
 
-\begin{algorithm}
+\begin{algorithm}[t]
     \caption{Flow variable preprocessing for OD pair $(u, v)$.}
     \label{alg:preprocessing}
     \begin{algorithmic}
@@ -793,7 +811,7 @@ Next we define the notation used for the uniform distribution in the algorithms.
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.8\textwidth]{figures/base-ptn.jpg}
+    \input{figures/tikz-base-ptn.tex} 
     \caption{The base PTN on which we generate data.}
     \label{fig:base-ptn}
 \end{figure}
@@ -805,7 +823,7 @@ First, we list all available lines as the set $\mathcal{L}$ with at least three 
 
 After the set of lines is determined, we sample the line frequencies $f_l$ with the discrete probability mass function $p(f_l) = \sqrt[|L| - 1]{f_l / 4} - \sqrt[|L| - 1]{(f_l - 1) / 4}$. The probability mass function is visualised in \cref{fig:generation-rl-mass}. The function is designed to give a larger weight for the low line frequencies in case we have only a few lines in total. This regulates the variations in solving times for the generated problems. %In practice, the samples are generated from a uniform distribution: $f_l = \lfloor x ^{|L| - 1} / 4 \rfloor + 1, x \sim \unifcont{0, 1}$.  % skip, may be be confusing even though the methods are equivalent
 
-\begin{figure}
+\begin{figure}[h]
     \centering
     \includegraphics[width=0.8\textwidth]{figures/generation-rl-sample-density.pdf}
     \caption{Probability mass functions for the sampling distribution of $f_l$ with various sizes $|L|$.}
@@ -841,7 +859,7 @@ From the set of lines and frequencies, we can derive the events and activities o
 
 The bounds for wait activities are sampled with the same idea of not having the bounds change between line directions or repetitions. This time we loop over the stops and skip the iteration if the stop is the start or end of the given line. The method is described in \cref{alg:wait-sampling}
 
-\begin{algorithm}
+\begin{algorithm}[t]
 
     \caption{Algorithm for sampling the wait activity duration bounds}
     \label{alg:wait-sampling}
@@ -880,7 +898,7 @@ Finally, we must come up with an OD matrix for the problem instance. Only the st
 To both keep the number of OD pairs feasible and to introduce variations in the data, we limit the number of OD pairs considered. When $|S| \geq 7$, the problem has at least $7 \cdot 6=42$ possible pairs. Instead of using them all, we take a random subset of the possible OD pairs. 
 We sample $|\od| \sim \unif{30, 40}$ and then take the random subset $\od \subset S^2$. If we did not sample $|\od|$, we just use all possible OD-pairs. For all OD-pairs we sample the demand as $\od_{uv} \sim \unif{1, 20}$ for all $uv \in \od$.
 
-\begin{figure}
+\begin{figure}[h]
     \centering
     \includegraphics[width=0.75\textwidth]{figures/data_gen_shares.pdf}
     \caption{The node set sizes of the generated instances before and after of discarding difficult problems.}
@@ -927,8 +945,9 @@ Unfortunately, the implementation of HGT we are using does not use edge features
 
 \begin{figure}
     \centering
-    \includegraphics[width=\textwidth]{figures/line-graphs.jpeg}
-    \caption{Demonstration of how the line graph trick is used to include edge features in the graph. The original graph with edge features is top left. The line graph of the edges on top right turns edges into nodes and connects the new nodes that were previously connected to a same node. The graphs are then joined by connecting the edge nodes to corresponding original nodes. The method is described in detail in \cref{alg:line-graph}.}
+    % \includegraphics[width=\textwidth]{figures/line-graphs.jpeg}
+    \input{figures/tikz-line-graph.tex}
+    \caption{Demonstration of how the line graph trick is used to include edge features in the graph. The original graph with edge features is top left. The line graph on top right turns edges into nodes and connects the new nodes that were previously connected to a same node. The original graph and the line graph are then joined by connecting the edge nodes to corresponding original nodes, depicted by the  blue edges. The method is described in detail in \cref{alg:line-graph}.}
     \label{fig:line-graph}
 \end{figure}
 
@@ -952,7 +971,8 @@ Unfortunately, the implementation of HGT we are using does not use edge features
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.3\textwidth]{figures/hetero-graph-relations.jpg}
+    % \includegraphics[width=0.3\textwidth]{figures/hetero-graph-relations.jpg}
+    \input{figures/tikz-relations.tex}
     \caption{The node and relation types of the heterogenous representation.}
     \label{fig:hetero-relations}
 \end{figure}
@@ -971,30 +991,35 @@ Unfortunately, the implementation of HGT we are using does not use edge features
 \subsection{Training}
 \label{sec:training}
 
-The HGT architecture and the training process are parametrized by hyperparameters. The hyperparameters for the HGT architecture are the number of hidden layers, the dimension of the hidden layers, and the number of attention heads used. The training process is 
+We train the GNN model to predict the normalised weights $w$ of the optimal passenger routing. The weights are normalised to have a mean of one, as having a consistent scale should help the model. The model parameter updates are done to minimise the $l^2$ loss of the predictions $\hat{w}$ against the know optimal weights $w^*$. The parameter updates are done using the Adam algorithm \cite{adam-2014}.
 
-\draft{   
-    Hyperparams:
-    - batch size (Mostly memory limit, also affects step )
-    - number of layers
-    - number of attention heads
-    - number of hidden channels
-    - learning rate
-    Parallel training: multiple training agents, fetch testable parameters from the coordinating server
-    Server assigns parameters based on strategy.
-    Strategies:
-    - grid (discrete "design space"?? check wording here), easily unnecessarily many combinations to test
-    - random (works also with continuous variables), not too bad, but we can do better
-    - bayesian (models expected value and expected variation, pick new samples from design space based on ?)
-}
+The training process and the model have multiple hyperparameters governing the model architecture and parameter updates. Typically, the hyperparameter choices need to be done carefully, as not all hyperparameter choices will yield good results. Hyperparameter optimization is the process of optimizing the hyperparameters itself instead of the model parameters, so that the combination of hyperparameters would yield good results in the training process. We choose to use a Bayesian search for this \cite{bayes-hyper}. The hyperparameters we aim to optimize are the learning rate $\gamma$, the layer count $T$, the hidden latent dimension $d$, and the number of attention heads $n_\textit{heads}$.
+
+In \cref{app:hyperparams} we present the results for the hyperparameter optimization and the hardware used. The computations are performed using resources within the Aalto University School of Science “Science-IT” project.
+
+% \draft{   
+%     Hyperparams:
+%     - batch size (Mostly memory limit, also affects step )
+%     - number of layers
+%     - number of attention heads
+%     - number of hidden channels
+%     - learning rate
+%     Parallel training: multiple training agents, fetch testable parameters from the coordinating server
+%     Server assigns parameters based on strategy.
+%     Strategies:
+%     - grid (discrete "design space"?? check wording here), easily unnecessarily many combinations to test
+%     - random (works also with continuous variables), not too bad, but we can do better
+%     - bayesian (models expected value and expected variation, pick new samples from design space based on ?)
+% }
     
-\draft{
-    \begin{itemize}
-        \item Describe hyperparameters and hyperparameter optimization with Bayesian search
-        \item Trained on triton with xyz hardware
-        \item Results in \cref{app:hyperparams}
-    \end{itemize}
-}
+% \draft{
+%     \begin{itemize}
+%         \item Trained to minimise l^2 loss of the predicted weights against the true weights.
+%         \item Describe hyperparameters and hyperparameter optimization with Bayesian search
+%         \item Trained on triton with xyz hardware
+%         \item Results in \cref{app:hyperparams}
+%     \end{itemize}
+% }
 \clearpage
 \section{Results}
 \label{sec:results}
@@ -1039,7 +1064,7 @@ In \cref{fig:trivial-shares-in-data} we break down the share of trivial problems
 In \cref{fig:results-gg-excl-trivial} we represent the optimality gap joint distribution without the trivial problems. Note, how the histograms are no longer concentrated around zero. With this filtering, the GNN heuristic achieves a better gap in 41\% of the problems. Likewise, the SP heuristic has a better gap for 47\% of the problems. When the solutions differ, the difference is often quite large: if GNN gap is smaller, on average it is only about 31\% of the SP heuristic gap. This means, that the proposed heuristic can find solutions that are vastly better than the baseline shortest path heuristic. However, this is not consistent.
 
 
-\begin{figure}
+\begin{figure}[h]
     \centering
     \includegraphics[width=0.75\linewidth]{figures/gap-gap-excl-trivials.pdf}
     \caption{Optimality gap joint distribution for SP and GNN heuristics. Excluding trivial problems.}
@@ -1060,7 +1085,7 @@ The PESP time limit was set to 6 hours for the evaluation. The evaluation was pe
     \label{fig:eval-timpasslib}
 \end{figure}
 
-\begin{table}[]
+\begin{table}[h]
     \centering
     \caption{Heuristic performance metrics both before and after filtering for trivial problem instances.}
     \label{tab:results}
@@ -1104,7 +1129,7 @@ In \cref{fig:gap-loss} we observe the loss vs optimality gap plots for both heur
     \label{fig:gap-loss}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[t]
     \centering
     \includegraphics[width=0.8\linewidth]{figures/gap-loss-gnn-zoomed.pdf}
     \caption{Zoomed view to \cref{fig:gap-loss-gnn}. We observe, that for very low loss values the gap tends to also be zero.}
@@ -1179,20 +1204,40 @@ To conclude, we explored heuristical approaches for the TimPass problem and inve
 
 \section{Hyperparameter tuning}
 \label{app:hyperparams}
-Used hyperparams:
-- batch size: 64
-- lr: 0.003
-- hidden channels: 16
-- attention heads: 8
-- layers: 15
+
+The model training and hyperparameter tuning was performed using up to 10 Nvidia V100 GPUs in parallel. The hyperparameter search domains are listed in \cref{tab:hyper-results} with the best hyperparameters highlighted. We used a batch size of 64 problem instances.
+
+\vspace{2cm}
 
 
-\draft{
-    \begin{itemize}
-        \item Results from hyperparameter tuning
-        \item Graphs from WandB
-        \item Conclusion: not very sensitive to parameters, most models are equally bad, but performance for some is extraordinarily terrible.
-    \end{itemize}
-}
+\begin{table}[H]
+    \centering
+    \caption{Hyperparameter search domains with the chosen parameters in bold.}
+    \label{tab:hyper-results}
+    \begin{tabular}{l|l}
+    Hyperparameter    & Search domain                                \\ \hline
+    $\gamma$          & \{0.0001, 0.0003, 0.001, \textbf{0.003}\}    \\
+    $n_\textit{head}$ & \{2, 4, \textbf{8}, 16\}                     \\
+    $d$               & \{\textbf{16}, 24, 36, 54, 81, 122\}         \\
+    $T$               & \{2, 3, 6, 10, \textbf{15}, 23, 34, 50, 75\}
+    \end{tabular}
+\end{table}
+
+
+% Used hyperparams:
+% - batch size: 64
+% - lr: 0.003
+% - hidden channels: 16
+% - attention heads: 8
+% - layers: 15
+
+
+% \draft{
+%     \begin{itemize}
+%         \item Results from hyperparameter tuning
+%         \item Graphs from WandB
+%         \item Conclusion: not very sensitive to parameters, most models are equally bad, but performance for some is extraordinarily terrible.
+%     \end{itemize}
+% }
 
 \end{document}

@@ -1,0 +1,21 @@
+\begin{tikzpicture}[scale=2.5,auto]
+    \tikzstyle{node}=[circle,draw]
+    \node (1) at (0,1) [node] {};
+    \node (2) at (1,1) [node] {};
+    \node (3) at (3,1) [node] {};
+    \node (4) at (4,1) [node] {};
+    \node (5) at (1,0) [node] {};
+    \node (6) at (3,0) [node] {};
+
+    \foreach \o/\d/\l in {
+        1/2/a,
+        2/3/b,
+        3/4/c,
+        1/5/f,
+        5/6/e,
+        6/4/d
+    } \draw [->] (\o) -- node {\l} (\d);
+
+    \draw [->,red,thick](2,0.65) arc (90:-180:0.15);
+    \node [text width=60, text badly centered, red] at (2.5,0.5) {cycle direction};
+\end{tikzpicture}

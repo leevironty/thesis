@@ -1,0 +1,12 @@
+\begin{tikzpicture}[scale=2]
+    \tikzstyle{node}=[circle,draw]
+
+    \node (1) at (0, 1) [node] {1};
+    \node (2) at (1, 1) [node] {2} edge [-] (1);
+    \node (3) at (1, 0) [node] {3} edge [-] (2);
+    \node (4) at (2, 0) [node] {4} edge [-] (3);
+    \node (5) at (2, 1) [node] {5} edge [-] (4) edge [-] (2);
+    \node (6) at (3, 1) [node] {6} edge [-] (5);
+    \node (7) at (2, 2) [node] {7} edge [-] (5);
+    \node (8) at (1, 2) [node] {8} edge [-] (2);
+\end{tikzpicture}

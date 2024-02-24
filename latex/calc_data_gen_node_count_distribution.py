@@ -28,8 +28,7 @@ def get_all_paths() -> list[list[tuple[int, int]]]:
     return all_paths
 
 
-def main():
-    sample_count = 10000
+def get_unique_counts(sample_count) -> tuple[np.ndarray, np.ndarray]:
     max_attempts = 100
     rng = random.Random(123)
     all_paths = get_all_paths()
@@ -55,6 +54,13 @@ def main():
     
     out = np.array(lens)
     unique, counts = np.unique(out, return_counts=True)
+    return unique, counts
+
+
+def main():
+    sample_count = 10000
+    unique, counts = get_unique_counts(sample_count)
+
     for u, c in zip(unique, counts):
         print(f'value: {u}, share: {c / sample_count:.4f}')
     
