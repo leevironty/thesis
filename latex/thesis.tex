@@ -104,17 +104,17 @@
 \univdegree{MSc}
 \thesisauthor{Leevi Rönty}
 
-\thesistitle{Graph Neural Network Heuristic for Public Transport Timetable Planning}
+\thesistitle{Graph Neural Network Heuristic for Timetable Planning in Public Transport}
 %\thesistitle[Title of the thesis]{Title of\\ the thesis}
 % \thesissubtitle{A possible subtitle}
 %\thesissubtitle[Subtitle of the thesis]{Subtitle of\\ the thesis}
 
 % \place{Otaniemi}
 \place{Espoo}
-\date{9 February 2023}
+\date{28 February 2024}
 
-\supervisor{Prof.\ Philine Schiewe}
-\advisor{Prof.\ Philine Schiewe}
+\supervisor{Asst. Prof.\ Philine Schiewe}
+\advisor{Asst. Prof.\ Philine Schiewe}
 
 \uselogo{!}
 
@@ -124,12 +124,13 @@
 	\year \ \doclicenseThis}
 
 
-\keywords{public transportation planning\spc Graph Neural Networks\spc TimPass}
+\keywords{Public Transportation Planning\spc Graph Neural Networks\spc TimPass}
 \thesisabstract{
-%     Public transporation are used by many and as such, having good timetables is important. However, optimising the timetables is not trivial, especially if combined with optimising the passenger routes at the same time.
-%     In this thesis we propose a graph neural network based heuristic for the routing of passengers. The motivation is, that if we can predict good passenger routings, then the ... to be continued
-% }
-    Timetable optimization is an important step of a typical public transport planning process. As the routes the passengers choose also affect the optimal time table and vice versa, it is beneficial to jointly optimize the two. However, this quickly becomes computationally intracable. Instead of finding exact solutions, as a heuristical approach we propose to predict the best passenger routings and then to optimize the timetable using established methods. We propose a graph neural network model for predicting the aggregated passenger counts on the event activity network edges. Our approach demonstrates occasional improvements against a shortest path routing baseline. The relationship between the weight prediction loss and the resulting optimality gap indicate, that training the network with a direct regression task may not directly result in improvements of the optimality gap, which is our ultimate objective. Further research to the topic of graph neural networks as a heuristic could explore other training tasks instead of the direct prediction approach. Generating high-quality training datasets is also an area that could be improved.
+    In public transport planning, timetabling is the process of assigning times for vehicle departures and arrivals to stops. Timetable optimization is an important step of a typical public transport planning process.
+    %As the routes the passengers choose also affect the optimal timetable and vice versa, it is beneficial to jointly optimize the two.
+    The timetable affects which routes the passengers choose to take. Yet, the choices of routes also affect which timetables are optimal. As such, the best solutions to this problem are obtained when both the timetable and the passenger routes are optimized simultaneously instead of sequentially.
+    %
+    However, this quickly becomes computationally intractable. Instead of finding exact solutions, as a heuristic approach, we propose to predict the best passenger routes and then to optimize the timetable using established methods. We propose a graph neural network model for predicting the aggregated passenger counts on the edges of the event activity network. Our approach demonstrates occasional improvements against a shortest path routing baseline. The relationship between the weight prediction loss and the resulting optimality gap indicates, that training the network with a direct regression task may not directly result in improvements of the optimality gap, which is our ultimate objective. Further research in the topic of graph neural networks as a heuristic could explore other training tasks instead of the direct prediction approach. Generating high-quality training datasets is also an area that could be improved.
 }
 
 \begin{document}
@@ -143,17 +144,17 @@
 
 
 \newpage
-\thesistitle{Placeholder title in finnish}
+\thesistitle{Graafineuroverkkoheuristiikka aikataulutukseen joukkoliikennesuunnittelussa}
 % \thesissubtitle{Opinnäytteen mahdollinen alaotsikko}
-\supervisor{Prof.\ Philine Schiewe}
-\advisor{Prof.\ Philine Schiewe}
+% \supervisor{Prof.\ Philine Schiewe}
+% \advisor{Ap. prof.\ Philine Schiewe}
 % \degreeprogram{Elektroniikka ja sähkötekniikka}
-\date{9.2.2023}
+\date{26.2.2024}
 %% The keywords need not be separated by \spc now.
-% \keywords{Vastus, resistanssi, lämpötila}
+\keywords{Joukkoliikennesuunnittelu, Graafineuroverkot, TimPass}
 %% Abstract text
 \begin{abstractpage}[finnish]
-    Abstrakti suomeksi.
+    Aikataulutus joukkoliikennesuunnittelussa on prosessi, jossa määritellään kulkuneuvojen lähtö- ja saapumisajat joukkoliikennepysäkeille. Aikataulun optimointi on tärkeä osa tyypillistä joukkoliikenteen suunnitteluprosessia. Valittu aikataulu vaikuttaa reitteihin, joita matkustajat valitsevat pysäkkien välillä, mutta toisaalta matkustajien suosimat reitit vaikuttaa aikataulun optimointiin. Parhaat ratkaisut aikataulutusongelmaan saadaankin optimoimalla aikataulu ja matkustajien reittivalinnat samaan aikaan perättäisen optimoinnin sijasta. Tästä tulee kuitenkin helposti laskennallisesti haastavaa. Eksaktien ratkaisujen etsimisen sijaan esitämme uutta heuristista ratkaisumenetelmää, jossa ennustamme parhaat matkustajien reititykset ja tämän perusteella optimoimme pelkästään kulkuneuvojen aikataulua. Graafineuroverkkolla ennustamme kokonaismatkustajamääriä graafin kaarille tapahtuma-aktiviteetti -verkossa. Lyhyimmän reitityksen vertailukohtaan verrattuna menetelmämme tuottaa toisinaan parempia ratkaisuja. Riippuvuus koulutushäviön ja optimaalisuuskuilun välillä ei viittaa, että graafineuroverkon kouluttaminen regressiotehtävällä suoraan parantaisi optimaalisuuskuilua, mikä kuitenkin on varsinainen tavoitteemme. Jatkotutkimus graafineuriverkkojen käytöstä heuristiikkana voisi perehtyä muihin verkon koulutustehtäviin kuin suoraan ennustamiseen. Korkealaatuisen koulutusdatan generointi on myös osa-alue, jolta löytyy parannettavaa.
 \end{abstractpage}
 
 
@@ -176,7 +177,7 @@ Otaniemi, 9 February 2023\\
 \section{Introduction}
 \label{sec:intro}
 
-Public transportation systems play a role in many people's lives. As such, it is of great public interest to have transportation systems that are both cheap and offer high-quality services. One perspective on quality is the expected travel time between often-used journey origins and destinations. Typically, the customers of public transport appreciate getting to their destination faster. 
+Public transportation systems play a role in many people's lives. As such, it is of great public interest to have transportation systems that are both cost effective to operate and offer high-quality services. One perspective on quality is the expected travel time between often-used journey origins and destinations. Typically, the customers of public transport appreciate getting to their destination faster. 
 
 The schedule determines when the vehicles arrive and depart from the stops in a public transport system. From the passenger's point of view, an efficient schedule minimizes the expected travel time. However, optimizing for the travel time is not easy. The optimal schedule depends on the routes the passengers choose to get to their destination, but at the same time the chosen routes depend on the schedule. This means, that to guarantee optimal solutions, we must optimize both the schedule and the passenger routes at the same time. This is much more challenging than optimizing the schedule with a pre-determined passenger routing, as the number of routes that each passenger can choose from can be very large, and in a realistic scenario, we will have a large number of passengers. In practice, we are not able to solve this problem optimally for realistically-sized problems.
 
@@ -191,7 +192,7 @@ We begin by reviewing the literature related to the topics of the thesis in \cre
 
 % As we are aiming to <> a new GNN heuristic for the TimPass problem, we 
 
-We will study the existing literature from three perspectives. First, we explore the existing heuristics, methods, and formulations related to the timetabling and passenger routing problem (TimPass) as seen in \cite{timpass-original-2014,schiewe2020periodic}. Next, we review the literature for machine learning (ML) methods in public transport optimization, and lastly, we take a look at ML methods in combinatorial optimization.
+We study the existing literature from three perspectives. First, we explore the existing heuristics, methods, and formulations related to the timetabling and passenger routing problem (TimPass) as seen in \cite{timpass-original-2014,schiewe2020periodic}. Next, we review the literature for machine learning (ML) methods in public transport optimization, and lastly, we take a look at ML methods in combinatorial optimization.
 
 % The TimPass formulation of \cite{schiewe2020periodic} can be viewed as an extension to the periodic event scheduling problem as described in ???. 
 
@@ -225,13 +226,13 @@ Moving on to ML method applications in public transport planning, \cite{MULLERHA
 
 Going beyond traditional ML, \cite{DRL-timetabling-yan2022distributed} use deep multi-agent reinforcement Q-learning to optimise the bus timetables in an aperiodic setting. As a case study, they demonstrate that the proposed method is able to reduce the actual operating cost of Beijing's bus network.
 
-Inspired by reinforcement learning (RL) with transformers for solving routing problems (\cite{kool2018attention}), \cite{darwish2020optimising} apply the method to Transit Network Design and Frequency Setting Problem. They obtain state-of-the-art results for a single benchmark instance.
+Inspired by reinforcement learning (RL) with transformers for solving routing problems (\cite{kool2018attention}), \cite{darwish2020optimising} apply the method to the Transit Network Design and Frequency Setting Problem. They obtain state-of-the-art results for a single benchmark instance.
 
 \cite{matos2021solving} combine the SAT formulation for PESP with a multi-agent RL scheme, in which they use the agents to generate heuristics for the SAT solver. The results are very promising for a subset of the benchmark instances, hinting that the approach could have more potential if a more complex decision policy was learned.
 
 
 % Pointti: heuristiikkoja on monenlaisia, osa expert-based (supervised), osa experience based (RL), heuristiikan voipi iskeä moneen kohtaan. Ei aina kovin menestyksekästä, esim. TSP ratkeaa helpommin perinteisillä menetelmillä
-When it comes to ML heuristics in combinatorial optimization, \cite{BENGIO2021405} review the methods on a high level. The authors highlight the diversity of the possible approaches. The existing approaches use either imitation learning or experience-based methods such as RL. However, the algorithmic structure is not tied to only e.g. directly predicting the optimal solution. Some approaches instead learn to configure the underlying solver to perform the best for the problem at hand, while other approaches learn a subroutine that the solver may use during the solving process, e.g. to learn a cut. 
+When it comes to ML heuristics in combinatorial optimization, \cite{BENGIO2021405} review the methods on a high level. The authors highlight the diversity of the possible approaches. The existing approaches use either imitation learning or experience-based methods such as RL. However, the algorithmic structure is not tied to only e.g. directly predicting the optimal solution. Some approaches instead learn to configure the underlying solver to perform the best for the problem at hand, while other approaches learn a subroutine that the solvers may use during the solving process, e.g. to learn a cut. 
 
 In \cite{ZHANG2023205}, the review is focused on methods that the solver uses as a subroutine. Like in \cite{BENGIO2021405}, the authors note the diversity of approaches. Both reviews conclude, that the work on the ML methods in optimization seems promising, but generalisation of the methods to all kinds of optimization problems is yet to be seen.
 
@@ -298,24 +299,24 @@ In this section, we introduce the used methods and their definitions. First, we 
 % prujaa: ???
 
 
-Before we can define event activity networks, we have to define a few other things.
+Before we can define an event activity network, we have to define a few other things.
 \begin{definition}[Public Transport Network]\label{def:ptn}
     A \textit{public transport network} (PTN) is a simple undirected graph PTN = $(S, R)$ with a set of stops $S$ and a set of direct connections between the stops $R$. 
 \end{definition}
 
 A PTN describes the underlying transportation infrastructure of a public transport system. We consider the connections to be undirected. This simplifies the modeling, but one can also have a PTN with directed edges. The PTN can also be non-simple, but that notation would make a difference only if there were either capacity constraints per connection or if multiple modalities were used.
 
-Stops and connections are not enough to model the public transport network. We will use an event activity network (EAN) for that.
+Stops and connections are not enough to model the public transport system. We will use an event activity network (EAN) for that.
 \begin{definition}[Event Activity Network]\label{def:ean}
-    The event activity network $EAN$ is a directed graph $\textit{EAN} = (E, A)$ with a set of events $E$ and a set of activities $A$ connecting the events.
+    The event activity network $EAN$ is a directed graph $\textit{EAN} = (E, A)$ with a set of events $E$ and a set of activities $A$ connecting the events. The activities and events are defined later.
 \end{definition}
 We will define the set of events $E$ and activities $A$ a bit later, as we need the notation of a line concept for that first.
 
-\begin{definition}[Periodic scheduling] 
+\begin{definition}[Periodic timetabling] 
     A period $\period \in \N$ defines the time interval at which various events are repeated.
 \end{definition}
 
-We are interested in the periodic instead of the aperiodic scheduling problem. This period could be for example 60 minutes, one day, or something else. The appropriate period length depends on what kind of schedule we aim to optimise. %Note that in general, the period could be a positive real number, but we consider it to be an integer to follow the convention established in \cite{schiewe2020periodic}.
+To contrast with periodic scheduling, in aperiodic scheduling the events do not repeat, but happen only once at the time indicated by the timetable. We are interested in the periodic instead of the aperiodic scheduling problem. This period could be for example 60 minutes, one day, or something else. The appropriate period length depends on what kind of schedule we aim to optimise. %Note that in general, the period could be a positive real number, but we consider it to be an integer to follow the convention established in \cite{schiewe2020periodic}.
 
 \begin{definition}[Line concept]
     A \textit{line} $l \subset R$ is a simple directed path in a PTN. A \textit{line concept} is a set of lines $L$ with associated frequencies $f_l \in \N$ for all $l \in L$. A frequency determines how often a line is served within the period $T$.
@@ -324,7 +325,7 @@ We are interested in the periodic instead of the aperiodic scheduling problem. T
 % TODO: miten merkataan simple path tässä tapauksessa? Onko siis ordered setti / lista stoppeja?
 %A \textit{line} $l \subset R$ is a simple directed path in a PTN. A \textit{line concept} is a set of lines $L$ with associated frequencies $f_l \in \N$ for all $l \in L$. A frequency determines how often a line is served within the period $T$. %We assume the lines to be bidirectional, meaning that the vehicles travel the line in both directions.
 
-Here we assume the lines to be directed, meaning that vehicles travel the line only in one direction. Usually, in real-world lines, the vehicles travel in both directions, but this can also be modeled here by including the reverse direction as a separate line instance. %This notation of the line including the direction just makes the rest of the notation a bit simpler, while at the same time allowing more flexibility in what kinds of lines can be expressed.
+Here, we assume the lines to be directed, meaning that vehicles travel the line only in one direction. Usually, in real-world lines, the vehicles travel in both directions, but this can also be modeled here by including the reverse direction as a separate line instance. %This notation of the line including the direction just makes the rest of the notation a bit simpler, while at the same time allowing more flexibility in what kinds of lines can be expressed.
 
 From the line concept, we can define the set of events $E$ and activities $A$ used in the EAN.
 % \begin{definition}[Event Activity Network]\label{def:ean}
@@ -369,7 +370,7 @@ The drive activities correspond to the driving activity between stops. The activ
     % \includegraphics[width=1.0\textwidth]{figures/drive-wait-demo.jpg}
     \input{figures/tikz-drive-wait.tex}
 
-    \caption{Demonstration for arrival and departure events, drive and wait activities, and line directions.}
+    \caption{Demonstration for arrival and departure events, drive and wait activities, and line directions. The figure depics how a single line passing through stops 1 and 2 is modelled within the EAN. For both line direction fw and bw we have departure and arrival events at each of the stops. Between the stops, departure events are connected to corresponding arrival events with a drive activity, and within the stop the arrival event connects to a departure event with a wait activity.}
     \label{fig:drive-wait-demo}
 \end{figure}
 
@@ -380,15 +381,15 @@ The drive activities correspond to the driving activity between stops. The activ
     \centering
     % \includegraphics[width=1.0\textwidth]{figures/change-demo.jpg}
     \input{figures/tikz-change-demo.tex}
-    \caption{Demonstration for multiple lines at a stop and change activities.}
+    \caption{Demonstration for multiple lines at a stop and change activities. We have two lines, that share the stops 1 and 2. Within one stop, the change activities connect arrival events to departure events of different lines. We omit the reverse directions of the lines for clarity in this demonstration.}
     \label{fig:change-demo}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[t]
     \centering
     % \includegraphics[width=1.0\textwidth]{figures/sync-demo.jpg}
     \input{figures/tikz-sync-demo.tex}
-    \caption{Demonstration for higher frequency lines and sync activities.}
+    \caption{Demonstration for higher frequency lines and sync activities. We have a single line passing through stops 1 and 2, but with multiple repetitions per time period. For eacch repetition, we have a new set of activities and events. For the subsequent repetitions, the events are connected with sync activities. The sync activities are not routable, but are used for constraining the spacing of the repetitions.}
     \label{fig:sync-demo}
 \end{figure}
 
@@ -648,7 +649,7 @@ A simple baseline heuristic to the TimPass problem is to route the passengers ac
 
 % TODO: citation to some relevant source
 
-\begin{algorithm}
+\begin{algorithm}[t]
     \caption{Weight calculation from edge durations}
     \label{alg:weights}
     \begin{algorithmic}
@@ -883,7 +884,7 @@ The bounds for wait activities are sampled with the same idea of not having the 
     
 \end{algorithm}
 
-For the change activities, the sampling process is a bit different. First, we sample the lower bound $\lambda_u \sim \unif{1, 5}$ for all $ u \in S$. Then, $L_a = \lambda_u,\ U_a = \lambda_u + T - 1$ for all activities $a = [(\text{arr}, u, l_1, r_1), (\text{dep}, u, l_2, r_2)] \in A_\text{change}$. In this case, the difference between the upper and lower bound is always $T-1$. This ensures, that the change is always feasible. We have the same bounds for all transfers that happen at the same stop.
+For the change activities, the sampling process is a bit different. First, we sample the lower bound $\lambda_u \sim \unif{1, 5}$ for all $ u \in S$. Then, $L_a = \lambda_u,\ U_a = \lambda_u + T - 1$ for all activities $a = ((\text{arr}, u, l_1, r_1), (\text{dep}, u, l_2, r_2)) \in A_\text{change}$. In this case, the difference between the upper and lower bound is always $T-1$. This ensures, that the change is always feasible. We have the same bounds for all transfers that happen at the same stop.
 
 By the definition used here, we can have different penalties for all the change activities, and nothing limits us to having penalties only for those activities either. However, to keep things simple and aligned with other datasets, we just sample $\rho \sim \unif{1, 5}$ and set $b_a = \rho$ for all $a \in A_\text{change}$ and $b_a = 0$ otherwise.
 
@@ -917,7 +918,7 @@ For the new objective, we change it to be the weighted sum of the flow variables
 \begin{align}
     \min\ \sum_{uv \in \od}\sum_{a\in \Ar}w_a^{uv}p_{a}^{\mathit{uv}} (x_a + b_a),\quad w_a^{uv} \sim \unifcont{0, 1}
 \end{align}
-Assuming that we can't sample the same weight for multiple flow variables, this ensures that the modified problem has only one optimal solution.
+Assuming that we can not sample the same weight for multiple flow variables, this ensures that the modified problem has only one optimal solution.
 
 With the problem given above, we attempt to generate 10 solutions for each problem instance. We only keep the unique solutions. Then we write the solutions to disk to be used later for the neural network training and evaluation.
 
@@ -932,18 +933,27 @@ With the problem given above, we attempt to generate 10 solutions for each probl
 \label{sec:data-repr-graph}
 
 % The simplified overview of the node types and their relations is expressed in \cref{fig:hetero-relations}. We use 
-On top of the EAN data, we have the OD data we need to include as input to the GNN. We will use a heterogenous graph for this, as it allows us to include multiple kinds of nodes and relations in a graph. The simplified overview of the node types and their relations is expressed in \cref{fig:hetero-relations}.
+On top of the EAN data, we have the OD data we need to include as input to the GNN. We use a heterogenous graph for this, as it allows us to include multiple kinds of nodes and relations in a graph. The simplified overview of the node types and their relations is expressed in \cref{fig:hetero-relations}.
 
 The set of node types is $\mathcal{A} = \{\text{event}, \text{stop}, \text{line}\}$. As the line and stop ids are essentially meaningless on their own, we chose to represent the identity of a line and a stop as a separate node in the graph. This allows us to meaningfully represent which events belong to which stop and line without needing to e.g. permute the ids when training the model. The node type defines what kinds of features the node has. The line and stop type nodes do not have any features. The event-type nodes have one-hot encoded the event type, either arrival or departure.
 
-The set of edge types is $\mathcal{R} = \{\text{activity}, \text{demand}, \text{belongs}\}$. The activity-type nodes have the activity type one-hot encoded. The activity duration lower bound $L_a$, upper bound $U_a$, and penalty $b_a$ are included as a share of the period $T$. The normalised shortest path routing weight is also included. In the preprocessing step we deduced that some of the flow variables must be zero. We chose to not encode this information as is, but as an aggregate of the share of flow variables that were preprocessed. We controlled for the optimal solution we obtained from the TimPass model with the preference variables.
+The set of edge types is $\mathcal{R} = \{\text{activity}, \text{demand}, \text{belongs}\}$. The activity-type edges have the activity type one-hot encoded. The activity duration lower bound $L_a$, upper bound $U_a$, and penalty $b_a$ are included as a share of the period $T$. The normalised shortest path routing weight is also included. In the preprocessing step we deduced that some of the flow variables must be zero. We chose to not encode this information as is, but as an aggregate of the share of flow variables that were preprocessed. We controlled for the optimal solution we obtained from the TimPass model with the preference variables.
 %The preferences are also included in the features, as otherwise we could not determine which solution the GNN should aim for. 
 To keep the regression target disambiguous, the preferences are also included in the features.
 The demand edges store the number of customers wanting to travel between the stops. The value is normalised to have a maximum value of one across all edges. The belongs edge type does not contain any features.
 
-Unfortunately, the implementation of HGT we are using does not use edge features directly. Instead, we will encode the edge features by connecting the line graph representation of the edges to the rest of the graph. A similar trick is used in \cite{line-graph-trick}. The method is visualised in \cref{fig:line-graph}. We applied the line-graph conversion one edge type at a time for the activity and demand edge types.
+Unfortunately, the implementation of HGT we are using does not use edge features directly. Instead, we encode the edge features by connecting the line graph representation of the edges to the rest of the graph. A similar trick is used in \cite{line-graph-trick}. The method is visualised in \cref{fig:line-graph}. We applied the line-graph conversion one edge type at a time for the activity and demand edge types. Other edges were left untouched.
 
-\begin{figure}
+
+\begin{figure}[b]
+    \centering
+    % \includegraphics[width=0.3\textwidth]{figures/hetero-graph-relations.jpg}
+    \input{figures/tikz-relations.tex}
+    \caption{The node and relation types of the heterogenous representation after the line-graph transformation. The added nodes and relations are in red.}
+    \label{fig:hetero-relations}
+\end{figure}
+
+\begin{figure}[t]
     \centering
     % \includegraphics[width=\textwidth]{figures/line-graphs.jpeg}
     \input{figures/tikz-line-graph.tex}
@@ -967,15 +977,9 @@ Unfortunately, the implementation of HGT we are using does not use edge features
     \end{algorithmic}
     
 \end{algorithm}
- 
 
-\begin{figure}
-    \centering
-    % \includegraphics[width=0.3\textwidth]{figures/hetero-graph-relations.jpg}
-    \input{figures/tikz-relations.tex}
-    \caption{The node and relation types of the heterogenous representation.}
-    \label{fig:hetero-relations}
-\end{figure}
+
+
 % \begin{itemize}
     % \item Describe how heterogenous graphs are represented in torch\_geometric -> some data conversions are needed
     % \item Edge features not included in the architecture -> we turn edges with features to nodes, connecting them with special edges to the original edge endpoints
@@ -1049,9 +1053,9 @@ For each problem instance, we calculated the GNN heuristic loss (as MSE against 
 
 For the calculated losses in \cref{fig:results-ll} we can clearly see, that the GNN heuristic typically achieves lower losses than the SP heuristic. This indicates that the trained network did at least partially work as intended, as the heuristic was trained to minimise the loss. The loss is smaller for the GNN in 79\% of the problem instances.
 
-However, observing the results in \cref{fig:results-gg} is more difficult. For the SP heuristic, the gap is zero in 91\% of the cases and for the GNN heuristic in 61\%. Notably, the SP heuristic finds the optimal solution more often than the GNN heuristic despite having larger losses. More on that in \cref{sec:loss-gap-relation}. However, we will now restrict our comparison to only cases where the SP heuristic optimality gap is nonzero. We justify this condition by stating that the optimality of the SP heuristic is easy to verify beforehand. As we are interested in improving the found solutions, we limit our focus only to cases where we know beforehand that improvements are possible. We use the name trivial problem for the problems where the shortest path heuristic achieves zero optimality gap.
+However, observing the results in \cref{fig:results-gg} is more difficult. For the SP heuristic, the gap is zero in 91\% of the cases and for the GNN heuristic in 61\%. Notably, the SP heuristic finds the optimal solution more often than the GNN heuristic despite having larger losses. More about that in \cref{sec:loss-gap-relation}. However, we now restrict our comparison to only cases where the SP heuristic optimality gap is nonzero. As we are interested in improving the found solutions, we limit our focus only to cases where we know beforehand that improvements are possible. We use the name trivial problem for the problems where the shortest path heuristic achieves zero optimality gap.
 
-In \cref{fig:trivial-shares-in-data} we break down the share of trivial problems by the instance size. We note, that for problems with four or five stops, the instances are almost always (98\% of cases) trivial. The share of zero GNN gap instances is always lower than the share of trivial instances.
+In \cref{fig:trivial-shares-in-data} we break down the share of trivial problems by the instance size. We note, that for problems with four or five stops, the instances are almost always (98\% of cases) trivial. This share decreases to only 38\% at eight stops. The share of zero GNN gap instances is always lower than the share of trivial instances.
 
 \begin{figure}
     \centering
@@ -1156,23 +1160,22 @@ As an overview of the obtained results, the GNN heuristic does not bring a consi
 
 The instances in TimPassLib represent a different data distribution than the training data. By testing the GNN heuristic against the benchmark instances, we found that the GNN heuristic does not generalise well to distributions outside of the training data. One of the reasons we chose the GNN architecture for our heuristic was the technical feasibility of using the same network for problem instances of different sizes. As the capability to generalise was very weak, we did not manage to observe if the problem instance size plays a role in performance. The possible performance degradation due to scaling the instances was masked by the large optimality gaps due to generalisation issues.
 
-The question remains if predicting the weights is a good idea in the first place. As we compared the optimality gaps against the $l^2$ loss on the weight prediction in \cref{sec:loss-gap-relation}, we did not observe any strong correlation between the values. This indicates, that training the model to predict the weight does not necessarily result in a lower gap against the reference solution. Additionally, as the allowed predictions were continuous, sometimes the low but non-zero weight values caused the subsequent PESP solving to be considerably slower than solving the PESP with the SP weights. % Pointti: vaikee ennustaa just nollaa
-
-To get around these issues, we came up with two ideas for further research into the topic of using a NN heuristics for the routing part of the TimPass problem. First, instead of training the model to predict the weights, we could instead try to predict the routes. This would make sure, that the resulting weights are consistent with the passenger demands, allowing us to skip the SP rerouting in the evaluation phase. The second idea is to try to minimise the TimPass objective value itself by means of reinforcement learning. As improvements in the regression task do not directly translate to better objective values, we could try to to minimise the objective instead. However, RL training is much more difficult to get right than the simple supervised regression task.
-
-Another point of discussion is the suitability of the HGT architecture for this problem. The family of convolutional graph networks are well-suited for tasks with local dependencies. This is also reflected in the typical benchmarks, e.g. the Open Academic Graph link prediction \cite{oag-dataset}, on which the solutions do not depend on long-range interactions. However, the task of routing the passengers optimally depends on global interactions: a small difference in the network, e.g. a high lower bound for an edge, may have large consequences far away, as now it's optimal to route the passengers with a completely different path to their destination.
-
-GNNs also have some well-known limitations. The message-passing architecture is susceptible to over-squashing of information, as the nodes become a bottleneck for the messages \cite{alon2020bottleneck}. This hinders the architecture's performance on tasks that depend on long-range interactions. The attention mechanism does help with this issue.
-
-The mechanism of passing messages within the one-hop neighbourhood acts as an inductive bias. It guides the model towards discovering short-range patters and as such, this mechanism may not be well-suited for tasks involving long-range interactions. Some recent research directions involve omiting this bias by letting the nodes communicate globally, essentially creating a transformer for graphs \cite{ying2021transformers,hussain2022global}. The resulting models have achieved good results on e.g. the quantum-chemical
-regression task on the OGB-LSC PCQM4Mv2 dataset, which depends on global interactions \cite{hu2021ogblsc}.
-
-Another area for improvement is the training dataset we used to train the model. We did have a large number of training instances, but the instances were not very diverse: most of the instances were trivial in the sense that the SP heuristic was optimal, and the base PTN was shared between all instances. It is not clear if the model learns anything useful when introduced to the trivial problems, as the SP heuristic weights are also included in the training data. Not being introduced to various PTNs could hinder the generalisation to other datasets. Due to practical concerns, we were forced to limit the computation time for the TimPass problem when generating the training samples. This could introduce bias, as the training examples are very hard to solve by existing methods while generating heuristics for difficult problems is ultimately our goal.
+Another area for improvement is the training dataset we used to train the model. We did have a large number of training instances, but the instances were not very diverse: most of the instances were trivial in the sense that the SP heuristic was optimal, and the base PTN was shared between all instances. It is not clear if the model learns anything useful when introduced to the trivial problems, as the SP heuristic weights are also included in the training data. Not being introduced to various PTNs could hinder the generalisation to other datasets. Due to practical concerns regarding the computational complexity of the TimPass problem, we were forced to limit the computation time when generating the training samples. This could introduce bias, as the training examples are very hard to solve by existing methods while generating heuristics for difficult problems is ultimately our goal.
 
 As we saw in \cref{sec:results}, at least for the training dataset the SP heuristic was often very good. On the other hand, when the SP heuristic failed, the GNN heuristic was at times able to find improvements. Combining these heuristics to a joint heuristic where the GNN prediction would be used in cases where the SP weights are predicted to be non-optimal could thus yield solutions that are better than what a singe heuristic can achieve. One approach to predicting where the SP heuristic may fail is to investigate the tightness of the bounds for the edge durations. This way we could classify the OD pairs to two groups by the potential for improvement. Training the GNN heuristic only on the high-potential OD pairs could in part alleviate the issue of lack of variation in the training data.
 
 Lastly, as this thesis was focused on investigating the idea of using a GNN heuristic, we did not invest in incorporating the latest solving methods and tricks for the TimPass and PESP problems. As noted earlier, the time limitation on the TimPass problem could introduce some bias. As we are required to solve the PESP problem in the evaluation phase, introducing the best available solution methods can possibly help us evaluate the large-scale problems more accurately.
 
+The question remains if predicting the weights is a good idea in the first place. As we compared the optimality gaps against the $l^2$ loss on the weight prediction in \cref{sec:loss-gap-relation}, we did not observe any strong correlation between the values. This indicates, that training the model to predict the weight does not necessarily result in a lower gap against the reference solution. Additionally, as the allowed predictions were continuous, sometimes the low but non-zero weight values caused the subsequent PESP solving to be considerably slower than solving the PESP with the SP weights. % Pointti: vaikee ennustaa just nollaa
+
+To get around these issues, we came up with two ideas for further research into the topic of using a NN heuristics for the routing part of the TimPass problem. First, instead of training the model to predict the weights, we could instead try to predict the routes. This would make sure, that the resulting weights are consistent with the passenger demands, allowing us to skip the SP rerouting in the evaluation phase. The second idea is to try to minimise the TimPass objective value itself by means of reinforcement learning. As improvements in the regression task do not directly translate to better objective values, we could try to to minimise the objective instead. However, RL training is much more difficult to get right than the simple supervised regression task.
+
+Another point of discussion is the suitability of the HGT architecture for this problem. The family of convolutional graph networks are well-suited for tasks with local dependencies. This is also reflected in the typical benchmarks, e.g. the Open Academic Graph link prediction \cite{oag-dataset}, on which the solutions do not depend on long-range interactions. However, the task of routing the passengers optimally depends on global interactions: a small difference in the network, e.g. a high lower bound for an edge, may have large consequences far away, as now it is optimal to route the passengers with a completely different path to their destination.
+
+GNNs also have some well-known limitations. The message-passing architecture is susceptible to over-squashing of information, as the nodes become a bottleneck for the messages \cite{alon2020bottleneck}. This hinders the architecture's performance on tasks that depend on long-range interactions. The attention mechanism does help with this issue.
+
+The mechanism of passing messages within the one-hop neighbourhood acts as an inductive bias. It guides the model towards discovering short-range patters and as such, this mechanism may not be well-suited for tasks involving long-range interactions. Some recent research directions involve omiting this bias by letting the nodes communicate globally, essentially creating a transformer for graphs \cite{ying2021transformers,hussain2022global}. The resulting models have achieved good results on e.g. the quantum-chemical
+regression task on the OGB-LSC PCQM4Mv2 dataset, which depends on global interactions \cite{hu2021ogblsc}.
 
 
 \clearpage
@@ -1181,11 +1184,11 @@ Lastly, as this thesis was focused on investigating the idea of using a GNN heur
 
 In this thesis, we study a novel graph neural network-based heuristic for the timetabling and passenger routing problem (TimPass). Heuristical approaches to the problem are interesting, as including routing makes the problem more realistic but also much more challenging to solve optimally. Improvements to solutions for large-scale problems can be helpful in public transport planning and by extension lower the transportation costs for everyone involved.
 
-We conduct a literary review focused on recent advancements and research directions in timetabling for public transportation, machine learning applications in public transport planning, and how neural networks have been used to support solving combinatorial optimization (CO) problems. We found, that the proposed heuristic has not been studied before, and that graph neural networks have seen popularity in CO applications.
+We conduct a literary review focused on recent advances and research directions in timetabling for public transportation, machine learning applications in public transport planning, and how neural networks have been used to support solving combinatorial optimization (CO) problems. We found, that the proposed heuristic has not been studied before, and that graph neural networks have seen popularity in CO applications.
 
 We present the methodological foundation for the event activity network representation, optimization problem formulation, and the heuristic model architecture. The practical problem representation issues of connecting the novel heuristic to the established formulation are also discussed and the workarounds are demonstrated. As the heuristic output by itself is not restricted to correspond to the passenger counts, we also devise a process for consistently evaluating the weight predictions.
 
-In the results section, we demonstrate how the new heuristic performed with various problem instance types. First, we examine the performance on the validation data generated by the same data generation process as for the training data. Second, we apply the heuristic to larger and more varied benchmark instances and compare the results to the shortest path heuristic and the found best solutions to the problem. We observe, that at times the new heuristic is able to yield improvements over the SP heuristic, but this is mostly limited to the distribution of instances the model is trained with. With the benchmark instances, the model does not seem to generalise well to the new distribution. The results on the impact of the instance size on performance are inconclusive, as no generalization was observed at all.
+In the results section, we demonstrate how the new heuristic performed with various problem instance types. First, we examine the performance on the validation data generated by the same data generation process as for the training data. Second, we apply the heuristic to larger and more varied benchmark instances and compare the results to the shortest path heuristic solutions and the published best solutions of the problem. We observe, that at times the new heuristic is able to yield improvements over the SP heuristic, but this is mostly limited to the distribution of instances the model is trained with. With the benchmark instances, the model does not seem to generalise well to the new distribution. The results on the impact of the instance size on performance are inconclusive, as no generalization was observed at all.
 
 Finally, we discuss the limitations and caveats related to the new method and the training process. We identify multiple possible reasons for the poor performance, starting from the relevance of the regression task itself and ending with contemplation on the architecture choice and recent advancements in the field of machine learning with graphs. Lastly, we propose a method of splitting the workload between two heuristics to possibly get the best of the two approaches in one method.
 
