@@ -396,11 +396,11 @@ The drive activities correspond to the driving activity between stops. The activ
 \subsection{Integer programming formulations}
 \label{sec:ips}
 
-Next we will define the integer programming formulations used. We will start with the periodic event scheduling problem (PESP) and it's cycle basis formulation. Then, we extend the PESP problem with passenger routing to obtain the time tabling and passenger routing (TimPass) problem.
+Next we define the integer programming formulations used. We start with the periodic event scheduling problem (PESP) and its cycle basis formulation. Then, we extend the PESP problem with passenger routing to obtain the timetabling and passenger routing (TimPass) problem.
 
 \subsubsection{Periodic event scheduling problem}
 
-The PESP problem in first presented in \cite{pesp-original-1989}. We will follow the formulation in \cite{schiewe2020periodic} with notation adapted to be in line with our definition of the EAN. In periodic scheduling, we have a periodic schedule $\pi$ defined for the events in the EAN. The event times are noted as $\pi_i \in \{0, \dots, T-1\}$ for all events $i \in E$. As we are working with a periodic schedule, all the event occurrence times must be lower than the period of the schedule $T$. %As noted previously, we could have a real-valued schedule instead of a discrete one, but once again we follow the previous formulation.
+The PESP problem is first presented in \cite{pesp-original-1989}. We  follow the formulation in \cite{schiewe2020periodic} with notation adapted to be in line with our definition of the EAN. In periodic scheduling, we have a periodic schedule $\pi$ defined for the events in the EAN. The event times are noted as $\pi_i \in \{0, \dots, T-1\}$ for all events $i \in E$. As we are working with a periodic schedule, all the event occurrence times can be assumed to be lower than the period of the schedule $T$. %As noted previously, we could have a real-valued schedule instead of a discrete one, but once again we follow the previous formulation.
 
 The activities in the EAN are used to define constraints on the upper and lower bounds for activity durations. For all activities $a \in A$, we have the lower bound $L_a \in \N$ and upper bound $U_a \in \N$. For the bounds, we of course must also have that $0 \leq L_a \leq U_a$. The activity duration for activity $a = (i, j)$ itself is calculated as $(\pi_j - \pi_i - L_a)\ \text{mod}\ T + L_a$. The lower bound term outside of the modulo ensures, that the lower bound is respected. The term inside the modulo is the "slack" time we have due to the schedule not aligning perfectly with the lower bound. As formulated, the duration is guaranteed to be greater or equal to the lower bound. For the given timetable $\pi$ to be feasible, for all activities $a \in A$ we must have that the upper bound holds: $(\pi_j - \pi_i - L_a)\ \text{mod}\ T + L_a\leq U_a$.
 
@@ -465,8 +465,7 @@ We still need to take the cycles and their feasibility in the EAN into account. 
 % \end{figure}
 
 \begin{definition}{(Cycles in a directed graph)}
-    A list of activities $(a_1, a_2, \dots, a_n)$ is a simple cycle if 
-    adjacent activities share one event: $|a_i\cap a_{j}| = 1$ for all $i = {1, \dots, n}$ and $j = (i - 1 ) \mod n$, and the events of the activities are visited exactly once: $|\cup_{i=1,\dots, n}a_i| = n$. The cycle activities are divided into a set of positive edges $c^+$ and negative edges $c^-$. The positive edges are defined as $c^+ = \{a_i = (e_1, e_2) : e_1 \in a_j, j = (i - 1) \mod n\}$. Likewise, $c^- = \{a_i : a_i \notin c^+\}$.
+    A list of activities $(a_1, a_2, \dots, a_n)$ is a simple cycle if each activity is unique: $a_i \neq a_j, i \neq j$ for all $i$ and $j$ in $\{1, \dots, n\}$, adjacent activities share at least one event: $|a_i\cap a_{j}| \geq 1$ for all $i = {1, \dots, n}$ and $j = (i - 1 ) \mod n$, and the events of the activities are visited exactly once: $|\cup_{i=1,\dots, n}a_i| = n$. The cycle activities are divided into a set of positive edges $c^+$ and negative edges $c^-$. The positive edges are defined as $c^+ = \{a_i = (e_1, e_2) : e_1 \in a_j, j = (i - 1) \mod n\}$. Likewise, $c^- = \{a_i : a_i \notin c^+\}$.
     % - all adjacent activities share a node
     % - no duplicated verticies
 \end{definition}
@@ -508,10 +507,15 @@ However, to represent the routes from stop $u$ to stop $v$ in an EAN, we would p
     \end{align*}
     Each auxiliary event is connected via auxiliary activities to the corresponding events in the EAN:
     \begin{align*}
-        \Aaux = \bigcup_{i = (t, u, l, r) \in E}\{((\text{orig}, u), i), (i, (\text{dest}, u))\}
+        % \Aaux = \bigcup_{i = (t, u, l, r) \in E}\{((\text{orig}, u), i), (i, (\text{dest}, u))\}
+        \Aaux =\  &\{
+            ((\text{orig}, u), i): i = (t, u, l, r) \in E, t = \text{dep}
+        \} \\ \cup &\{
+            (i, (\text{dest}, u)): i = (t, u, l, r) \in E, t = \text{arr}
+        \}
     \end{align*} 
 \end{definition}
-The auxiliary event and activity construction is demonstrated in \ref{fig:aux-events-demo}. Now, when considering a route from stop $u$ to $v$, we know that the path starts from $(\text{orig}, u)$ and ends at $(\text{dest}, v)$.
+The auxiliary event and activity construction is demonstrated in \cref{fig:aux-events-demo}. Now, when considering a route from stop $u$ to $v$, we know that the path starts from $(\text{orig}, u)$ and ends at $(\text{dest}, v)$.
 
 To denote the set of all routable activities, we note $\Arp = \Ar \cup \Aaux$. Similarly, to denote all events including the auxiliary events, we note $\Ep = E \cup \Eaux$. Auxiliary activities are not considered to be actual activities in the sense of not having a duration. As such, the auxiliary activities are not subject to duration constraints and are not part of the objective function.
 
@@ -545,15 +549,15 @@ We can formalise this by introducing a node-arc-incidence matrix $\incidence$ an
 For the node-arc incidence matrix $\incidence=(m_{i, a})_{(i, a) \in \Ep \times \Arp}$, we have that the element is minus one if the activity leads away from the event, one if the activity leads to the event and zero otherwise. Formally:
 \begin{align}
     m_{i, a} = \begin{cases}
-        -1&\text{if}\ a = (i, j)\ \exists j \in \Ep\\
-        1&\text{if}\  a = (j, i)\ \exists j \in \Ep\\
+        -1&\text{if}\ a = (i, j)\ \text{for some}\  j \in \Ep\\
+        1&\text{if}\  a = (j, i)\ \text{for some}\  j \in \Ep\\
         0&\text{otherwise}
     \end{cases}
 \end{align}
 
-Armed with this notation, we can finally construct the constraint necessary for the set of active flow variables to constitute a valid path from stop $u$ to stop $v$:
+With this notation, we can finally construct the constraint necessary for the set of active flow variables to constitute a valid path from stop $u$ to stop $v$:
 \begin{align}
-    \incidence (p_a^{uv})_{a \in \Arp} = q^\mathit{uv} \quad \forall uv \in \od
+    \incidence (p_a^{uv})_{a \in \Arp} = q^\mathit{uv} \quad uv \in \od
 \end{align}
 This constraint does not actually prevent the flow variables from creating a cycle, but as we are minimising the total perceived travel time, those cycles would be non-optimal and thus they will not occur in optimal solutions.
 
@@ -565,7 +569,7 @@ However, we have a problem as we hope to get a linear integer programming proble
 
 We create the linearization decision variable $\textit{lin}_a^{uv}$ for all $a \in \Ar$ and $uv \in \od$. We aim to always have $\textit{lin}_a^{uv} = p_a^{uv}(x_a + b_a)$ without explicitly stating this equality, as the right-hand side has the non-linear term. We achieve this by constructing suitable constraints for the linearization term.
 
-Let $B$ be some large integer for which $B \geq x_a + b_a\ \forall a \in \Ar$. With this value, we can come up with the following set of constraints:
+Let $B$ be some large integer for which $B \geq x_a + b_a\ \text{for all}\  a \in \Ar$. With this value, we can come up with the following set of constraints:
 \begin{align}
     &\textit{lin}_a^{uv} \geq 0 \\
     &\textit{lin}_a^{uv} \leq p_a^{uv} B \\
@@ -607,13 +611,13 @@ To formalise the preprocessing, we will need a notation for the shortest paths. 
 
 % We define the function $\shortestpath_{u,v}(D)$ to be the function, that given the set of durations $D$ for the activities, calculates the shortest path between nodes $u$ and $v$ in the given EAN. This shortest path can be calculated with e.g. Dijkstra's algorithm. We can calculate the length of the path with the function $\mathit{len}(p, D)$, which calculates the length of the path $p$ with the durations $D$. We define $\mathit{len}(p, D) = \sum_{a \in p} D_a$.
 
-The upper and lower bounds can be used as the duration in both $\len$ and $\shortestpath$. However, as in the TimPass problem we are dealing with perceived travel times, we should include the penalty term in the duration. Thus, let us define $L^b = \{L_a + b_a:a\in A\}$ and $U^b = \{U_a + b_a:a \in A\}$. Now we can use these to calculate which flow variables $p_a^{uv}$ can never be active in the optimal solution.
+The upper and lower bounds can be used as the duration in both $\len$ and $\shortestpath$. However, as in the TimPass problem we are dealing with perceived travel times, we should include the penalty term in the duration. Thus, let us define $L^b = (L_a + b_a)_{a\in A}$ and $U^b = (U_a + b_a)_{a \in A}$. Now we can use these to calculate which flow variables $p_a^{uv}$ can never be active in the optimal solution.
 
-In \cref{alg:preprocessing} we present the algorithm for calculating which flow variables can be safely set to zero. We need to run the algorithm for each OD pair for which we want to reduce the number of flow variables. On a high level, the algorithm first calculates the longest possible route that can belong to an optimal solution. The length of that route under the upper bound edge durations is $\beta$. Then, for each activity, we check if the activity can belong to an optimal solution by checking if including the activity would increase the lowest possible perceived travel time for the path above $\beta$. In the end, we obtain a set of activities $\preprocessed_{uv}$, for which we can set the corresponding flow variable to zero. We handle the preprocessing by including the following constraint in the model:
+In \cref{alg:preprocessing}, we present the algorithm for calculating which flow variables can be safely set to zero. We need to run the algorithm for each OD pair for which we want to reduce the number of flow variables. On a high level, the algorithm first calculates an upper bound as the longest possible route that can belong to an optimal solution. The length of that route under the upper bound edge durations is $\beta$. Then, for each activity, we check if the activity can belong to an optimal solution by checking if including the activity would increase the lowest possible perceived travel time for the path above $\beta$. In the end, we obtain a set of activities $\preprocessed_{uv}$, for which we can set the corresponding flow variable to zero. We handle the preprocessing by including the following constraint in the model:
 %Let us note the set of preprocessed activities for the OD pair $uv \in \od$ as $P_{uv}$. This is the variable $P$ for running the algorithm for the given OD pair. 
 %Then we can include the following constraint to handle the preprocessed flow variables:
 \begin{align}
-    p_a^{uv} = 0 \quad \forall uv \in \od, a \in \preprocessed_{uv}
+    p_a^{uv} = 0 \quad uv \in \od, a \in \preprocessed_{uv}
 \end{align}
 
 % TODO: does this even make sense to represent this way? Definitions in a for loop may not be the most interesting thing.
@@ -645,7 +649,7 @@ In \cref{alg:preprocessing} we present the algorithm for calculating which flow 
 \subsection{Shortest path routing heuristic}
 \label{sec:sp-heur}
 
-A simple baseline heuristic to the TimPass problem is to route the passengers according to the lower bound shortest paths and to then solve the timetable with PESP. Formally, we calculate the weights with \cref{alg:weights} by using the penalised lower bounds $L^b$ as the activity durations. As we don't have capacity constraints on the activities, we can route each OD pair independently of each other.
+A simple baseline heuristic to the TimPass problem is to route the passengers according to the lower bound shortest paths and to then solve the timetable with PESP. Formally, we calculate the weights with \cref{alg:weights} by using the penalised lower bounds $L^b$ as the activity durations. As we do not have capacity constraints on the activities, we can route each OD pair independently of each other.
 
 % TODO: citation to some relevant source
 
@@ -666,7 +670,7 @@ A simple baseline heuristic to the TimPass problem is to route the passengers ac
     \end{algorithmic}
 \end{algorithm}
 
-We use the obtained weights in the PESP to obtain a timetable. The timetable evaluation is conducted in the same way as for the new proposed heuristic. The evaluation method is described in \cref{sec:heur-eval}. Note, that despite the weights used here representing real passengers, we should still do the rerouting as described in the evaluation method, as that can improve the objective. We want to ensure fair evaluation for both the baseline and the proposed heuristic.
+We use the obtained weights in the PESP to obtain a timetable. The timetable evaluation is conducted in the same way as for the newly proposed heuristic. The evaluation method is described in \cref{sec:heur-eval}. Note, that despite the weights used here representing real passengers, we should still do the rerouting as described in the evaluation method, as that can improve the objective. We want to ensure fair evaluation for both the baseline and the proposed heuristic.
 
 % TODO: source / citation for why rerouting is necessary for fair evaluation
 
