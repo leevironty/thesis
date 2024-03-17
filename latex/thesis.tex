@@ -953,7 +953,7 @@ Unfortunately, the implementation of HGT we are using does not use edge features
     \centering
     % \includegraphics[width=0.3\textwidth]{figures/hetero-graph-relations.jpg}
     \input{figures/tikz-relations.tex}
-    \caption{The node and relation types of the heterogenous representation after the line-graph transformation. The added nodes and relations are in red.}
+    \caption{The node and relation types of the heterogenous representation after the line-graph transformation. The node types and relations added by the transformation are marked in red.}
     \label{fig:hetero-relations}
 \end{figure}
 
@@ -979,7 +979,6 @@ Unfortunately, the implementation of HGT we are using does not use edge features
         \State $E_\text{joined} = E \cup E_\text{line} \cup \{(v, (v, n)) : v \in V, n \in N(v)\}$
         \State Joined graph $J = (V_\text{joined}, E_\text{joined})$
     \end{algorithmic}
-    
 \end{algorithm}
 
 
@@ -1079,19 +1078,7 @@ In \cref{fig:results-gg-excl-trivial} we represent the optimality gap joint dist
     \label{fig:results-gg-excl-trivial}
 \end{figure}
 
-In \cref{tab:results} we present the calculated heuristic performance metrics in tabular form. 
-
-We also evaluated the GNN and SP heuristics on selected TimPassLib instances. The benchmark instances are much larger and more diverse than the training problems. This allows us to probe the generalization ability and scalability of our heuristic approach. We compare the GNN heuristic results against the SP heuristic and the best published lower and upper bounds. The visualised results are represented in \cref{fig:eval-timpasslib}. As observed from the figure, the GNN heuristic yields much greater optimality gaps than the SP heuristic, regardless of the instance size. This hints, that the new method does not generalise well, as is a common limitation of many other ML approaches in combinatorial optimization (\cite{cappart2023combinatorial}).
-
-
-The PESP time limit was set to 6 hours for the evaluation. The evaluation was performed on a machine with CPU 8 cores and 8 GB of memory. The problem instance sizes can be found in \cite{schiewe2023introducing}.
-
-\begin{figure}
-    \centering
-    \includegraphics[width=\linewidth]{figures/eval-timpasslib.pdf}
-    \caption{Optimality gaps with respect to the best bound published for the TimPassLib instance.} 
-    \label{fig:eval-timpasslib}
-\end{figure}
+In \cref{tab:results} we present the calculated heuristic performance metrics in tabular form.
 
 \begin{table}[h]
     \centering
@@ -1109,7 +1096,32 @@ The PESP time limit was set to 6 hours for the evaluation. The evaluation was pe
     Gap smaller share                & 0.0349            & \textbf{0.3532}   & 0.4066               & \textbf{0.4657}   \\
     \makecell{Average relative\\gap improvement} &               &                   & 0.31                 &                  
     \end{tabular}
-    \end{table}
+\end{table}
+
+We also evaluated the GNN and SP heuristics on selected TimPassLib instances. In \cref{tab:dataset-summary-stats} we present summary statistics comparing the validation dataset instances to the selected benchmark instances. Note, that the validation instances are drawn from the same distribution as the training instances. We chose the benchmark instances to represent a reasonable range of problem sizes. The benchmark instances are much larger and more diverse than the training problems. This allows us to probe the generalization ability and scalability of our heuristic approach. We compare the GNN heuristic results against the SP heuristic and the best published lower and upper bounds. The PESP time limit was set to 6 hours for the evaluation. The evaluation was performed on a machine with CPU 8 cores and 8 GB of memory. Regarding the PESP computation time, all the SP heuristic results were obtained in less than 11 seconds, while the GNN heuristic for toy\_2 took 2h 29min, and the grid and Erding\_NDP\_S020 hit the time limit of 6 hours. The visualised results are represented in \cref{fig:eval-timpasslib}. As observed from the figure, the GNN heuristic yields much greater optimality gaps than the SP heuristic, regardless of the instance size. This hints, that the new method does not generalize well, as is a common limitation of many other ML approaches in combinatorial optimization (\cite{cappart2023combinatorial}).
+    
+    
+\begin{table}[] % TODO: referoi tää jossain relevantissa kohdassa!!
+    \centering
+    \caption{Counts of stops, lines, events, activities, and OD pairs for the datasets used in the evaluation. Using averages for the validation data as there are multiple instances of validation problems.}
+    \label{tab:dataset-summary-stats}
+    \begin{tabular}{l|rrrrr}
+    Dataset                 & Stops & Lines & Events & Activities & OD pairs \\ \hline
+    Validation instances (average) & 5.5   & 2.5   & 55.6   & 150.2      & 24.9     \\
+    toy\_2                   & 8     & 6     & 156    & 1088       & 46       \\
+    grid                    & 25    & 8     & 382    & 2382       & 567      \\
+    Erding\_NDP\_S020         & 51    & 21    & 1132   & 5300       & 675     
+    \end{tabular}
+\end{table}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{figures/eval-timpasslib.pdf}
+    \caption{Calculated GNN and SP heuristic optimality gaps against the best published upper bound for the TimPassLib instance.}
+    \label{fig:eval-timpasslib}
+\end{figure}
+
 
 
 \subsection{Relation of loss and heuristic optimality gap}
