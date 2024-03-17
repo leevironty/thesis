@@ -111,7 +111,7 @@
 
 % \place{Otaniemi}
 \place{Espoo}
-\date{28 February 2024}
+\date{17 March 2024}
 
 \supervisor{Asst. Prof.\ Philine Schiewe}
 \advisor{Asst. Prof.\ Philine Schiewe}
@@ -149,12 +149,12 @@
 % \supervisor{Prof.\ Philine Schiewe}
 % \advisor{Ap. prof.\ Philine Schiewe}
 % \degreeprogram{Elektroniikka ja sähkötekniikka}
-\date{26.2.2024}
+\date{17.3.2024}
 %% The keywords need not be separated by \spc now.
 \keywords{Joukkoliikennesuunnittelu, Graafineuroverkot, TimPass}
 %% Abstract text
 \begin{abstractpage}[finnish]
-    Aikataulutus joukkoliikennesuunnittelussa on prosessi, jossa määritellään kulkuneuvojen lähtö- ja saapumisajat joukkoliikennepysäkeille. Aikataulun optimointi on tärkeä osa tyypillistä joukkoliikenteen suunnitteluprosessia. Valittu aikataulu vaikuttaa reitteihin, joita matkustajat valitsevat pysäkkien välillä, mutta toisaalta matkustajien suosimat reitit vaikuttaa aikataulun optimointiin. Parhaat ratkaisut aikataulutusongelmaan saadaankin optimoimalla aikataulu ja matkustajien reittivalinnat samaan aikaan perättäisen optimoinnin sijasta. Tästä tulee kuitenkin helposti laskennallisesti haastavaa. Eksaktien ratkaisujen etsimisen sijaan esitämme uutta heuristista ratkaisumenetelmää, jossa ennustamme parhaat matkustajien reititykset ja tämän perusteella optimoimme pelkästään kulkuneuvojen aikataulua. Graafineuroverkkolla ennustamme kokonaismatkustajamääriä graafin kaarille tapahtuma-aktiviteetti -verkossa. Lyhyimmän reitityksen vertailukohtaan verrattuna menetelmämme tuottaa toisinaan parempia ratkaisuja. Riippuvuus koulutushäviön ja optimaalisuuskuilun välillä ei viittaa, että graafineuroverkon kouluttaminen regressiotehtävällä suoraan parantaisi optimaalisuuskuilua, mikä kuitenkin on varsinainen tavoitteemme. Jatkotutkimus graafineuriverkkojen käytöstä heuristiikkana voisi perehtyä muihin verkon koulutustehtäviin kuin suoraan ennustamiseen. Korkealaatuisen koulutusdatan generointi on myös osa-alue, jolta löytyy parannettavaa.
+    Aikataulutus joukkoliikennesuunnittelussa on prosessi, jossa määritellään kulkuneuvojen lähtö- ja saapumisajat joukkoliikennepysäkeille. Aikataulun optimointi on tärkeä osa tyypillistä joukkoliikenteen suunnitteluprosessia. Valittu aikataulu vaikuttaa reitteihin, joita matkustajat valitsevat pysäkkien välillä, mutta toisaalta matkustajien suosimat reitit vaikuttaa aikataulun optimointiin. Parhaat ratkaisut aikataulutusongelmaan saadaankin optimoimalla aikataulu ja matkustajien reittivalinnat samanaikaisesti perättäisen optimoinnin sijasta. Tästä tulee kuitenkin nopeasti laskennallisesti haastavaa. Eksaktien ratkaisujen etsimisen sijaan esitämme uutta heuristista ratkaisumenetelmää, jossa ennustamme parhaat matkustajien reititykset ja tämän perusteella optimoimme pelkästään kulkuneuvojen aikatauluja. Graafineuroverkkolla ennustamme kokonaismatkustajamääriä graafin kaarille tapahtuma-aktiviteetti -verkossa. Verrattuna lyhyimmän reitityksen vertailukohtaan, menetelmämme tuottaa toisinaan parempia ratkaisuja. Riippuvuus koulutushäviön ja optimaalisuuskuilun välillä ei viittaa, että graafineuroverkon kouluttaminen regressiotehtävällä suoraan parantaisi optimaalisuuskuilua, joka kuitenkin on varsinainen tavoitteemme. Jatkotutkimus graafineuriverkkojen käytöstä heuristiikkana voisi perehtyä muihin verkon koulutustehtäviin kuin suoraan ennustamiseen. Korkealaatuisen koulutusdatan generointi on myös yksi parannettavista osa-alueista.
 \end{abstractpage}
 
 
@@ -165,7 +165,7 @@
 
 
 \vspace{5cm}
-Otaniemi, 9 February 2023\\
+Espoo, 17 March 2024\\
 
 \vspace{5mm}
 {\hfill Leevi Rönty \hspace{1cm}}
@@ -949,7 +949,7 @@ The demand edges store the number of customers wanting to travel between the sto
 Unfortunately, the implementation of HGT we are using does not use edge features directly. Instead, we encode the edge features by connecting the line graph representation of the edges to the rest of the graph. A similar trick is used in \cite{line-graph-trick}. The method is visualised in \cref{fig:line-graph}. We applied the line-graph conversion one edge type at a time for the activity and demand edge types. Other edges were left untouched.
 
 
-\begin{figure}[b]
+\begin{figure}[t]
     \centering
     % \includegraphics[width=0.3\textwidth]{figures/hetero-graph-relations.jpg}
     \input{figures/tikz-relations.tex}
@@ -966,7 +966,7 @@ Unfortunately, the implementation of HGT we are using does not use edge features
 \end{figure}
 
 
-\begin{algorithm}
+\begin{algorithm}[b]
 
     \caption{Line graph extension}
     \label{alg:line-graph}
@@ -1027,13 +1027,13 @@ In \cref{app:hyperparams} we present the results for the hyperparameter optimiza
 %         \item Results in \cref{app:hyperparams}
 %     \end{itemize}
 % }
-\clearpage
+% \clearpage
 \section{Results}
 \label{sec:results}
 \subsection{Heuristic performance}
 \label{sec:heur-perf}
 
-\begin{figure} 
+\begin{figure}[b]
     \begin{subfigure}{0.5\textwidth}
         \centering
         \includegraphics[width=\linewidth]{figures/loss-loss.pdf}
@@ -1071,7 +1071,7 @@ In \cref{fig:trivial-shares-in-data} we break down the share of trivial problems
 In \cref{fig:results-gg-excl-trivial} we represent the optimality gap joint distribution without the trivial problems. Note, how the histograms are no longer concentrated around zero. With this filtering, the GNN heuristic achieves a better gap in 41\% of the problems. Likewise, the SP heuristic has a better gap for 47\% of the problems. When the solutions differ, the difference is often quite large: if GNN gap is smaller, on average it is only about 31\% of the SP heuristic gap. This means, that the proposed heuristic can find solutions that are vastly better than the baseline shortest path heuristic. However, this is not consistent.
 
 
-\begin{figure}[h]
+\begin{figure}[t]
     \centering
     \includegraphics[width=0.75\linewidth]{figures/gap-gap-excl-trivials.pdf}
     \caption{Optimality gap joint distribution for SP and GNN heuristics. Excluding trivial problems.}
@@ -1080,7 +1080,7 @@ In \cref{fig:results-gg-excl-trivial} we represent the optimality gap joint dist
 
 In \cref{tab:results} we present the calculated heuristic performance metrics in tabular form.
 
-\begin{table}[h]
+\begin{table}[b]
     \centering
     \caption{Heuristic performance metrics both before and after filtering for trivial problem instances.}
     \label{tab:results}
@@ -1100,7 +1100,15 @@ In \cref{tab:results} we present the calculated heuristic performance metrics in
 
 We also evaluated the GNN and SP heuristics on selected TimPassLib instances. In \cref{tab:dataset-summary-stats} we present summary statistics comparing the validation dataset instances to the selected benchmark instances. Note, that the validation instances are drawn from the same distribution as the training instances. We chose the benchmark instances to represent a reasonable range of problem sizes. The benchmark instances are much larger and more diverse than the training problems. This allows us to probe the generalization ability and scalability of our heuristic approach. We compare the GNN heuristic results against the SP heuristic and the best published lower and upper bounds. The PESP time limit was set to 6 hours for the evaluation. The evaluation was performed on a machine with CPU 8 cores and 8 GB of memory. Regarding the PESP computation time, all the SP heuristic results were obtained in less than 11 seconds, while the GNN heuristic for toy\_2 took 2h 29min, and the grid and Erding\_NDP\_S020 hit the time limit of 6 hours. The visualised results are represented in \cref{fig:eval-timpasslib}. As observed from the figure, the GNN heuristic yields much greater optimality gaps than the SP heuristic, regardless of the instance size. This hints, that the new method does not generalize well, as is a common limitation of many other ML approaches in combinatorial optimization (\cite{cappart2023combinatorial}).
     
-    
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/eval-timpasslib.pdf}
+    \caption{Calculated GNN and SP heuristic optimality gaps against the best published upper bound for the TimPassLib instance.}
+    \label{fig:eval-timpasslib}
+\end{figure}
+
+
 \begin{table}[] % TODO: referoi tää jossain relevantissa kohdassa!!
     \centering
     \caption{Counts of stops, lines, events, activities, and OD pairs for the datasets used in the evaluation. Using averages for the validation data as there are multiple instances of validation problems.}
@@ -1115,13 +1123,6 @@ We also evaluated the GNN and SP heuristics on selected TimPassLib instances. In
 \end{table}
 
 
-\begin{figure}
-    \centering
-    \includegraphics[width=\linewidth]{figures/eval-timpasslib.pdf}
-    \caption{Calculated GNN and SP heuristic optimality gaps against the best published upper bound for the TimPassLib instance.}
-    \label{fig:eval-timpasslib}
-\end{figure}
-
 
 
 \subsection{Relation of loss and heuristic optimality gap}
@@ -1132,7 +1133,7 @@ The chosen GNN heuristic training has the inbuilt assumption, that achieving goo
 In \cref{fig:gap-loss} we observe the loss vs optimality gap plots for both heuristics. If the assumption was correct, we would observe some kind of positive correlation between the metrics. However, the metrics are virtually independent of each other. Only when we focus on very small losses as in \cref{fig:gap-loss-gnn-zoomed} we see any dependence. For very small losses the optimality gaps tend to also be very small.
 
 
-\begin{figure}
+\begin{figure}[t]
     \begin{subfigure}{0.5\textwidth}
         \centering
         \includegraphics[width=\linewidth]{figures/gap-loss-trivial.pdf}
@@ -1149,7 +1150,7 @@ In \cref{fig:gap-loss} we observe the loss vs optimality gap plots for both heur
     \label{fig:gap-loss}
 \end{figure}
 
-\begin{figure}[t]
+\begin{figure}[b]
     \centering
     \includegraphics[width=0.8\linewidth]{figures/gap-loss-gnn-zoomed.pdf}
     \caption{Zoomed view to \cref{fig:gap-loss-gnn}. We observe, that for very low loss values the gap tends to also be zero.}
